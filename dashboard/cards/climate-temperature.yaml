@@ -1,0 +1,8 @@
+---
+type: markdown
+title: Temperature
+content: >-
+  - Cabin temperature: `climate / cabin_temperature`
+  - Outside temperature: `climate / outside_temperature`
+
+  This card owns temperature readouts and future target-temperature display.
