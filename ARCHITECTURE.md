@@ -22,6 +22,7 @@ dashboard/
     battery.yaml
     vehicle.yaml
     cabin-comfort.yaml
+    power-flow.yaml
   cards/
     overview-hero.yaml
     section-navigation.yaml
@@ -45,6 +46,12 @@ dashboard/
     climate-comfort.yaml
     climate-session.yaml
     climate-back-navigation.yaml
+    energy-hero.yaml
+    energy-efficiency.yaml
+    energy-range-context.yaml
+    energy-charging-context.yaml
+    energy-history.yaml
+    energy-back-navigation.yaml
     quick-actions.yaml
     location-summary.yaml
     tire-status.yaml
@@ -130,6 +137,14 @@ features, remote climate actions, session context, and return navigation to
 Overview.
 
 See `docs/climate-view.md` for the Climate view contract.
+
+## Energy Strategy
+
+Energy is the fourth detail view. It expands range and charging context into a
+focused surface for efficiency, range interpretation, charging context,
+historical metrics, and return navigation to Overview.
+
+See `docs/energy-view.md` for the Energy view contract.
 
 ## Extension Strategy
 

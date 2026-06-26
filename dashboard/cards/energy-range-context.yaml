@@ -1,0 +1,10 @@
+---
+type: markdown
+title: Range Context
+content: >-
+  - Estimated range: `battery / estimated_range`
+  - Battery level: `battery / level`
+  - Charge target: `battery / target_charge_limit`
+
+  Range context belongs here so Overview can stay compact while Energy owns the
+  deeper interpretation.

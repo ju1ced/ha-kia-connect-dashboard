@@ -1,0 +1,8 @@
+---
+type: button
+name: Back to Overview
+icon: mdi:arrow-left
+show_state: false
+tap_action:
+  action: navigate
+  navigation_path: /lovelace/overview
