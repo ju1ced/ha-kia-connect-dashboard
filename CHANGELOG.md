@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added the first Climate detail view shell and cabin comfort card fragments.
 - Added the first Vehicle detail view shell and vehicle state card fragments.
 - Added the first Battery detail view shell and charging card fragments.
 - Added the first native Lovelace Overview shell and card fragments.
