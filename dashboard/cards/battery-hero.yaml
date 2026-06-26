@@ -1,0 +1,12 @@
+---
+type: markdown
+title: Battery
+content: >-
+  ## Battery Overview
+
+  Primary battery detail surface for `battery.level`,
+  `battery.charging_state`, `battery.charging_power`, and
+  `battery.estimated_range`.
+
+  This page expands the Overview summary while keeping raw Home Assistant entity
+  IDs inside `dashboard/templates/entities.yaml`.
