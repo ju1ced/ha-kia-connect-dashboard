@@ -7,8 +7,3 @@ content: >-
 
   Map and route context will be connected after the Overview data cards consume
   mapped Home Assistant entities.
-card_mod:
-  style: |
-    ha-card {
-      border-left: 4px solid var(--kia-brand-primary);
-    }
