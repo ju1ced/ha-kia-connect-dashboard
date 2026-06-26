@@ -6,8 +6,3 @@ content: >-
   - Front right: `tires.front_right_pressure`
   - Rear left: `tires.rear_left_pressure`
   - Rear right: `tires.rear_right_pressure`
-card_mod:
-  style: |
-    ha-card {
-      border-left: 4px solid var(--kia-status-warning);
-    }
