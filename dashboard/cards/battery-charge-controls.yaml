@@ -1,0 +1,25 @@
+---
+type: grid
+columns: 2
+square: false
+cards:
+  - type: button
+    name: Start charging
+    icon: mdi:ev-station
+    tap_action:
+      action: none
+  - type: button
+    name: Stop charging
+    icon: mdi:stop-circle
+    tap_action:
+      action: none
+  - type: button
+    name: Charge limit
+    icon: mdi:battery-sync
+    tap_action:
+      action: none
+  - type: button
+    name: Refresh
+    icon: mdi:refresh
+    tap_action:
+      action: none
