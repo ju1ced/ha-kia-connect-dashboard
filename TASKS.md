@@ -5,6 +5,7 @@
 - [x] Create project management documents.
 - [x] Create baseline repository structure.
 - [x] Add README, contributing, changelog, and license files.
+- [x] Add GitHub issue and pull request templates.
 - [x] Add initial CI validation workflow.
 
 ## Milestone 2
