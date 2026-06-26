@@ -1,0 +1,17 @@
+---
+type: grid
+columns: 2
+square: false
+cards:
+  - type: button
+    name: Refresh Vehicle
+    icon: mdi:refresh
+    show_state: false
+    tap_action:
+      action: none
+  - type: button
+    name: Open Mapping
+    icon: mdi:file-cog
+    show_state: false
+    tap_action:
+      action: none
