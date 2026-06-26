@@ -73,6 +73,7 @@ dashboard/
   popups/
   templates/
     colors.yaml
+    decluttering_templates.yaml
     entities.yaml
     icons.yaml
   themes/
@@ -175,6 +176,18 @@ with a focused surface for entity mapping guidance, theme context, refresh
 actions, maintenance notes, diagnostics, and return navigation to Overview.
 
 See `docs/settings-view.md` for the Settings view contract.
+
+## Mapped Template Strategy
+
+Mapped templates are the bridge between page card fragments and the entity
+mapping contract. The first shared patterns live in
+`dashboard/templates/decluttering_templates.yaml` and cover state rows, action
+buttons, section notes, and standard return navigation.
+
+Cards should consume these patterns before adding one-off entity rows or action
+buttons.
+
+See `docs/mapped-template-patterns.md` for the mapped template contract.
 
 ## Extension Strategy
 
