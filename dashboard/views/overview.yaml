@@ -9,6 +9,7 @@ sections:
   - type: grid
     cards:
       - !include ../cards/overview-hero.yaml
+      - !include ../cards/section-navigation.yaml
       - !include ../cards/battery-summary.yaml
   - type: grid
     cards:
