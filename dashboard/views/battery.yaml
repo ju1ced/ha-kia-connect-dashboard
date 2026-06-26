@@ -1,0 +1,20 @@
+---
+title: Battery
+path: kia-battery
+icon: mdi:battery-charging-high
+type: sections
+max_columns: 3
+badges: []
+sections:
+  - type: grid
+    cards:
+      - !include ../cards/battery-hero.yaml
+      - !include ../cards/battery-charge-controls.yaml
+  - type: grid
+    cards:
+      - !include ../cards/battery-range.yaml
+      - !include ../cards/battery-health.yaml
+  - type: grid
+    cards:
+      - !include ../cards/battery-charging-session.yaml
+      - !include ../cards/battery-back-navigation.yaml

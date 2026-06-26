@@ -23,3 +23,9 @@
 
 - [x] Implement Overview view shell.
 - [x] Implement hero, battery, quick actions, map, vehicle status, tire status, and footer cards.
+
+## Milestone 5
+
+- [x] Add Battery detail view shell.
+- [x] Add charging controls, range, health, session, and back navigation cards.
+- [ ] Connect Battery cards to reusable mapped-entity templates.

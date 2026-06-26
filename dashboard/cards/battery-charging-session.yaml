@@ -1,0 +1,10 @@
+---
+type: markdown
+title: Charging Session
+content: >-
+  - Charging power: `battery.charging_power`
+  - Charging state: `battery.charging_state`
+  - Plug connected: `battery.plug_connected`
+
+  Charging session history and estimated completion can be connected in a future
+  card once the required mapped entities are available.

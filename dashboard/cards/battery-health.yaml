@@ -1,0 +1,9 @@
+---
+type: markdown
+title: Battery Health
+content: >-
+  - Charge limit: `battery.target_charge_limit`
+  - Plug connected: `battery.plug_connected`
+  - Charging state: `battery.charging_state`
+
+  Battery health metrics can be added when the mapped integration exposes them.
