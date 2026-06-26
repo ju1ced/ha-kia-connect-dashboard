@@ -1,0 +1,20 @@
+---
+title: Location
+path: kia-location
+icon: mdi:map-marker
+type: sections
+max_columns: 3
+badges: []
+sections:
+  - type: grid
+    cards:
+      - !include ../cards/location-hero.yaml
+      - !include ../cards/location-map-context.yaml
+  - type: grid
+    cards:
+      - !include ../cards/location-odometer.yaml
+      - !include ../cards/location-parking.yaml
+  - type: grid
+    cards:
+      - !include ../cards/location-trip-context.yaml
+      - !include ../cards/location-back-navigation.yaml
