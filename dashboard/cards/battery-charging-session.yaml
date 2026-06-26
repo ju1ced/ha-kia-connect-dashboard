@@ -1,10 +1,28 @@
 ---
-type: markdown
-title: Charging Session
-content: >-
-  - Charging power: `battery.charging_power`
-  - Charging state: `battery.charging_state`
-  - Plug connected: `battery.plug_connected`
-
-  Charging session history and estimated completion can be connected in a future
-  card once the required mapped entities are available.
+type: vertical-stack
+cards:
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: battery.charging_power
+      - name: Charging power
+      - icon: mdi:flash
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: battery.charging_state
+      - name: Charging state
+      - icon: mdi:battery-charging
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: battery.plug_connected
+      - name: Plug connected
+      - icon: mdi:power-plug
+  - type: custom:decluttering-card
+    template: kia_mapped_section_note
+    variables:
+      - title: Charging Session
+      - content: >-
+          Charging session history and estimated completion can be connected
+          once the required mapped entities are available.
