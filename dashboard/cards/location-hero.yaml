@@ -1,0 +1,11 @@
+---
+type: markdown
+title: Location
+content: >-
+  ## Position Context
+
+  Detail surface for vehicle tracker state, odometer context, parking notes, and
+  future map-focused components.
+
+  The first shell keeps Overview lightweight while giving location data a clear
+  destination of its own.
