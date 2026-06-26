@@ -1,0 +1,9 @@
+---
+type: markdown
+title: Range
+content: >-
+  - Estimated range: `battery.estimated_range`
+  - State of charge: `battery.level`
+  - Outside temperature context: `climate.outside_temperature`
+
+  Future implementation should show range trends and climate-aware range notes.
