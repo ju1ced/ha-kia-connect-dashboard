@@ -20,6 +20,7 @@ dashboard/
   views/
     overview.yaml
     battery.yaml
+    vehicle.yaml
   cards/
     overview-hero.yaml
     section-navigation.yaml
@@ -30,8 +31,14 @@ dashboard/
     battery-health.yaml
     battery-charging-session.yaml
     battery-back-navigation.yaml
-    quick-actions.yaml
     vehicle-status.yaml
+    vehicle-hero.yaml
+    vehicle-locks.yaml
+    vehicle-openings.yaml
+    vehicle-lights.yaml
+    vehicle-warnings.yaml
+    vehicle-back-navigation.yaml
+    quick-actions.yaml
     location-summary.yaml
     tire-status.yaml
     overview-footer.yaml
@@ -99,6 +106,14 @@ focused surface for state of charge, range, charge controls, charge limit, plug
 state, and charging session context.
 
 See `docs/battery-view.md` for the Battery view contract.
+
+## Vehicle Strategy
+
+Vehicle is the second detail view. It expands the Overview vehicle summary into
+a focused surface for lock state, door and window openings, exterior lights,
+vehicle warnings, and return navigation to Overview.
+
+See `docs/vehicle-view.md` for the Vehicle view contract.
 
 ## Extension Strategy
 
