@@ -23,6 +23,7 @@ dashboard/
     vehicle.yaml
     cabin-comfort.yaml
     power-flow.yaml
+    position-context.yaml
   cards/
     overview-hero.yaml
     section-navigation.yaml
@@ -52,8 +53,14 @@ dashboard/
     energy-charging-context.yaml
     energy-history.yaml
     energy-back-navigation.yaml
-    quick-actions.yaml
     location-summary.yaml
+    location-hero.yaml
+    location-map-context.yaml
+    location-odometer.yaml
+    location-parking.yaml
+    location-trip-context.yaml
+    location-back-navigation.yaml
+    quick-actions.yaml
     tire-status.yaml
     overview-footer.yaml
   popups/
@@ -145,6 +152,14 @@ focused surface for efficiency, range interpretation, charging context,
 historical metrics, and return navigation to Overview.
 
 See `docs/energy-view.md` for the Energy view contract.
+
+## Location Strategy
+
+Location is the fifth detail view. It expands the Overview location summary into
+a focused surface for tracker context, odometer, parking state, trip context,
+and return navigation to Overview.
+
+See `docs/location-view.md` for the Location view contract.
 
 ## Extension Strategy
 
