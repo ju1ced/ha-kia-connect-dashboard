@@ -4,4 +4,4 @@ views:
   - !include views/overview.yaml
   - !include views/battery.yaml
   - !include views/vehicle.yaml
-  - !include views/climate.yaml
+  - !include views/cabin-comfort.yaml
