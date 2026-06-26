@@ -28,7 +28,7 @@
 
 - [x] Add Battery detail view shell.
 - [x] Add charging controls, range, health, session, and back navigation cards.
-- [ ] Connect Battery cards to reusable mapped-entity templates.
+- [x] Connect Battery cards to reusable mapped-entity templates.
 
 ## Milestone 6
 
@@ -64,4 +64,4 @@
 
 - [x] Add reusable mapped state row, action button, section note, and back navigation patterns.
 - [x] Document mapped template ownership and review rules.
-- [ ] Convert Battery cards to reusable mapped-entity templates.
+- [x] Convert Battery cards to reusable mapped-entity templates.
