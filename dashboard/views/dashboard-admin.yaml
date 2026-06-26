@@ -1,0 +1,20 @@
+---
+title: Settings
+path: kia-settings
+icon: mdi:tune
+type: sections
+max_columns: 3
+badges: []
+sections:
+  - type: grid
+    cards:
+      - !include ../cards/settings-hero.yaml
+      - !include ../cards/settings-entity-mapping.yaml
+  - type: grid
+    cards:
+      - !include ../cards/settings-theme.yaml
+      - !include ../cards/settings-actions.yaml
+  - type: grid
+    cards:
+      - !include ../cards/settings-maintenance.yaml
+      - !include ../cards/settings-back-navigation.yaml
