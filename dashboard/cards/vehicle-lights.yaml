@@ -1,0 +1,9 @@
+---
+type: markdown
+title: Lights
+content: >-
+  - Headlights: `lights.headlights`
+  - Hazard lights: `lights.hazard_lights`
+
+  Lighting controls should stay grouped here rather than duplicated across
+  overview cards.
