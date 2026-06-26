@@ -1,0 +1,11 @@
+---
+type: markdown
+title: Energy
+content: >-
+  ## Energy Flow
+
+  Detail surface for range context, charging power, charge state, and future
+  efficiency trends.
+
+  The first version keeps the page native Lovelace and uses logical mapping
+  names until reusable data cards are introduced.
