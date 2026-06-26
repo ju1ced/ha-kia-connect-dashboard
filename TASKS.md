@@ -16,7 +16,7 @@
 
 ## Milestone 3
 
-- [x] Implement Nebula theme tokens.
+- [x] Implement Kia Horizon theme tokens.
 - [x] Validate light/dark contrast.
 
 ## Milestone 4

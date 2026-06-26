@@ -2,9 +2,9 @@
 
 ## Purpose
 
-Nebula is the first dashboard theme for HA Kia Connect Dashboard. It defines a
-quiet, high-contrast dark interface inspired by Kia Connect surfaces and modern
-vehicle dashboard UI patterns.
+Kia Horizon is the first dashboard theme for HA Kia Connect Dashboard. It defines
+a quiet, high-contrast dark interface inspired by Kia Connect surfaces and
+modern vehicle dashboard UI patterns.
 
 The theme separates raw color values from dashboard intent. Cards and views
 should use semantic tokens, not one-off color literals.
@@ -30,7 +30,7 @@ should use semantic tokens, not one-off color literals.
 
 ## Files
 
-- `dashboard/themes/nebula.yaml` defines Home Assistant theme variables.
+- `dashboard/themes/kia-horizon.yaml` defines Home Assistant theme variables.
 - `dashboard/templates/colors.yaml` maps semantic color groups for templates.
 - `dashboard/templates/icons.yaml` maps semantic icon names for dashboard domains.
 

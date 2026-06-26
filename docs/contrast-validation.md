@@ -2,9 +2,9 @@
 
 ## Scope
 
-This document records the initial Nebula theme contrast checks for core text and
-status colors. The goal is to keep dashboard text readable before visual cards
-are implemented.
+This document records the initial Kia Horizon theme contrast checks for core text
+and status colors. The goal is to keep dashboard text readable before visual
+cards are implemented.
 
 ## Core Text Checks
 

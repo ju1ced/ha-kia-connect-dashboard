@@ -48,7 +48,7 @@ dashboard/
     entities.yaml
     icons.yaml
   themes/
-    nebula.yaml
+    kia-horizon.yaml
 assets/
   images/
   icons/
@@ -137,9 +137,9 @@ See `docs/extension-points.md` for review rules.
 
 ## Theme Strategy
 
-Nebula is the first dashboard theme. It defines Home Assistant theme variables
-and semantic Kia dashboard tokens for surfaces, text, brand colors, status
-colors, battery states, spacing, radius, and elevation.
+Kia Horizon is the first dashboard theme. It defines Home Assistant theme
+variables and semantic Kia dashboard tokens for surfaces, text, brand colors,
+status colors, battery states, spacing, radius, and elevation.
 
 Dashboard cards should use semantic tokens such as `var(--kia-status-warning)`
 rather than raw color literals. Contrast expectations are documented in
