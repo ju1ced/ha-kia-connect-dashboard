@@ -1,0 +1,12 @@
+---
+type: markdown
+content: >-
+  Overview shell for Milestone 4. Implementation cards should replace placeholder
+  mapping keys with reusable card templates while keeping entity IDs inside
+  `dashboard/templates/entities.yaml`.
+card_mod:
+  style: |
+    ha-card {
+      color: var(--kia-text-secondary);
+      border: 1px solid var(--kia-border-subtle);
+    }
