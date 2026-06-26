@@ -10,9 +10,9 @@
 
 ## Milestone 2
 
-- [ ] Finalize entity mapping schema.
-- [ ] Define Lovelace include conventions.
-- [ ] Document dashboard extension points.
+- [x] Finalize entity mapping schema.
+- [x] Define Lovelace include conventions.
+- [x] Document dashboard extension points.
 
 ## Milestone 3
 
