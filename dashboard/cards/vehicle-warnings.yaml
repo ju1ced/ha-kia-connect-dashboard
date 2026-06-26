@@ -1,0 +1,9 @@
+---
+type: markdown
+title: Warnings
+content: >-
+  Vehicle warnings will collect lock, opening, light, and future diagnostic
+  state into one reviewable surface.
+
+  Add new warning mappings through `dashboard/templates/entities.yaml` before
+  rendering them here.
