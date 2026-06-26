@@ -1,0 +1,22 @@
+---
+title: Overview
+path: overview
+icon: mdi:car-electric
+type: sections
+max_columns: 3
+badges: []
+sections:
+  - type: grid
+    cards:
+      - !include ../cards/overview-hero.yaml
+      - !include ../cards/section-navigation.yaml
+      - !include ../cards/battery-summary.yaml
+  - type: grid
+    cards:
+      - !include ../cards/quick-actions.yaml
+      - !include ../cards/vehicle-status.yaml
+  - type: grid
+    cards:
+      - !include ../cards/location-summary.yaml
+      - !include ../cards/tire-status.yaml
+      - !include ../cards/overview-footer.yaml

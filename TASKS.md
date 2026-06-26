@@ -21,5 +21,5 @@
 
 ## Milestone 4
 
-- [ ] Implement Overview view shell.
-- [ ] Implement hero, battery, quick actions, map, vehicle status, tire status, and footer cards.
+- [x] Implement Overview view shell.
+- [x] Implement hero, battery, quick actions, map, vehicle status, tire status, and footer cards.

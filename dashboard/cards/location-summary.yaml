@@ -1,0 +1,9 @@
+---
+type: markdown
+title: Location
+content: >-
+  - Tracker: `location.tracker`
+  - Odometer: `location.odometer`
+
+  Map and route context will be connected after the Overview data cards consume
+  mapped Home Assistant entities.

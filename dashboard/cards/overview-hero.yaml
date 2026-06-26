@@ -1,0 +1,9 @@
+---
+type: markdown
+title: Kia EV6
+content: >-
+  ## Kia EV6 GT-Line RWD
+
+  Snow White Pearl reference vehicle with a dashboard shell ready for mapped
+  vehicle data. This card will consume `vehicle`, `battery`, `location`, and
+  `controls` mapping keys as implementation cards mature.

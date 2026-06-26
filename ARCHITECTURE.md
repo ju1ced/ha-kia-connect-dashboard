@@ -3,9 +3,14 @@
 ## Overview
 
 The dashboard is organized as a Home Assistant Lovelace YAML project.
-`dashboard/dashboard.yaml` will act as the composition root and include view
-files from `dashboard/views/`. Cards, popups, templates, and themes are isolated
-into purpose-specific folders.
+`dashboard/dashboard.yaml` acts as the composition root and includes view files
+from `dashboard/views/`. Cards, popups, templates, and themes are isolated into
+purpose-specific folders.
+
+The project is intended to integrate into an existing Home Assistant dashboard.
+A user's Home dashboard can link to this package through a Kia EV6 button, which
+lands on the Overview page. From there, the Overview page acts as the navigation
+hub for all Kia-specific sections.
 
 ## Directory Layout
 
@@ -13,7 +18,16 @@ into purpose-specific folders.
 dashboard/
   dashboard.yaml
   views/
+    overview.yaml
   cards/
+    overview-hero.yaml
+    section-navigation.yaml
+    battery-summary.yaml
+    quick-actions.yaml
+    vehicle-status.yaml
+    location-summary.yaml
+    tire-status.yaml
+    overview-footer.yaml
   popups/
   templates/
     colors.yaml
@@ -57,6 +71,19 @@ cards and popups, while cards and popups consume shared template inputs.
 Templates do not include views or popups.
 
 Folder ownership is documented in `docs/include-conventions.md`.
+
+## Overview Strategy
+
+The first Overview shell uses native Lovelace cards only. It establishes the
+screen layout and card ownership for vehicle identity, section navigation,
+battery state, quick actions, vehicle status, location context, tire state, and
+footer notes.
+
+Overview owns the internal menu structure for the Kia dashboard package. Detail
+sections should remain reachable from Overview even when the package is opened
+from a button inside a larger Home Assistant home dashboard.
+
+See `docs/overview-shell.md` for the shell contract.
 
 ## Extension Strategy
 

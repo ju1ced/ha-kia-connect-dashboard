@@ -1,0 +1,10 @@
+---
+type: markdown
+title: Battery
+content: >-
+  - State of charge: `battery.level`
+  - Charging state: `battery.charging_state`
+  - Charging power: `battery.charging_power`
+  - Estimated range: `battery.estimated_range`
+  - Charge limit: `battery.target_charge_limit`
+  - Plug connected: `battery.plug_connected`

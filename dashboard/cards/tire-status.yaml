@@ -1,0 +1,8 @@
+---
+type: markdown
+title: Tire Status
+content: >-
+  - Front left: `tires.front_left_pressure`
+  - Front right: `tires.front_right_pressure`
+  - Rear left: `tires.rear_left_pressure`
+  - Rear right: `tires.rear_right_pressure`
