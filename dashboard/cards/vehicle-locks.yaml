@@ -1,0 +1,9 @@
+---
+type: markdown
+title: Locks
+content: >-
+  - Door lock: `locks.door_lock`
+  - Charging port lock: `locks.charging_port_lock`
+
+  Lock controls can be connected after the reusable mapped-entity binding
+  pattern is reviewed.
