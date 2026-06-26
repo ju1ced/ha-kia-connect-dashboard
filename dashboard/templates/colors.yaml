@@ -1,0 +1,33 @@
+---
+surfaces:
+  base: var(--kia-surface-base)
+  raised: var(--kia-surface-raised)
+  elevated: var(--kia-surface-elevated)
+  overlay: var(--kia-surface-overlay)
+  border: var(--kia-border-subtle)
+
+text:
+  primary: var(--kia-text-primary)
+  secondary: var(--kia-text-secondary)
+  muted: var(--kia-text-muted)
+  inverse: var(--kia-text-inverse)
+
+brand:
+  primary: var(--kia-brand-primary)
+  secondary: var(--kia-brand-secondary)
+  accent: var(--kia-brand-accent)
+
+status:
+  charging: var(--kia-status-charging)
+  ready: var(--kia-status-ready)
+  warning: var(--kia-status-warning)
+  critical: var(--kia-status-critical)
+  offline: var(--kia-status-offline)
+  locked: var(--kia-status-locked)
+  unlocked: var(--kia-status-unlocked)
+
+battery:
+  high: var(--kia-battery-high)
+  medium: var(--kia-battery-medium)
+  low: var(--kia-battery-low)
+  critical: var(--kia-battery-critical)

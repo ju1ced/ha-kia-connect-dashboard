@@ -5,8 +5,8 @@ This folder contains reusable dashboard contracts and shared template inputs.
 ## Files
 
 - `entities.yaml` maps logical dashboard keys to Home Assistant entity IDs.
-- `colors.yaml` will define semantic color tokens.
-- `icons.yaml` will define semantic icon choices.
+- `colors.yaml` defines semantic color tokens for dashboard templates.
+- `icons.yaml` defines semantic icon choices for dashboard domains.
 - `decluttering_templates.yaml` will define reusable Lovelace card patterns.
 
 ## Ownership Rules

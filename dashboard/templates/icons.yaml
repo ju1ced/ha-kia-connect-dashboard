@@ -1,0 +1,40 @@
+---
+vehicle:
+  car: mdi:car-electric
+  location: mdi:map-marker
+  odometer: mdi:counter
+
+battery:
+  level: mdi:battery-high
+  charging: mdi:ev-station
+  plug: mdi:power-plug
+  range: mdi:map-marker-distance
+
+climate:
+  cabin: mdi:thermometer
+  hvac: mdi:air-conditioner
+  defrost: mdi:car-defrost-front
+  steering_wheel_heater: mdi:steering
+
+locks:
+  locked: mdi:lock
+  unlocked: mdi:lock-open-variant
+  charging_port: mdi:ev-plug-type2
+
+openings:
+  door: mdi:car-door
+  trunk: mdi:car-back
+  hood: mdi:car-cog
+  window: mdi:car-door-lock
+
+lights:
+  headlights: mdi:car-light-high
+  hazard: mdi:car-emergency
+
+tires:
+  pressure: mdi:car-tire-alert
+
+controls:
+  refresh: mdi:refresh
+  start: mdi:play-circle
+  stop: mdi:stop-circle
