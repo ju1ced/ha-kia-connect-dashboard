@@ -7,7 +7,7 @@ return path to Overview.
 
 ## Route
 
-- View file: `dashboard/views/climate.yaml`
+- View file: `dashboard/views/cabin-comfort.yaml`
 - Navigation path: `/lovelace/kia-climate`
 - Entry point: Overview section navigation
 
