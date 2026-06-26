@@ -5,7 +5,6 @@
 - [x] Create project management documents.
 - [x] Create baseline repository structure.
 - [x] Add README, contributing, changelog, and license files.
-- [x] Add GitHub issue and pull request templates.
 - [x] Add initial CI validation workflow.
 
 ## Milestone 2
@@ -21,5 +20,5 @@
 
 ## Milestone 4
 
-- [ ] Implement Overview view shell.
-- [ ] Implement hero, battery, quick actions, map, vehicle status, tire status, and footer cards.
+- [x] Implement Overview view shell.
+- [x] Implement hero, battery, quick actions, map, vehicle status, tire status, and footer cards.
