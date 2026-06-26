@@ -1,0 +1,11 @@
+---
+type: markdown
+title: Openings
+content: >-
+  - Front left door: `openings.front_left_door`
+  - Front right door: `openings.front_right_door`
+  - Rear left door: `openings.rear_left_door`
+  - Rear right door: `openings.rear_right_door`
+  - Trunk: `openings.trunk`
+  - Hood: `openings.hood`
+  - Windows: `openings.windows`
