@@ -1,0 +1,56 @@
+---
+# Vehicle-specific Home Assistant entity IDs live here only.
+# Dashboard files should reference these logical keys through templates.
+vehicle:
+  name: "Kia EV6"
+  model: "EV6 GT-Line RWD"
+  year: 2026
+
+battery:
+  level: sensor.kia_ev6_battery_level
+  charging_state: sensor.kia_ev6_charging_state
+  charging_power: sensor.kia_ev6_charging_power
+  estimated_range: sensor.kia_ev6_estimated_range
+  target_charge_limit: number.kia_ev6_charge_limit
+  plug_connected: binary_sensor.kia_ev6_plug_connected
+
+climate:
+  cabin_temperature: sensor.kia_ev6_cabin_temperature
+  outside_temperature: sensor.kia_ev6_outside_temperature
+  hvac: climate.kia_ev6_climate
+  defrost: switch.kia_ev6_defrost
+  steering_wheel_heater: switch.kia_ev6_steering_wheel_heater
+
+location:
+  tracker: device_tracker.kia_ev6_location
+  odometer: sensor.kia_ev6_odometer
+
+locks:
+  door_lock: lock.kia_ev6_door_lock
+  charging_port_lock: lock.kia_ev6_charging_port_lock
+
+openings:
+  front_left_door: binary_sensor.kia_ev6_front_left_door
+  front_right_door: binary_sensor.kia_ev6_front_right_door
+  rear_left_door: binary_sensor.kia_ev6_rear_left_door
+  rear_right_door: binary_sensor.kia_ev6_rear_right_door
+  trunk: binary_sensor.kia_ev6_trunk
+  hood: binary_sensor.kia_ev6_hood
+  windows: binary_sensor.kia_ev6_windows
+
+lights:
+  headlights: binary_sensor.kia_ev6_headlights
+  hazard_lights: switch.kia_ev6_hazard_lights
+
+tires:
+  front_left_pressure: sensor.kia_ev6_front_left_tire_pressure
+  front_right_pressure: sensor.kia_ev6_front_right_tire_pressure
+  rear_left_pressure: sensor.kia_ev6_rear_left_tire_pressure
+  rear_right_pressure: sensor.kia_ev6_rear_right_tire_pressure
+
+controls:
+  refresh: button.kia_ev6_refresh
+  start_climate: button.kia_ev6_start_climate
+  stop_climate: button.kia_ev6_stop_climate
+  start_charging: button.kia_ev6_start_charging
+  stop_charging: button.kia_ev6_stop_charging
