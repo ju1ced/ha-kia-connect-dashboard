@@ -21,7 +21,7 @@ dashboard/
     overview.yaml
     battery.yaml
     vehicle.yaml
-    climate.yaml
+    cabin-comfort.yaml
   cards/
     overview-hero.yaml
     section-navigation.yaml
