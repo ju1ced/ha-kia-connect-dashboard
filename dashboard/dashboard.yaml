@@ -6,3 +6,4 @@ views:
   - !include views/vehicle.yaml
   - !include views/cabin-comfort.yaml
   - !include views/power-flow.yaml
+  - !include views/position-context.yaml
