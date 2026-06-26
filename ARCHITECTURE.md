@@ -24,6 +24,7 @@ dashboard/
     cabin-comfort.yaml
     power-flow.yaml
     position-context.yaml
+    dashboard-admin.yaml
   cards/
     overview-hero.yaml
     section-navigation.yaml
@@ -60,6 +61,12 @@ dashboard/
     location-parking.yaml
     location-trip-context.yaml
     location-back-navigation.yaml
+    settings-hero.yaml
+    settings-entity-mapping.yaml
+    settings-theme.yaml
+    settings-actions.yaml
+    settings-maintenance.yaml
+    settings-back-navigation.yaml
     quick-actions.yaml
     tire-status.yaml
     overview-footer.yaml
@@ -160,6 +167,14 @@ a focused surface for tracker context, odometer, parking state, trip context,
 and return navigation to Overview.
 
 See `docs/location-view.md` for the Location view contract.
+
+## Settings Strategy
+
+Settings is the sixth detail view. It completes the initial Overview navigation
+with a focused surface for entity mapping guidance, theme context, refresh
+actions, maintenance notes, diagnostics, and return navigation to Overview.
+
+See `docs/settings-view.md` for the Settings view contract.
 
 ## Extension Strategy
 
