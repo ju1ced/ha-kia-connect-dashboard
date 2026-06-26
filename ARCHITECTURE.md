@@ -19,10 +19,17 @@ dashboard/
   dashboard.yaml
   views/
     overview.yaml
+    battery.yaml
   cards/
     overview-hero.yaml
     section-navigation.yaml
     battery-summary.yaml
+    battery-hero.yaml
+    battery-charge-controls.yaml
+    battery-range.yaml
+    battery-health.yaml
+    battery-charging-session.yaml
+    battery-back-navigation.yaml
     quick-actions.yaml
     vehicle-status.yaml
     location-summary.yaml
@@ -84,6 +91,14 @@ sections should remain reachable from Overview even when the package is opened
 from a button inside a larger Home Assistant home dashboard.
 
 See `docs/overview-shell.md` for the shell contract.
+
+## Battery Strategy
+
+Battery is the first detail view. It expands the Overview battery summary into a
+focused surface for state of charge, range, charge controls, charge limit, plug
+state, and charging session context.
+
+See `docs/battery-view.md` for the Battery view contract.
 
 ## Extension Strategy
 
