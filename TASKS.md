@@ -41,3 +41,9 @@
 - [x] Add Climate detail view shell.
 - [x] Add temperature, controls, comfort, session, and back navigation cards.
 - [ ] Connect Climate cards to reusable mapped-entity templates.
+
+## Milestone 8
+
+- [x] Add Energy detail view shell.
+- [x] Add efficiency, range context, charging context, history, and back navigation cards.
+- [ ] Connect Energy cards to reusable mapped-entity templates.
