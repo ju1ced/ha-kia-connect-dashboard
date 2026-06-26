@@ -1,0 +1,8 @@
+---
+type: markdown
+title: Theme
+content: >-
+  Theme: `Kia Horizon`
+
+  Theme guidance and token ownership live in `docs/theme-tokens.md` and
+  `dashboard/themes/kia-horizon.yaml`.
