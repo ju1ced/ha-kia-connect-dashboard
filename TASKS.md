@@ -35,3 +35,9 @@
 - [x] Add Vehicle detail view shell.
 - [x] Add locks, openings, lights, warnings, and back navigation cards.
 - [ ] Connect Vehicle cards to reusable mapped-entity templates.
+
+## Milestone 7
+
+- [x] Add Climate detail view shell.
+- [x] Add temperature, controls, comfort, session, and back navigation cards.
+- [ ] Connect Climate cards to reusable mapped-entity templates.

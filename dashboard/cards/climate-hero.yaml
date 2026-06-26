@@ -1,0 +1,11 @@
+---
+type: markdown
+title: Climate
+content: >-
+  ## Cabin Comfort
+
+  Detail surface for cabin temperature, exterior temperature, HVAC state,
+  defrost, steering wheel heat, and remote climate actions.
+
+  All live values should flow through the shared entity mapping before they are
+  rendered here.

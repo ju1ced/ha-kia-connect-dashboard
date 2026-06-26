@@ -1,0 +1,20 @@
+---
+title: Climate
+path: kia-climate
+icon: mdi:air-conditioner
+type: sections
+max_columns: 3
+badges: []
+sections:
+  - type: grid
+    cards:
+      - !include ../cards/climate-hero.yaml
+      - !include ../cards/climate-temperature.yaml
+  - type: grid
+    cards:
+      - !include ../cards/climate-controls.yaml
+      - !include ../cards/climate-comfort.yaml
+  - type: grid
+    cards:
+      - !include ../cards/climate-session.yaml
+      - !include ../cards/climate-back-navigation.yaml
