@@ -16,8 +16,11 @@ dashboard/
   cards/
   popups/
   templates/
+    colors.yaml
     entities.yaml
+    icons.yaml
   themes/
+    nebula.yaml
 assets/
   images/
   icons/
@@ -74,6 +77,16 @@ See `docs/extension-points.md` for review rules.
 - `colors.yaml` centralizes semantic color tokens.
 - `icons.yaml` centralizes icon choices.
 - `entities.yaml` is the only vehicle-specific configuration surface.
+
+## Theme Strategy
+
+Nebula is the first dashboard theme. It defines Home Assistant theme variables
+and semantic Kia dashboard tokens for surfaces, text, brand colors, status
+colors, battery states, spacing, radius, and elevation.
+
+Dashboard cards should use semantic tokens such as `var(--kia-status-warning)`
+rather than raw color literals. Contrast expectations are documented in
+`docs/contrast-validation.md`.
 
 ## UI Strategy
 
