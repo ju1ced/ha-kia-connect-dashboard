@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added the first Settings detail view shell and dashboard administration card fragments.
 - Added the first Location detail view shell and position context card fragments.
 - Added the first Energy detail view shell and power flow card fragments.
 - Added the first Climate detail view shell and cabin comfort card fragments.
