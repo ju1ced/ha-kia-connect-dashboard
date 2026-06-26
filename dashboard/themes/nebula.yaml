@@ -1,0 +1,59 @@
+---
+nebula:
+  # Core Home Assistant surfaces
+  primary-background-color: "#0f1115"
+  secondary-background-color: "#171a21"
+  card-background-color: "#20242d"
+  divider-color: "#343a46"
+
+  # Text
+  primary-text-color: "#f4f6f8"
+  secondary-text-color: "#b7c0cc"
+  disabled-text-color: "#6f7885"
+
+  # Brand and interaction
+  primary-color: "#5cc8ff"
+  accent-color: "#7ee787"
+  ha-card-border-radius: "18px"
+  ha-card-box-shadow: "0 18px 44px rgba(0, 0, 0, 0.32)"
+
+  # Semantic Kia dashboard tokens
+  kia-surface-base: "#0f1115"
+  kia-surface-raised: "#20242d"
+  kia-surface-elevated: "#2b303a"
+  kia-surface-overlay: "rgba(15, 17, 21, 0.88)"
+  kia-border-subtle: "#343a46"
+
+  kia-text-primary: "#f4f6f8"
+  kia-text-secondary: "#b7c0cc"
+  kia-text-muted: "#8a94a3"
+  kia-text-inverse: "#081018"
+
+  kia-brand-primary: "#5cc8ff"
+  kia-brand-secondary: "#7ee787"
+  kia-brand-accent: "#ffd166"
+
+  kia-status-charging: "#7ee787"
+  kia-status-ready: "#5cc8ff"
+  kia-status-warning: "#ffd166"
+  kia-status-critical: "#ff6b6b"
+  kia-status-offline: "#8a94a3"
+  kia-status-locked: "#7ee787"
+  kia-status-unlocked: "#ffd166"
+
+  kia-battery-high: "#7ee787"
+  kia-battery-medium: "#ffd166"
+  kia-battery-low: "#ff9f43"
+  kia-battery-critical: "#ff6b6b"
+
+  kia-radius-small: "10px"
+  kia-radius-medium: "16px"
+  kia-radius-large: "24px"
+  kia-spacing-xs: "4px"
+  kia-spacing-sm: "8px"
+  kia-spacing-md: "16px"
+  kia-spacing-lg: "24px"
+  kia-spacing-xl: "32px"
+
+  kia-shadow-soft: "0 12px 30px rgba(0, 0, 0, 0.24)"
+  kia-shadow-raised: "0 18px 44px rgba(0, 0, 0, 0.32)"
