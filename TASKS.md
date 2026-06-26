@@ -16,8 +16,8 @@
 
 ## Milestone 3
 
-- [ ] Implement Nebula theme tokens.
-- [ ] Validate light/dark contrast.
+- [x] Implement Nebula theme tokens.
+- [x] Validate light/dark contrast.
 
 ## Milestone 4
 
