@@ -1,0 +1,42 @@
+---
+decluttering_templates:
+  kia_mapped_state_row:
+    default:
+      - icon: mdi:information-outline
+      - secondary_info: none
+    card:
+      type: entity
+      entity: "[[entity]]"
+      name: "[[name]]"
+      icon: "[[icon]]"
+      secondary_info: "[[secondary_info]]"
+
+  kia_mapped_action_button:
+    default:
+      - icon: mdi:gesture-tap-button
+      - action: none
+    card:
+      type: button
+      entity: "[[entity]]"
+      name: "[[name]]"
+      icon: "[[icon]]"
+      show_state: false
+      tap_action:
+        action: "[[action]]"
+
+  kia_mapped_section_note:
+    card:
+      type: markdown
+      title: "[[title]]"
+      content: >-
+        [[content]]
+
+  kia_back_to_overview:
+    card:
+      type: button
+      name: Back to Overview
+      icon: mdi:arrow-left
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/overview

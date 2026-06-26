@@ -59,3 +59,9 @@
 - [x] Add Settings detail view shell.
 - [x] Add mapping, theme, actions, maintenance, and back navigation cards.
 - [ ] Connect Settings cards to reusable mapped-entity templates.
+
+## Milestone 11
+
+- [x] Add reusable mapped state row, action button, section note, and back navigation patterns.
+- [x] Document mapped template ownership and review rules.
+- [ ] Convert Battery cards to reusable mapped-entity templates.
