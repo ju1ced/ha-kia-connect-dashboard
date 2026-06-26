@@ -1,0 +1,10 @@
+---
+type: markdown
+title: Charging Context
+content: >-
+  - Charging state: `battery / charging_state`
+  - Charging power: `battery / charging_power`
+  - Plug connected: `battery / plug_connected`
+
+  Charging context should complement the Battery page without duplicating its
+  action controls.
