@@ -1,0 +1,10 @@
+---
+type: markdown
+title: Comfort
+content: >-
+  - HVAC state: `climate / hvac`
+  - Defrost: `climate / defrost`
+  - Steering wheel heater: `climate / steering_wheel_heater`
+
+  Comfort toggles should remain grouped here so remote cabin controls are easy
+  to review before activation.
