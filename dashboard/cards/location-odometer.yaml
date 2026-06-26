@@ -1,0 +1,8 @@
+---
+type: markdown
+title: Odometer
+content: >-
+  - Odometer: `location / odometer`
+
+  Odometer context belongs here so Energy can focus on efficiency and Overview
+  can stay concise.
