@@ -47,3 +47,9 @@
 - [x] Add Energy detail view shell.
 - [x] Add efficiency, range context, charging context, history, and back navigation cards.
 - [ ] Connect Energy cards to reusable mapped-entity templates.
+
+## Milestone 9
+
+- [x] Add Location detail view shell.
+- [x] Add map context, odometer, parking, trip context, and back navigation cards.
+- [ ] Connect Location cards to reusable mapped-entity templates.
