@@ -1,0 +1,8 @@
+---
+type: markdown
+title: Map Context
+content: >-
+  - Tracker: `location / tracker`
+
+  A native map card can replace this placeholder once the mapped tracker binding
+  pattern is available.
