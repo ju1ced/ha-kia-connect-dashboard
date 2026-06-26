@@ -1,0 +1,17 @@
+---
+type: grid
+columns: 2
+square: false
+cards:
+  - type: button
+    name: Start Climate
+    icon: mdi:fan
+    show_state: false
+    tap_action:
+      action: none
+  - type: button
+    name: Stop Climate
+    icon: mdi:fan-off
+    show_state: false
+    tap_action:
+      action: none
