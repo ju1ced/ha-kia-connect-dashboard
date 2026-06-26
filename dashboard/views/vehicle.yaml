@@ -1,0 +1,20 @@
+---
+title: Vehicle
+path: kia-vehicle
+icon: mdi:car-info
+type: sections
+max_columns: 3
+badges: []
+sections:
+  - type: grid
+    cards:
+      - !include ../cards/vehicle-hero.yaml
+      - !include ../cards/vehicle-locks.yaml
+  - type: grid
+    cards:
+      - !include ../cards/vehicle-openings.yaml
+      - !include ../cards/vehicle-lights.yaml
+  - type: grid
+    cards:
+      - !include ../cards/vehicle-warnings.yaml
+      - !include ../cards/vehicle-back-navigation.yaml

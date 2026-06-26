@@ -3,3 +3,4 @@ title: HA Kia Connect Dashboard
 views:
   - !include views/overview.yaml
   - !include views/battery.yaml
+  - !include views/vehicle.yaml

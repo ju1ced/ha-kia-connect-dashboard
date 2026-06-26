@@ -29,3 +29,9 @@
 - [x] Add Battery detail view shell.
 - [x] Add charging controls, range, health, session, and back navigation cards.
 - [ ] Connect Battery cards to reusable mapped-entity templates.
+
+## Milestone 6
+
+- [x] Add Vehicle detail view shell.
+- [x] Add locks, openings, lights, warnings, and back navigation cards.
+- [ ] Connect Vehicle cards to reusable mapped-entity templates.

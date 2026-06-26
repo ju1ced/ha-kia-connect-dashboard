@@ -1,0 +1,9 @@
+---
+type: markdown
+title: Vehicle
+content: >-
+  ## Vehicle State
+
+  Detail surface for `vehicle`, `locks`, `openings`, and `lights` mapping
+  groups. This page expands the Overview vehicle summary while keeping raw
+  entity IDs inside `dashboard/templates/entities.yaml`.
