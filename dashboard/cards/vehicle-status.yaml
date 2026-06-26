@@ -10,8 +10,3 @@ content: >-
   - Hood: `openings.hood`
   - Windows: `openings.windows`
   - Headlights: `lights.headlights`
-card_mod:
-  style: |
-    ha-card {
-      border-left: 4px solid var(--kia-status-ready);
-    }
