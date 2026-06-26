@@ -5,6 +5,7 @@ cards and the entity mapping contract.
 
 ## Files
 
+- `dashboard/dashboard.yaml` includes the shared decluttering templates.
 - `dashboard/templates/entities.yaml` owns real Home Assistant entity IDs.
 - `dashboard/templates/decluttering_templates.yaml` owns reusable Lovelace card
   patterns.
@@ -45,6 +46,12 @@ must stay visually consistent across detail pages.
 
 Use `kia_back_to_overview` when a detail page needs the standard return button.
 
+## Usage Shape
+
+Page cards call these patterns through `custom:decluttering-card` and pass
+logical mapping keys as variables. The dashboard root exposes the templates with
+`decluttering_templates: !include templates/decluttering_templates.yaml`.
+
 ## Review Rules
 
 - Do not hardcode Home Assistant entity IDs in cards or views.
@@ -55,6 +62,5 @@ Use `kia_back_to_overview` when a detail page needs the standard return button.
 
 ## Follow-up Work
 
-- Convert Battery detail cards to these patterns first.
 - Convert Vehicle, Climate, Energy, Location, and Settings cards in focused PRs.
 - Add confirmation and service-call patterns before enabling remote actions.

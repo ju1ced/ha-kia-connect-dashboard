@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Connected Battery detail cards to reusable mapped entity template patterns.
 - Added reusable mapped entity card patterns and template usage documentation.
 - Added the first Settings detail view shell and dashboard administration card fragments.
 - Added the first Location detail view shell and position context card fragments.

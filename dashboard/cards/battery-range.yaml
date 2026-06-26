@@ -1,9 +1,22 @@
 ---
-type: markdown
-title: Range
-content: >-
-  - Estimated range: `battery.estimated_range`
-  - State of charge: `battery.level`
-  - Outside temperature context: `climate / outside_temperature`
-
-  Future implementation should show range trends and climate-aware range notes.
+type: vertical-stack
+cards:
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: battery.estimated_range
+      - name: Estimated range
+      - icon: mdi:map-marker-distance
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: battery.level
+      - name: State of charge
+      - icon: mdi:battery-high
+  - type: custom:decluttering-card
+    template: kia_mapped_section_note
+    variables:
+      - title: Range Context
+      - content: >-
+          Future implementation should add range trends and climate-aware range
+          notes once the shared chart pattern exists.

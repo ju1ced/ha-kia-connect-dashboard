@@ -1,25 +1,26 @@
 ---
 type: grid
-columns: 2
+columns: 3
 square: false
 cards:
-  - type: button
-    name: Start charging
-    icon: mdi:ev-station
-    tap_action:
-      action: none
-  - type: button
-    name: Stop charging
-    icon: mdi:stop-circle
-    tap_action:
-      action: none
-  - type: button
-    name: Charge limit
-    icon: mdi:battery-sync
-    tap_action:
-      action: none
-  - type: button
-    name: Refresh
-    icon: mdi:refresh
-    tap_action:
-      action: none
+  - type: custom:decluttering-card
+    template: kia_mapped_action_button
+    variables:
+      - entity: controls.start_charging
+      - name: Start charging
+      - icon: mdi:ev-station
+      - action: none
+  - type: custom:decluttering-card
+    template: kia_mapped_action_button
+    variables:
+      - entity: controls.stop_charging
+      - name: Stop charging
+      - icon: mdi:stop-circle
+      - action: none
+  - type: custom:decluttering-card
+    template: kia_mapped_action_button
+    variables:
+      - entity: controls.refresh
+      - name: Refresh
+      - icon: mdi:refresh
+      - action: none

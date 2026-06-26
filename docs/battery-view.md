@@ -11,10 +11,10 @@ surface.
 `dashboard/views/battery.yaml` composes these card fragments:
 
 - `battery-hero.yaml` for the page headline and mapped battery context.
-- `battery-charge-controls.yaml` for native charging control placeholders.
+- `battery-charge-controls.yaml` for mapped charging action placeholders.
 - `battery-range.yaml` for range and state-of-charge context.
 - `battery-health.yaml` for charge limit, plug, and future health metrics.
-- `battery-charging-session.yaml` for charging session placeholders.
+- `battery-charging-session.yaml` for charging session context.
 - `battery-back-navigation.yaml` for returning to Overview.
 
 ## Navigation
@@ -28,13 +28,15 @@ customized for a user's Home Assistant instance.
 Battery cards reference logical mapping keys only. Raw Home Assistant entity IDs
 remain in `dashboard/templates/entities.yaml`.
 
-## Native Card Baseline
+## Mapped Template Usage
 
-The first Battery view uses native Lovelace cards only:
+Battery is the first detail view connected to the shared mapped template
+patterns:
 
-- `markdown`
-- `grid`
-- `button`
+- `kia_mapped_state_row` renders mapped read-only battery values.
+- `kia_mapped_action_button` renders inert charging and refresh actions.
+- `kia_mapped_section_note` renders consistent placeholder notes.
+- `kia_back_to_overview` renders the standard return navigation.
 
-Future PRs can replace placeholders with richer reusable cards after the
-binding pattern is agreed.
+Action buttons remain inert until command confirmation and service-call patterns
+are reviewed.
