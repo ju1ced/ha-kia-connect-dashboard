@@ -1,5 +1,6 @@
 ---
 title: HA Kia Connect Dashboard
+decluttering_templates: !include templates/decluttering_templates.yaml
 views:
   - !include views/overview.yaml
   - !include views/battery.yaml
