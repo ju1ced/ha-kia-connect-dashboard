@@ -5,3 +5,4 @@ views:
   - !include views/battery.yaml
   - !include views/vehicle.yaml
   - !include views/cabin-comfort.yaml
+  - !include views/power-flow.yaml
