@@ -1,0 +1,17 @@
+---
+type: markdown
+title: Vehicle Status
+content: >-
+  - Door lock: `locks.door_lock`
+  - Charging port lock: `locks.charging_port_lock`
+  - Doors: `openings.front_left_door`, `openings.front_right_door`,
+    `openings.rear_left_door`, `openings.rear_right_door`
+  - Trunk: `openings.trunk`
+  - Hood: `openings.hood`
+  - Windows: `openings.windows`
+  - Headlights: `lights.headlights`
+card_mod:
+  style: |
+    ha-card {
+      border-left: 4px solid var(--kia-status-ready);
+    }
