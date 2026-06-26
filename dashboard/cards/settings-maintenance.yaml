@@ -1,0 +1,8 @@
+---
+type: markdown
+title: Maintenance
+content: >-
+  Maintenance notes will show dashboard version, last refresh result, mapping
+  validation status, and future troubleshooting links.
+
+  Keep operational diagnostics here instead of placing them on Overview.

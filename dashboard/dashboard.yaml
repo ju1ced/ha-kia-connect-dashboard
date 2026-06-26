@@ -7,3 +7,4 @@ views:
   - !include views/cabin-comfort.yaml
   - !include views/power-flow.yaml
   - !include views/position-context.yaml
+  - !include views/dashboard-admin.yaml

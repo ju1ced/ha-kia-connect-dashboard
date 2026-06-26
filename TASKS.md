@@ -53,3 +53,9 @@
 - [x] Add Location detail view shell.
 - [x] Add map context, odometer, parking, trip context, and back navigation cards.
 - [ ] Connect Location cards to reusable mapped-entity templates.
+
+## Milestone 10
+
+- [x] Add Settings detail view shell.
+- [x] Add mapping, theme, actions, maintenance, and back navigation cards.
+- [ ] Connect Settings cards to reusable mapped-entity templates.
