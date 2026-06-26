@@ -1,0 +1,20 @@
+---
+title: Energy
+path: kia-energy
+icon: mdi:chart-line
+type: sections
+max_columns: 3
+badges: []
+sections:
+  - type: grid
+    cards:
+      - !include ../cards/energy-hero.yaml
+      - !include ../cards/energy-efficiency.yaml
+  - type: grid
+    cards:
+      - !include ../cards/energy-range-context.yaml
+      - !include ../cards/energy-charging-context.yaml
+  - type: grid
+    cards:
+      - !include ../cards/energy-history.yaml
+      - !include ../cards/energy-back-navigation.yaml
