@@ -21,6 +21,7 @@ dashboard/
     overview.yaml
     battery.yaml
     vehicle.yaml
+    climate.yaml
   cards/
     overview-hero.yaml
     section-navigation.yaml
@@ -38,6 +39,12 @@ dashboard/
     vehicle-lights.yaml
     vehicle-warnings.yaml
     vehicle-back-navigation.yaml
+    climate-hero.yaml
+    climate-temperature.yaml
+    climate-controls.yaml
+    climate-comfort.yaml
+    climate-session.yaml
+    climate-back-navigation.yaml
     quick-actions.yaml
     location-summary.yaml
     tire-status.yaml
@@ -114,6 +121,15 @@ a focused surface for lock state, door and window openings, exterior lights,
 vehicle warnings, and return navigation to Overview.
 
 See `docs/vehicle-view.md` for the Vehicle view contract.
+
+## Climate Strategy
+
+Climate is the third detail view. It expands Overview quick actions into a
+focused surface for cabin temperature, exterior temperature, HVAC state, comfort
+features, remote climate actions, session context, and return navigation to
+Overview.
+
+See `docs/climate-view.md` for the Climate view contract.
 
 ## Extension Strategy
 
