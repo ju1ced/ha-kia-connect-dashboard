@@ -1,0 +1,8 @@
+---
+type: markdown
+title: Entity Mapping
+content: >-
+  Entity IDs are configured in `dashboard/templates/entities.yaml` only.
+
+  Use this page for future mapping health checks, missing-entity notices, and
+  customization links.
