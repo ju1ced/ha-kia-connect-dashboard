@@ -1,10 +1,28 @@
 ---
-type: markdown
-title: Charging Context
-content: >-
-  - Charging state: `battery / charging_state`
-  - Charging power: `battery / charging_power`
-  - Plug connected: `battery / plug_connected`
-
-  Charging context should complement the Battery page without duplicating its
-  action controls.
+type: vertical-stack
+cards:
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: battery.charging_state
+      - name: Charging state
+      - icon: mdi:ev-station
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: battery.charging_power
+      - name: Charging power
+      - icon: mdi:flash
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: battery.plug_connected
+      - name: Plug connected
+      - icon: mdi:power-plug
+  - type: custom:decluttering-card
+    template: kia_mapped_section_note
+    variables:
+      - title: Charging Context
+      - content: >-
+          Charging context should complement the Battery page without
+          duplicating its action controls.
