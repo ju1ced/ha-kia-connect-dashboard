@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1080" viewBox="0 0 1440 1080" role="img" aria-labelledby="title desc">
+  <title id="title">Settings diagnostics reference render</title>
+  <desc id="desc">Reference layout for entity diagnostics on the Settings page.</desc>
+  <rect width="1440" height="1080" fill="#f5f7fb"/>
+  <rect x="72" y="54" width="1296" height="972" rx="30" fill="#ffffff" stroke="#d8dee9"/>
+  <text x="112" y="126" font-family="Arial, sans-serif" font-size="36" font-weight="700" fill="#111827">Settings</text>
+  <text x="112" y="160" font-family="Arial, sans-serif" font-size="18" fill="#64748b">Entity mapping, diagnostics, and dashboard administration</text>
+
+  <rect x="112" y="212" width="590" height="184" rx="22" fill="#f8fafc" stroke="#d8dee9"/>
+  <text x="144" y="268" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#111827">Entity Mapping</text>
+  <text x="144" y="310" font-family="Arial, sans-serif" font-size="17" fill="#475569">Real Home Assistant entity IDs live in one file.</text>
+  <rect x="144" y="336" width="384" height="36" rx="10" fill="#e0f2fe"/>
+  <text x="162" y="360" font-family="Arial, sans-serif" font-size="15" fill="#075985">dashboard/templates/entities.yaml</text>
+
+  <rect x="738" y="212" width="590" height="184" rx="22" fill="#fff7ed" stroke="#fed7aa"/>
+  <text x="770" y="268" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#9a3412">Missing Entity Handling</text>
+  <text x="770" y="310" font-family="Arial, sans-serif" font-size="17" fill="#7c2d12">If a row is unavailable or unknown, inspect the mapped value first.</text>
+  <text x="770" y="348" font-family="Arial, sans-serif" font-size="16" fill="#7c2d12">Card files keep logical keys so the package remains portable.</text>
+
+  <rect x="112" y="438" width="590" height="184" rx="22" fill="#f0fdf4" stroke="#bbf7d0"/>
+  <text x="144" y="494" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#166534">Validation Coverage</text>
+  <text x="144" y="536" font-family="Arial, sans-serif" font-size="17" fill="#166534">QA rejects direct entity IDs outside the mapping file.</text>
+  <text x="144" y="574" font-family="Arial, sans-serif" font-size="17" fill="#166534">QA also rejects logical keys missing from the mapping contract.</text>
+
+  <rect x="738" y="438" width="590" height="184" rx="22" fill="#f8fafc" stroke="#d8dee9"/>
+  <text x="770" y="494" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#111827">Maintenance</text>
+  <text x="770" y="536" font-family="Arial, sans-serif" font-size="17" fill="#475569">Version, refresh result, mapping health, and links can live here later.</text>
+
+  <rect x="112" y="702" width="1216" height="166" rx="24" fill="#101828"/>
+  <text x="152" y="762" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#ffffff">Future runtime health</text>
+  <text x="152" y="806" font-family="Arial, sans-serif" font-size="18" fill="#cbd5e1">Start in Settings. Add inline alerts to detail pages only after the runtime source contract is stable.</text>
+  <rect x="112" y="910" width="220" height="54" rx="16" fill="#eef6ff" stroke="#bfdbfe"/>
+  <text x="158" y="945" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="#111827">Back to Overview</text>
+</svg>
