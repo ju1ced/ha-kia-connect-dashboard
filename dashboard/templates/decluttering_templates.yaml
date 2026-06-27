@@ -30,6 +30,18 @@ kia_mapped_section_note:
     content: >-
       [[content]]
 
+kia_mapped_entity_diagnostics:
+  default:
+    - title: Entity Diagnostics
+    - content: >-
+        If a row shows unavailable or unknown, review the matching logical key
+        in dashboard/templates/entities.yaml before changing card files.
+  card:
+    type: markdown
+    title: "[[title]]"
+    content: >-
+      [[content]]
+
 kia_back_to_overview:
   card:
     type: button
