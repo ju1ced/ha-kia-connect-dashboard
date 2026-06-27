@@ -35,6 +35,16 @@ Both of these forms are accepted while the dashboard is being assembled:
 CI normalizes both forms and verifies that each referenced key exists in
 `dashboard/templates/entities.yaml`.
 
+## Missing Entity Handling
+
+If a dashboard row renders as unknown, unavailable, or missing in Home Assistant,
+users should inspect `dashboard/templates/entities.yaml` first. Card files should
+keep their logical keys unchanged unless the dashboard contract itself changes.
+
+Settings owns the first read-only diagnostic surface for these mapping problems.
+Future runtime health checks should reuse that surface before adding inline
+alerts to every detail page.
+
 ## Rules
 
 - Add new Home Assistant entity IDs only to `dashboard/templates/entities.yaml`.
