@@ -70,3 +70,10 @@
 - [x] Convert Energy cards to reusable mapped-entity templates.
 - [x] Convert Location cards to reusable mapped-entity templates.
 - [x] Convert Settings cards to reusable mapped-entity templates.
+
+## Milestone 12
+
+- [x] Add read-only entity diagnostics guidance to Settings.
+- [x] Add reusable mapped entity diagnostics template.
+- [ ] Add runtime mapping health checks.
+- [ ] Decide where inline unavailable-entity alerts should appear.
