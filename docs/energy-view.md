@@ -24,6 +24,12 @@ charging context, history, and a return path to Overview.
 - `dashboard/cards/energy-back-navigation.yaml` owns return navigation to
   Overview.
 
+## Mapped Template Usage
+
+Energy detail cards use `custom:decluttering-card` wrappers for range rows,
+charging rows, placeholder section notes, and back navigation. Chart-ready blocks
+remain section notes until statistics entities or helper sensors are mapped.
+
 ## Entity Rules
 
 Energy cards must not hardcode Home Assistant entity IDs. New efficiency or
@@ -34,6 +40,5 @@ then consumed by logical mapping names from these cards.
 
 - Add explicit energy and efficiency mapping keys when the reference entities are
   known.
-- Bind range and charging rows to the reusable mapped-entity template pattern.
 - Decide which chart card should render historical consumption once statistics
   entities exist.
