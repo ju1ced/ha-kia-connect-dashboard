@@ -3,15 +3,17 @@ type: grid
 columns: 2
 square: false
 cards:
-  - type: button
-    name: Start Climate
-    icon: mdi:fan
-    show_state: false
-    tap_action:
-      action: none
-  - type: button
-    name: Stop Climate
-    icon: mdi:fan-off
-    show_state: false
-    tap_action:
-      action: none
+  - type: custom:decluttering-card
+    template: kia_mapped_action_button
+    variables:
+      - entity: controls.start_climate
+      - name: Start Climate
+      - icon: mdi:fan
+      - action: none
+  - type: custom:decluttering-card
+    template: kia_mapped_action_button
+    variables:
+      - entity: controls.stop_climate
+      - name: Stop Climate
+      - icon: mdi:fan-off
+      - action: none
