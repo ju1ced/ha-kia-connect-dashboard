@@ -42,6 +42,13 @@ Expected inputs:
 Use `kia_mapped_section_note` for short explanatory or empty-state content that
 must stay visually consistent across detail pages.
 
+### Entity Diagnostics
+
+Use `kia_mapped_entity_diagnostics` for Settings guidance and future diagnostic
+surfaces that explain missing, unknown, or unavailable mapped entities. The
+pattern must stay read-only and should point users back to
+`dashboard/templates/entities.yaml`.
+
 ### Back Navigation
 
 Use `kia_back_to_overview` when a detail page needs the standard return button.
@@ -60,8 +67,10 @@ logical mapping keys as variables. The dashboard root exposes the templates with
 - Prefer one shared template pattern over repeated one-off YAML.
 - Keep page cards responsible for layout and ownership, not raw entity details.
 - Keep action buttons inert until the command confirmation pattern is reviewed.
+- Keep diagnostics read-only until runtime health checks are documented.
 
 ## Follow-up Work
 
 - Add confirmation and service-call patterns before enabling remote actions.
-- Decide how missing or unavailable mapped entities should render in Lovelace.
+- Decide whether runtime health should be shown as a Settings-only surface or as
+  inline alerts on each detail page.
