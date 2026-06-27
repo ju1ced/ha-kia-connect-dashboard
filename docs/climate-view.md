@@ -24,6 +24,12 @@ return path to Overview.
 - `dashboard/cards/climate-back-navigation.yaml` owns return navigation to
   Overview.
 
+## Mapped Template Usage
+
+Climate detail cards use `custom:decluttering-card` wrappers for mapped state
+rows, action buttons, section notes, and back navigation. The action buttons stay
+inert with `action: none` until the remote climate service contract is explicit.
+
 ## Entity Rules
 
 Climate cards must not hardcode Home Assistant entity IDs. New climate state
@@ -32,8 +38,6 @@ logical mapping names from these cards.
 
 ## Follow-up Work
 
-- Bind temperature, HVAC, defrost, and heating rows to the reusable mapped-entity
-  template pattern.
 - Decide which climate actions need confirmation before activation.
 - Add target-temperature and session-timer controls once the service contract is
   documented.
