@@ -104,8 +104,18 @@ The initial mapping groups are:
 - `lights` for light state and light controls.
 - `tires` for tire pressure sensors.
 - `controls` for refresh, charging, and climate actions.
+- `settings` for dashboard administration actions.
 
 See `docs/entity-mapping.md` for customization rules.
+
+## Entity Diagnostics Strategy
+
+Settings owns the first read-only diagnostics surface for mapping problems.
+Missing, unknown, or unavailable entities should point users back to
+`dashboard/templates/entities.yaml` before suggesting card changes.
+
+Runtime health checks should start in Settings before inline alerts are added to
+every detail page.
 
 ## Include Strategy
 
@@ -182,7 +192,7 @@ See `docs/settings-view.md` for the Settings view contract.
 Mapped templates are the bridge between page card fragments and the entity
 mapping contract. The first shared patterns live in
 `dashboard/templates/decluttering_templates.yaml` and cover state rows, action
-buttons, section notes, and standard return navigation.
+buttons, section notes, entity diagnostics, and standard return navigation.
 
 Cards should consume these patterns before adding one-off entity rows or action
 buttons.
@@ -229,4 +239,5 @@ muted surfaces, and clear status hierarchy.
 
 The QA Agent runs automated checks for repository structure, YAML syntax,
 Markdown style, formatting, missing assets, duplicate entities, direct entity
-references, and required documentation before pull requests are accepted.
+references, mapped entity keys, and required documentation before pull requests
+are accepted.
