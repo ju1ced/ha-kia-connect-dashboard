@@ -24,6 +24,13 @@ odometer, parking state, trip context, and a return path to Overview.
 - `dashboard/cards/location-back-navigation.yaml` owns return navigation to
   Overview.
 
+## Mapped Template Usage
+
+Location detail cards use `custom:decluttering-card` wrappers for tracker rows,
+odometer rows, placeholder section notes, and back navigation. The map block
+stays template-based until a native map card can consume the mapped tracker
+safely.
+
 ## Entity Rules
 
 Location cards must not hardcode Home Assistant entity IDs. New tracker,
@@ -33,7 +40,6 @@ these cards.
 
 ## Follow-up Work
 
-- Bind tracker and odometer rows to the reusable mapped-entity template pattern.
 - Decide whether the tracker should render as a native map card or a compact
   status card first.
 - Add parking freshness and trip metrics once the reference entities are known.

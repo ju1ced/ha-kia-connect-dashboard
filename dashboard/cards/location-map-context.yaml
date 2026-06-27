@@ -1,8 +1,16 @@
 ---
-type: markdown
-title: Map Context
-content: >-
-  - Tracker: `location / tracker`
-
-  A native map card can replace this placeholder once the mapped tracker binding
-  pattern is available.
+type: vertical-stack
+cards:
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: location.tracker
+      - name: Tracker
+      - icon: mdi:map-marker
+  - type: custom:decluttering-card
+    template: kia_mapped_section_note
+    variables:
+      - title: Map Context
+      - content: >-
+          A native map card can replace this placeholder once the mapped tracker
+          binding pattern is available.
