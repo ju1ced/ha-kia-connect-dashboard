@@ -7,7 +7,10 @@ HA Kia Connect Dashboard is a Home Assistant Lovelace YAML dashboard inspired by
 
 ## Status
 
-This repository is in Milestone 1: repository setup and architecture planning. Dashboard implementation will begin only after the architecture, validation, and template contracts are reviewed.
+This repository now contains the initial Lovelace dashboard shell, Kia Horizon
+theme tokens, mapped entity contracts, detail pages, and read-only entity
+diagnostics guidance. Runtime health checks, safe service actions, and real
+Home Assistant screenshots are still in progress.
 
 ## Mission
 
@@ -25,13 +28,18 @@ The first reference vehicle is a 2026 Kia EV6 GT-Line RWD in Snow White Pearl. T
 - Entity IDs are abstracted through `dashboard/templates/entities.yaml`.
 - Production-quality documentation and validation.
 
+## Visual References
+
+Reference renders are available in `docs/screenshots/` and documented in
+`docs/visual-reference.md`.
+
 ## Planned Documentation
 
 - Installation guide.
 - Customization guide.
 - Troubleshooting guide.
 - FAQ.
-- Screenshot gallery placeholders in `docs/screenshots/`.
+- Real Home Assistant screenshot gallery.
 
 ## Repository Layout
 
