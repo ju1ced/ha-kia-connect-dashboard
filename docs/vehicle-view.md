@@ -25,9 +25,13 @@ Vehicle cards must not hardcode Home Assistant entity IDs. New vehicle state
 should first be added to `dashboard/templates/entities.yaml`, then consumed by
 logical mapping names from these cards.
 
-## Follow-up Work
+## Mapped Template Usage
 
-- Bind lock, opening, and light rows to the reusable mapped-entity template
-  pattern.
-- Decide which lock and light controls are safe to expose as direct actions.
-- Add status-specific styling once the shared card templates are introduced.
+Vehicle uses the shared mapped template patterns:
+
+- `kia_mapped_state_row` renders lock, opening, and light values.
+- `kia_mapped_section_note` renders warning and placeholder notes.
+- `kia_back_to_overview` renders the standard return navigation.
+
+Future lock and light controls should stay inert until command confirmation and
+action safety patterns are reviewed.

@@ -1,9 +1,22 @@
 ---
-type: markdown
-title: Locks
-content: >-
-  - Door lock: `locks.door_lock`
-  - Charging port lock: `locks.charging_port_lock`
-
-  Lock controls can be connected after the reusable mapped-entity binding
-  pattern is reviewed.
+type: vertical-stack
+cards:
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: locks.door_lock
+      - name: Door lock
+      - icon: mdi:car-door-lock
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: locks.charging_port_lock
+      - name: Charging port lock
+      - icon: mdi:ev-plug-type2
+  - type: custom:decluttering-card
+    template: kia_mapped_section_note
+    variables:
+      - title: Locks
+      - content: >-
+          Lock controls can be connected after command confirmation and action
+          safety patterns are reviewed.
