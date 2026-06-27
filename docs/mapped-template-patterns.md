@@ -56,11 +56,12 @@ logical mapping keys as variables. The dashboard root exposes the templates with
 
 - Do not hardcode Home Assistant entity IDs in cards or views.
 - Add or update entity IDs only in `dashboard/templates/entities.yaml`.
+- Keep every card-level logical entity key present in the mapping file.
 - Prefer one shared template pattern over repeated one-off YAML.
 - Keep page cards responsible for layout and ownership, not raw entity details.
 - Keep action buttons inert until the command confirmation pattern is reviewed.
 
 ## Follow-up Work
 
-- Convert Vehicle, Climate, Energy, Location, and Settings cards in focused PRs.
 - Add confirmation and service-call patterns before enabling remote actions.
+- Decide how missing or unavailable mapped entities should render in Lovelace.

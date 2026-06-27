@@ -22,6 +22,18 @@ Entity groups are organized by dashboard domain:
 - `lights` stores light state and light controls.
 - `tires` stores tire pressure sensors.
 - `controls` stores service-like button entities.
+- `settings` stores dashboard administration action entities.
+
+## Logical Key Syntax
+
+Dashboard cards pass mapped entities to shared card templates with logical keys.
+Both of these forms are accepted while the dashboard is being assembled:
+
+- Dot form: `battery.level`
+- Slash form: `climate / cabin_temperature`
+
+CI normalizes both forms and verifies that each referenced key exists in
+`dashboard/templates/entities.yaml`.
 
 ## Rules
 
@@ -30,6 +42,15 @@ Entity groups are organized by dashboard domain:
 - Keep one entity per logical key.
 - Prefer adding missing keys over reusing unrelated keys.
 - Document optional or unavailable integration entities before using them.
+
+## Validation
+
+The QA workflow runs two entity checks:
+
+- `scripts/check_entity_references.py` rejects direct Home Assistant entity IDs
+  outside `dashboard/templates/entities.yaml`.
+- `scripts/check_mapped_entity_keys.py` rejects card-level logical keys that do
+  not exist in `dashboard/templates/entities.yaml`.
 
 ## Customization Flow
 
