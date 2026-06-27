@@ -54,3 +54,6 @@ controls:
   stop_climate: button.kia_ev6_stop_climate
   start_charging: button.kia_ev6_start_charging
   stop_charging: button.kia_ev6_stop_charging
+
+settings:
+  mapping: button.kia_ev6_open_mapping
