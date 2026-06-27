@@ -26,6 +26,12 @@ maintenance notes, and a return path to Overview.
 - `dashboard/cards/settings-back-navigation.yaml` owns return navigation to
   Overview.
 
+## Mapped Template Usage
+
+Settings detail cards use `custom:decluttering-card` wrappers for action buttons,
+section notes, and back navigation. Action buttons stay inert with `action: none`
+until refresh and mapping workflows have documented service targets.
+
 ## Entity Rules
 
 Settings cards must not hardcode Home Assistant entity IDs. Any future action or
