@@ -1,10 +1,28 @@
 ---
-type: markdown
-title: Comfort
-content: >-
-  - HVAC state: `climate / hvac`
-  - Defrost: `climate / defrost`
-  - Steering wheel heater: `climate / steering_wheel_heater`
-
-  Comfort toggles should remain grouped here so remote cabin controls are easy
-  to review before activation.
+type: vertical-stack
+cards:
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: climate / hvac
+      - name: HVAC state
+      - icon: mdi:air-conditioner
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: climate / defrost
+      - name: Defrost
+      - icon: mdi:car-defrost-front
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: climate / steering_wheel_heater
+      - name: Steering wheel heater
+      - icon: mdi:steering
+  - type: custom:decluttering-card
+    template: kia_mapped_section_note
+    variables:
+      - title: Comfort
+      - content: >-
+          Comfort toggles should remain grouped here so remote cabin controls
+          are easy to review before activation.
