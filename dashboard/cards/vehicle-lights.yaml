@@ -1,9 +1,22 @@
 ---
-type: markdown
-title: Lights
-content: >-
-  - Headlights: `lights.headlights`
-  - Hazard lights: `lights.hazard_lights`
-
-  Lighting controls should stay grouped here rather than duplicated across
-  overview cards.
+type: vertical-stack
+cards:
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: lights.headlights
+      - name: Headlights
+      - icon: mdi:car-light-high
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: lights.hazard_lights
+      - name: Hazard lights
+      - icon: mdi:hazard-lights
+  - type: custom:decluttering-card
+    template: kia_mapped_section_note
+    variables:
+      - title: Lights
+      - content: >-
+          Lighting controls should stay grouped here rather than duplicated
+          across overview cards.
