@@ -40,28 +40,33 @@
 
 - [x] Add Climate detail view shell.
 - [x] Add temperature, controls, comfort, session, and back navigation cards.
-- [ ] Connect Climate cards to reusable mapped-entity templates.
+- [x] Connect Climate cards to reusable mapped-entity templates.
 
 ## Milestone 8
 
 - [x] Add Energy detail view shell.
 - [x] Add efficiency, range context, charging context, history, and back navigation cards.
-- [ ] Connect Energy cards to reusable mapped-entity templates.
+- [x] Connect Energy cards to reusable mapped-entity templates.
 
 ## Milestone 9
 
 - [x] Add Location detail view shell.
 - [x] Add map context, odometer, parking, trip context, and back navigation cards.
-- [ ] Connect Location cards to reusable mapped-entity templates.
+- [x] Connect Location cards to reusable mapped-entity templates.
 
 ## Milestone 10
 
 - [x] Add Settings detail view shell.
 - [x] Add mapping, theme, actions, maintenance, and back navigation cards.
-- [ ] Connect Settings cards to reusable mapped-entity templates.
+- [x] Connect Settings cards to reusable mapped-entity templates.
 
 ## Milestone 11
 
 - [x] Add reusable mapped state row, action button, section note, and back navigation patterns.
 - [x] Document mapped template ownership and review rules.
 - [x] Convert Battery cards to reusable mapped-entity templates.
+- [x] Convert Vehicle cards to reusable mapped-entity templates.
+- [x] Convert Climate cards to reusable mapped-entity templates.
+- [x] Convert Energy cards to reusable mapped-entity templates.
+- [x] Convert Location cards to reusable mapped-entity templates.
+- [x] Convert Settings cards to reusable mapped-entity templates.
