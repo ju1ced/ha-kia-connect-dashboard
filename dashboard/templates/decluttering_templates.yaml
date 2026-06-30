@@ -23,6 +23,23 @@ kia_mapped_action_button:
     tap_action:
       action: "[[action]]"
 
+kia_mapped_confirm_action_button:
+  default:
+    - icon: mdi:gesture-tap-button
+    - action: none
+    - confirmation: false
+    - confirmation_text: Confirm this action?
+  card:
+    type: button
+    entity: "[[entity]]"
+    name: "[[name]]"
+    icon: "[[icon]]"
+    show_state: false
+    tap_action:
+      action: "[[action]]"
+      confirmation:
+        text: "[[confirmation_text]]"
+
 kia_mapped_section_note:
   card:
     type: markdown
