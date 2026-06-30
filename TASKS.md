@@ -75,6 +75,7 @@
 
 - [x] Add read-only entity diagnostics guidance to Settings.
 - [x] Add reusable mapped entity diagnostics template.
+- [x] Add runtime mapping health example contract.
 - [ ] Add runtime mapping health checks.
 - [ ] Decide where inline unavailable-entity alerts should appear.
 
