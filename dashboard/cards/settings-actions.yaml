@@ -4,16 +4,18 @@ columns: 2
 square: false
 cards:
   - type: custom:decluttering-card
-    template: kia_mapped_action_button
+    template: kia_mapped_confirm_action_button
     variables:
       - entity: controls.refresh
       - name: Refresh Vehicle
       - icon: mdi:refresh
       - action: none
+      - confirmation_text: Refresh vehicle status when service binding is enabled?
   - type: custom:decluttering-card
-    template: kia_mapped_action_button
+    template: kia_mapped_confirm_action_button
     variables:
       - entity: settings / mapping
       - name: Open Mapping
       - icon: mdi:file-cog
       - action: none
+      - confirmation_text: Open mapping tools when navigation is enabled?
