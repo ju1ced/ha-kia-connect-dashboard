@@ -27,15 +27,25 @@ Expected inputs:
 
 ### Action Buttons
 
-Use `kia_mapped_action_button` for future refresh, charging, climate, lock, and
-maintenance actions that do not need confirmation.
+Use `kia_mapped_action_button` for local actions such as `more-info` or future
+navigation patterns that do not perform a Home Assistant service call.
 
 Expected inputs:
 
 - `entity` receives the mapped action entity value.
 - `name` is the user-facing command label.
 - `icon` is the semantic icon for the action.
-- `action` defaults to `none` until a service or navigation pattern is chosen.
+- `action` defaults to `none` until a local action pattern is chosen.
+
+Use `kia_mapped_perform_action_button` only for reviewed low-risk Home Assistant
+service actions such as pressing a mapped refresh button.
+
+Expected inputs:
+
+- `entity` receives the mapped action entity value.
+- `name` is the user-facing command label.
+- `icon` is the semantic icon for the action.
+- `perform_action` is the Home Assistant action, such as `button.press`.
 
 Use `kia_mapped_confirm_action_button` when the future action needs a
 confirmation prompt. The template still supports `action: none`, so it can show
@@ -97,13 +107,13 @@ logical mapping keys as variables. The dashboard root exposes the templates with
 - Keep every card-level logical entity key present in the mapping file.
 - Prefer one shared template pattern over repeated one-off YAML.
 - Keep page cards responsible for layout and ownership, not raw entity details.
-- Keep action buttons inert until the command confirmation pattern is reviewed.
+- Keep service action buttons limited to reviewed low-risk targets.
+- Keep confirm-action buttons inert until the command confirmation pattern is reviewed.
 - Keep diagnostics read-only until runtime health checks are documented.
 - Keep inline alerts limited to critical page-blocking mapped data.
 
 ## Follow-up Work
 
-- Bind low-risk Settings actions once their service or navigation targets are
-  documented.
+- Add last-command feedback rows before enabling medium-risk commands.
 - Add inline alerts to affected page groups after the first Home Assistant test
   identifies repeated missing, unknown, or unavailable states.
