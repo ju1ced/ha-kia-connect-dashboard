@@ -1,0 +1,49 @@
+---
+# Example contract for future runtime mapping health helpers.
+# This file is documentation-oriented and is not included by the dashboard yet.
+# Runtime health should start in Settings before inline alerts are added.
+health_states:
+  ok:
+    label: OK
+    severity: normal
+    icon: mdi:check-circle-outline
+  missing:
+    label: Missing
+    severity: error
+    icon: mdi:alert-circle-outline
+  unknown:
+    label: Unknown
+    severity: warning
+    icon: mdi:help-circle-outline
+  unavailable:
+    label: Unavailable
+    severity: warning
+    icon: mdi:cloud-alert-outline
+  not_configured:
+    label: Not configured
+    severity: muted
+    icon: mdi:minus-circle-outline
+
+required_fields:
+  - logical_key
+  - mapped_entity
+  - health_state
+  - last_checked
+  - hint
+
+example_rows:
+  - logical_key: battery.level
+    mapped_entity: sensor.kia_ev6_battery_level
+    health_state: ok
+    last_checked: null
+    hint: Battery level is mapped and usable.
+  - logical_key: climate.hvac
+    mapped_entity: climate.kia_ev6_climate
+    health_state: unavailable
+    last_checked: null
+    hint: Check whether the Kia integration entity is available in Home Assistant.
+  - logical_key: settings.mapping
+    mapped_entity: button.kia_ev6_open_mapping
+    health_state: not_configured
+    last_checked: null
+    hint: Optional dashboard action is not configured yet.
