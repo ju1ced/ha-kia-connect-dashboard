@@ -9,6 +9,9 @@ This dashboard is designed to be opened from an existing Home Assistant dashboar
 such as a Kia EV6 button on a home page. Once the user lands on Overview, all
 vehicle-specific sections should be reachable from this page.
 
+See `docs/home-assistant-integration.md` for the recommended Home dashboard entry
+flow.
+
 ## Composition
 
 `dashboard/views/overview.yaml` composes these card fragments:
