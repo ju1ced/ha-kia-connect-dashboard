@@ -20,6 +20,18 @@ Use these states when designing future health cards or helper entities:
 - `not_configured`: the mapping key exists but intentionally points to a
   placeholder or disabled entity.
 
+## Example Contract
+
+`dashboard/templates/mapping_health.example.yaml` documents the expected runtime
+health shape. It is not included by the dashboard yet and should not be treated
+as live Home Assistant configuration.
+
+The example file defines:
+
+- Supported health states and severity levels.
+- Required fields for future health rows.
+- Example rows for mapped, unavailable, and optional entities.
+
 ## First Surface
 
 Settings owns the first runtime health surface. It should summarize mapping
