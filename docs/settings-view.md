@@ -21,17 +21,17 @@ maintenance notes, and a return path to Overview.
   references.
 - `dashboard/cards/settings-actions.yaml` owns future refresh and configuration
   action placement.
-- `dashboard/cards/settings-maintenance.yaml` owns diagnostics, version, and
-  troubleshooting notes.
+- `dashboard/cards/settings-maintenance.yaml` owns refresh result, mapping health,
+  dashboard version, diagnostics, and troubleshooting notes.
 - `dashboard/cards/settings-back-navigation.yaml` owns return navigation to
   Overview.
 
 ## Mapped Template Usage
 
 Settings detail cards use `custom:decluttering-card` wrappers for confirm action
-buttons, section notes, entity diagnostics, and back navigation. Action buttons
-stay inert with `action: none` until refresh and mapping workflows have
-documented service targets.
+buttons, state rows, section notes, entity diagnostics, and back navigation.
+Action buttons stay inert with `action: none` until refresh and mapping workflows
+have documented service targets.
 
 ## Entity Rules
 
@@ -53,6 +53,12 @@ Runtime mapping health states are defined in `docs/runtime-mapping-health.md`.
 Settings action buttons use the confirmation-capable template even while they
 remain inert. This keeps the safety pattern visible before refresh or mapping
 navigation targets are enabled.
+
+## Feedback Rules
+
+Settings maintenance rows show read-only feedback for last refresh result,
+mapping health, and dashboard version. These rows must exist before refresh or
+mapping actions are wired to real targets.
 
 ## Follow-up Work
 
