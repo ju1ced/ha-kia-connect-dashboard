@@ -59,6 +59,18 @@ kia_mapped_entity_diagnostics:
     content: >-
       [[content]]
 
+kia_inline_mapping_alert:
+  default:
+    - icon: mdi:alert-circle-outline
+    - severity: Warning
+  card:
+    type: markdown
+    title: "[[severity]]"
+    content: >-
+      **[[icon]] [[title]]**
+
+      [[content]]
+
 kia_back_to_overview:
   card:
     type: button

@@ -79,7 +79,7 @@
 - [x] Add first Home Assistant test render path.
 - [x] Add first Home Assistant test checklist.
 - [x] Add runtime mapping health checks.
-- [ ] Decide where inline unavailable-entity alerts should appear.
+- [x] Decide where inline unavailable-entity alerts should appear.
 
 ## Milestone 13
 

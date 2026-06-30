@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added inline unavailable alert placement rules and a reusable inline mapping
+  alert template.
 - Added a runtime mapping health check script for comparing mapped entities with
   Home Assistant state exports.
 - Added CI coverage for the runtime mapping health check script.
