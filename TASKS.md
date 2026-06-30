@@ -78,3 +78,10 @@
 - [x] Add runtime mapping health example contract.
 - [ ] Add runtime mapping health checks.
 - [ ] Decide where inline unavailable-entity alerts should appear.
+
+## Milestone 13
+
+- [x] Add action safety contract.
+- [x] Add confirmation-capable mapped action template.
+- [ ] Bind low-risk Settings actions to real targets.
+- [ ] Add feedback rows for last command results.
