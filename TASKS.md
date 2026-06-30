@@ -76,6 +76,8 @@
 - [x] Add read-only entity diagnostics guidance to Settings.
 - [x] Add reusable mapped entity diagnostics template.
 - [x] Add runtime mapping health example contract.
+- [x] Add first Home Assistant test render path.
+- [x] Add first Home Assistant test checklist.
 - [ ] Add runtime mapping health checks.
 - [ ] Decide where inline unavailable-entity alerts should appear.
 
