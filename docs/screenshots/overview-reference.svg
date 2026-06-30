@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1080" viewBox="0 0 1440 1080" role="img" aria-labelledby="title desc">
+  <title id="title">Kia dashboard Overview reference render</title>
+  <desc id="desc">Reference layout for the Kia EV6 Overview page inside Home Assistant.</desc>
+  <rect width="1440" height="1080" fill="#f5f7fb"/>
+  <rect x="56" y="44" width="1328" height="992" rx="32" fill="#ffffff" stroke="#d8dee9"/>
+  <text x="96" y="116" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#111827">Nebula</text>
+  <text x="96" y="152" font-family="Arial, sans-serif" font-size="18" fill="#64748b">Kia EV6 GT-Line RWD - Overview</text>
+  <rect x="1110" y="80" width="210" height="54" rx="18" fill="#0b5cab"/>
+  <text x="1162" y="114" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#ffffff">Refresh</text>
+
+  <rect x="96" y="196" width="1248" height="210" rx="26" fill="#101828"/>
+  <text x="136" y="252" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#ffffff">Vehicle ready</text>
+  <text x="136" y="286" font-family="Arial, sans-serif" font-size="18" fill="#cbd5e1">Primary state, charge status, and navigation live on one overview surface.</text>
+  <circle cx="1140" cy="300" r="72" fill="#1e293b" stroke="#94a3b8"/>
+  <path d="M1072 318 C1095 250 1186 250 1209 318 L1228 336 H1053 Z" fill="#e5e7eb"/>
+  <circle cx="1094" cy="345" r="13" fill="#111827"/>
+  <circle cx="1188" cy="345" r="13" fill="#111827"/>
+
+  <g font-family="Arial, sans-serif">
+    <rect x="96" y="438" width="290" height="150" rx="18" fill="#f8fafc" stroke="#d8dee9"/>
+    <text x="122" y="486" font-size="19" font-weight="700" fill="#111827">Battery</text>
+    <text x="122" y="526" font-size="36" font-weight="700" fill="#0b5cab">78%</text>
+    <text x="122" y="556" font-size="16" fill="#64748b">Estimated range and charging state</text>
+
+    <rect x="416" y="438" width="290" height="150" rx="18" fill="#f8fafc" stroke="#d8dee9"/>
+    <text x="442" y="486" font-size="19" font-weight="700" fill="#111827">Vehicle</text>
+    <text x="442" y="526" font-size="28" font-weight="700" fill="#16a34a">Locked</text>
+    <text x="442" y="556" font-size="16" fill="#64748b">Doors, lights, and warnings</text>
+
+    <rect x="736" y="438" width="290" height="150" rx="18" fill="#f8fafc" stroke="#d8dee9"/>
+    <text x="762" y="486" font-size="19" font-weight="700" fill="#111827">Location</text>
+    <text x="762" y="526" font-size="28" font-weight="700" fill="#111827">Home</text>
+    <text x="762" y="556" font-size="16" fill="#64748b">Tracker and odometer context</text>
+
+    <rect x="1056" y="438" width="288" height="150" rx="18" fill="#f8fafc" stroke="#d8dee9"/>
+    <text x="1082" y="486" font-size="19" font-weight="700" fill="#111827">Climate</text>
+    <text x="1082" y="526" font-size="28" font-weight="700" fill="#111827">21 C</text>
+    <text x="1082" y="556" font-size="16" fill="#64748b">Cabin comfort shortcuts</text>
+  </g>
+
+  <text x="96" y="656" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#111827">Menu structure on Overview</text>
+  <g font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#111827">
+    <rect x="96" y="690" width="180" height="78" rx="16" fill="#eef6ff" stroke="#bfdbfe"/>
+    <text x="136" y="738">Battery</text>
+    <rect x="306" y="690" width="180" height="78" rx="16" fill="#eef6ff" stroke="#bfdbfe"/>
+    <text x="349" y="738">Vehicle</text>
+    <rect x="516" y="690" width="180" height="78" rx="16" fill="#eef6ff" stroke="#bfdbfe"/>
+    <text x="560" y="738">Climate</text>
+    <rect x="726" y="690" width="180" height="78" rx="16" fill="#eef6ff" stroke="#bfdbfe"/>
+    <text x="776" y="738">Energy</text>
+    <rect x="936" y="690" width="180" height="78" rx="16" fill="#eef6ff" stroke="#bfdbfe"/>
+    <text x="980" y="738">Location</text>
+    <rect x="1146" y="690" width="198" height="78" rx="16" fill="#eef6ff" stroke="#bfdbfe"/>
+    <text x="1200" y="738">Settings</text>
+  </g>
+
+  <rect x="96" y="840" width="1248" height="118" rx="20" fill="#f8fafc" stroke="#d8dee9"/>
+  <text x="126" y="890" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#111827">Integration model</text>
+  <text x="126" y="926" font-family="Arial, sans-serif" font-size="17" fill="#64748b">Existing Home Assistant dashboard button opens this Overview page. All Kia-specific pages remain reachable from here.</text>
+</svg>
