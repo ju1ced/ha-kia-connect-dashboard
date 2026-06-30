@@ -61,6 +61,10 @@ Expected behavior:
 
 - Keep `kia_mapped_action_button` inert until a service or confirmation pattern
   is reviewed.
+- Use `kia_mapped_confirm_action_button` when an action will need a confirmation
+  prompt before activation.
+- Keep confirm-action buttons on `action: none` until the real service or
+  navigation target is documented.
 - Add new action templates only when the risk class is documented.
 - Do not mix status rows and service calls in one template.
 - Keep Home Assistant service targets in documented mapping or script surfaces.
