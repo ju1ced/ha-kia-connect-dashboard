@@ -46,6 +46,8 @@ a dashboard row renders as unknown, unavailable, or missing, the guidance should
 point users back to `dashboard/templates/entities.yaml` before suggesting card
 changes.
 
+Runtime mapping health states are defined in `docs/runtime-mapping-health.md`.
+
 ## Follow-up Work
 
 - Bind refresh actions to the mapped controls once the shared action pattern is
