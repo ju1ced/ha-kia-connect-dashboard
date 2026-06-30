@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added a runtime mapping health example contract for future diagnostics.
 - Added read-only entity diagnostics guidance for missing, unknown, or unavailable mapped entities.
 - Connected Settings detail cards to reusable mapped entity template patterns.
 - Connected Location detail cards to reusable mapped entity template patterns.
