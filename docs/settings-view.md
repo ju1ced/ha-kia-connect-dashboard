@@ -28,10 +28,10 @@ maintenance notes, and a return path to Overview.
 
 ## Mapped Template Usage
 
-Settings detail cards use `custom:decluttering-card` wrappers for action buttons,
-section notes, entity diagnostics, and back navigation. Action buttons stay inert
-with `action: none` until refresh and mapping workflows have documented service
-targets.
+Settings detail cards use `custom:decluttering-card` wrappers for confirm action
+buttons, section notes, entity diagnostics, and back navigation. Action buttons
+stay inert with `action: none` until refresh and mapping workflows have
+documented service targets.
 
 ## Entity Rules
 
@@ -47,6 +47,12 @@ point users back to `dashboard/templates/entities.yaml` before suggesting card
 changes.
 
 Runtime mapping health states are defined in `docs/runtime-mapping-health.md`.
+
+## Action Rules
+
+Settings action buttons use the confirmation-capable template even while they
+remain inert. This keeps the safety pattern visible before refresh or mapping
+navigation targets are enabled.
 
 ## Follow-up Work
 
