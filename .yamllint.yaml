@@ -3,6 +3,8 @@ extends: default
 
 ignore: |
   node_modules/
+  build/
+  dist/
 
 rules:
   line-length:

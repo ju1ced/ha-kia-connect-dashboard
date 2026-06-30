@@ -40,8 +40,8 @@ The package currently uses these route assumptions:
 - Location: `/lovelace/kia-location`
 - Settings: `/lovelace/kia-settings`
 
-Adjust these paths later if the dashboard is mounted under a different Lovelace
-URL in your Home Assistant instance.
+Adjust these paths if the dashboard is mounted under a different Lovelace URL in
+your Home Assistant instance.
 
 ## Example Home Button
 
@@ -68,12 +68,18 @@ Before expecting live data, update `dashboard/templates/entities.yaml` with the
 entity IDs from your Home Assistant instance. Keep card files unchanged; they
 should continue using logical keys.
 
-## Future Installation Work
+Run the dashboard render step before copying the package into Home Assistant:
 
-This guide intentionally documents the navigation model first. A later
-installation guide should add:
+```bash
+python scripts/render_dashboard.py
+```
 
-- Lovelace dashboard import instructions.
-- Resource requirements for custom cards.
-- Theme installation steps for Kia Horizon.
-- Real screenshots from a Home Assistant test instance.
+The rendered Home Assistant-ready files are written to
+`build/home-assistant-dashboard/`.
+
+## First Test Guide
+
+Use `docs/first-home-assistant-test.md` for the first manual test pass. It
+covers the required custom card resource, theme install, existing Home dashboard
+button, first navigation checks, and the actions that should remain untested
+until the safety binding milestone is complete.
