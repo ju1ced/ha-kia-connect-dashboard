@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added Settings feedback rows for refresh result, mapping health, and dashboard version.
 - Added a confirmation-capable mapped action template for future safe actions.
 - Added a runtime mapping health example contract for future diagnostics.
 - Added read-only entity diagnostics guidance for missing, unknown, or unavailable mapped entities.
