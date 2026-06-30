@@ -63,6 +63,23 @@ surfaces that explain missing, unknown, or unavailable mapped entities. The
 pattern must stay read-only and should point users back to
 `dashboard/templates/entities.yaml`.
 
+### Inline Mapping Alerts
+
+Use `kia_inline_mapping_alert` for future compact alerts near critical page data.
+Inline alerts must stay read-only and should be reserved for cases where missing,
+unknown, or unavailable mapped data blocks the purpose of a page section.
+
+Expected inputs:
+
+- `severity` is the alert title.
+- `icon` is the semantic alert icon.
+- `title` names the affected feature area.
+- `content` gives a short remediation hint and should point users to Settings or
+  the entity mapping file.
+
+See `docs/inline-unavailable-alerts.md` before adding inline alerts to detail
+pages.
+
 ### Back Navigation
 
 Use `kia_back_to_overview` when a detail page needs the standard return button.
@@ -82,10 +99,11 @@ logical mapping keys as variables. The dashboard root exposes the templates with
 - Keep page cards responsible for layout and ownership, not raw entity details.
 - Keep action buttons inert until the command confirmation pattern is reviewed.
 - Keep diagnostics read-only until runtime health checks are documented.
+- Keep inline alerts limited to critical page-blocking mapped data.
 
 ## Follow-up Work
 
 - Bind low-risk Settings actions once their service or navigation targets are
   documented.
-- Decide whether runtime health should be shown as a Settings-only surface or as
-  inline alerts on each detail page.
+- Add inline alerts to affected page groups after the first Home Assistant test
+  identifies repeated missing, unknown, or unavailable states.
