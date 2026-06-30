@@ -5,11 +5,14 @@ import re
 import sys
 
 ALLOWED = Path("dashboard/templates/entities.yaml")
+IGNORED_PARTS = {".git", "build", "dist", "node_modules"}
 PATTERN = re.compile(r"\b(?:sensor|binary_sensor|switch|lock|climate|device_tracker|button|number|select|input_boolean|input_number|input_select)\.[a-zA-Z0-9_]+\b")
 violations = []
+
 for path in Path(".").rglob("*.yaml"):
-    if path == ALLOWED or ".git" in path.parts:
+    if path == ALLOWED or IGNORED_PARTS.intersection(path.parts):
         continue
+
     text = path.read_text(encoding="utf-8")
     for match in PATTERN.finditer(text):
         violations.append(f"{path}:{text[:match.start()].count(chr(10)) + 1}: {match.group(0)}")
