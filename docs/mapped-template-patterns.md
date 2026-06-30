@@ -37,6 +37,8 @@ Expected inputs:
 - `icon` is the semantic icon for the action.
 - `action` defaults to `none` until a service or confirmation pattern is chosen.
 
+See `docs/action-safety-contract.md` before enabling any mapped action button.
+
 ### Section Notes
 
 Use `kia_mapped_section_note` for short explanatory or empty-state content that
