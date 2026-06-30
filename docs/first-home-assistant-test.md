@@ -4,7 +4,7 @@
 
 This checklist gets the dashboard ready for a first Home Assistant test behind an
 existing home dashboard button. The first test should verify navigation, layout,
-theme loading, and read-only live data.
+theme loading, read-only live data, and low-risk Settings actions.
 
 Remote vehicle commands should stay disabled or untested until the action
 bindings have their own safety pass.
@@ -121,6 +121,8 @@ Check these items first:
 - The Kia Horizon theme loads correctly.
 - Read-only data rows show values or understandable unavailable states.
 - Settings shows mapping health, refresh result, and dashboard version rows.
+- Settings Refresh Vehicle calls the mapped refresh button only.
+- Settings Mapping Details opens the mapped entity more-info panel only.
 
 ## Do Not Test Yet
 
@@ -129,7 +131,7 @@ Avoid these until the action binding milestone is complete:
 - Starting or stopping climate remotely.
 - Starting or stopping charging remotely.
 - Locking or unlocking the vehicle remotely.
-- Any service call that changes vehicle state.
+- Any service call that changes vehicle state beyond refreshing status.
 
 ## Capture Reference Evidence
 
