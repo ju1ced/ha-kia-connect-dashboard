@@ -32,18 +32,18 @@ required_fields:
   - hint
 
 example_rows:
-  - logical_key: battery.level
-    mapped_entity: sensor.kia_ev6_battery_level
+  - logical_key: battery / level
+    mapped_entity: mapped_battery_level_entity
     health_state: ok
     last_checked: null
     hint: Battery level is mapped and usable.
-  - logical_key: climate.hvac
-    mapped_entity: climate.kia_ev6_climate
+  - logical_key: climate / hvac
+    mapped_entity: mapped_climate_hvac_entity
     health_state: unavailable
     last_checked: null
     hint: Check whether the Kia integration entity is available in Home Assistant.
-  - logical_key: settings.mapping
-    mapped_entity: button.kia_ev6_open_mapping
+  - logical_key: settings / mapping
+    mapped_entity: mapped_settings_mapping_entity
     health_state: not_configured
     last_checked: null
     hint: Optional dashboard action is not configured yet.
