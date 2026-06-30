@@ -69,6 +69,13 @@ Expected behavior:
 - Do not mix status rows and service calls in one template.
 - Keep Home Assistant service targets in documented mapping or script surfaces.
 
+## Feedback Rules
+
+- Add read-only last-result rows before enabling an action.
+- Show action feedback in Settings first unless a detail page needs immediate
+  context for safe use.
+- Do not treat entity availability alone as proof that an action is safe.
+
 ## Follow-up Work
 
 - Choose the Home Assistant confirmation pattern for medium-risk actions.
