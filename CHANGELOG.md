@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added a first Home Assistant test checklist for installation, navigation,
+  theme loading, and safe test scope.
+- Added a dashboard render script that converts logical entity keys into mapped
+  Home Assistant entity IDs for test installation output.
+- Added generated output ignores for linting and source control.
 - Added Settings feedback rows for refresh result, mapping health, and dashboard version.
 - Added a confirmation-capable mapped action template for future safe actions.
 - Added a runtime mapping health example contract for future diagnostics.
