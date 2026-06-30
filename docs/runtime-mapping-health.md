@@ -52,7 +52,10 @@ The script accepts either of these JSON shapes:
 
 ```json
 [
-  {"entity_id": "sensor.kia_ev6_battery_level", "state": "80"}
+  {
+    "entity_id": "sensor.kia_ev6_battery_level",
+    "state": "80"
+  }
 ]
 ```
 
