@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added a runtime mapping health check script for comparing mapped entities with
+  Home Assistant state exports.
+- Added CI coverage for the runtime mapping health check script.
 - Added a first Home Assistant test checklist for installation, navigation,
   theme loading, and safe test scope.
 - Added a dashboard render script that converts logical entity keys into mapped

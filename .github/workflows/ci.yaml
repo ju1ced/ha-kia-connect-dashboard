@@ -36,5 +36,7 @@ jobs:
         run: python scripts/check_entity_references.py
       - name: Check mapped entity keys
         run: python scripts/check_mapped_entity_keys.py
+      - name: Check runtime mapping health script
+        run: python scripts/check_runtime_mapping_health.py
       - name: Check image references
         run: python scripts/check_image_references.py

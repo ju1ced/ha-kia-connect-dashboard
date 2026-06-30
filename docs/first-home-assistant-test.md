@@ -33,6 +33,25 @@ battery:
 The source dashboard uses logical keys such as `battery.level`. The render step
 turns those logical keys into Home Assistant entity IDs for the test package.
 
+## Check Runtime Mapping Health
+
+After updating the entity map, run the runtime health check. Without Home
+Assistant state data it reports which mappings can be checked later:
+
+```bash
+python scripts/check_runtime_mapping_health.py
+```
+
+With a Home Assistant state export, it reports `ok`, `missing`, `unknown`, and
+`unavailable` rows:
+
+```bash
+python scripts/check_runtime_mapping_health.py --states-json ha-states.json
+```
+
+Use `docs/runtime-mapping-health.md` for export details and strict-mode usage.
+Fix missing or incorrect mapped entity IDs before rendering the test dashboard.
+
 ## Render The Test Dashboard
 
 Run the render step from the repository root:

@@ -78,7 +78,7 @@
 - [x] Add runtime mapping health example contract.
 - [x] Add first Home Assistant test render path.
 - [x] Add first Home Assistant test checklist.
-- [ ] Add runtime mapping health checks.
+- [x] Add runtime mapping health checks.
 - [ ] Decide where inline unavailable-entity alerts should appear.
 
 ## Milestone 13
