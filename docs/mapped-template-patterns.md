@@ -28,14 +28,26 @@ Expected inputs:
 ### Action Buttons
 
 Use `kia_mapped_action_button` for future refresh, charging, climate, lock, and
-maintenance actions.
+maintenance actions that do not need confirmation.
 
 Expected inputs:
 
 - `entity` receives the mapped action entity value.
 - `name` is the user-facing command label.
 - `icon` is the semantic icon for the action.
-- `action` defaults to `none` until a service or confirmation pattern is chosen.
+- `action` defaults to `none` until a service or navigation pattern is chosen.
+
+Use `kia_mapped_confirm_action_button` when the future action needs a
+confirmation prompt. The template still supports `action: none`, so it can show
+risk intent before real services are enabled.
+
+Expected inputs:
+
+- `entity` receives the mapped action entity value.
+- `name` is the user-facing command label.
+- `icon` is the semantic icon for the action.
+- `action` defaults to `none` until a service or navigation pattern is chosen.
+- `confirmation_text` explains what the user is confirming.
 
 See `docs/action-safety-contract.md` before enabling any mapped action button.
 
@@ -73,6 +85,7 @@ logical mapping keys as variables. The dashboard root exposes the templates with
 
 ## Follow-up Work
 
-- Add confirmation and service-call patterns before enabling remote actions.
+- Bind low-risk Settings actions once their service or navigation targets are
+  documented.
 - Decide whether runtime health should be shown as a Settings-only surface or as
   inline alerts on each detail page.
