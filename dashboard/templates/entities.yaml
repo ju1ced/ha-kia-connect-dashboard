@@ -2,7 +2,7 @@
 # Vehicle-specific Home Assistant entity IDs live here only.
 # Dashboard files should reference these logical keys through templates.
 vehicle:
-  name: "Kia EV6"
+  name: "Nebula"
   model: "EV6 GT-Line RWD"
   year: 2026
 
