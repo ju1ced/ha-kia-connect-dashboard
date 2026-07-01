@@ -19,11 +19,11 @@ maintenance notes, and a return path to Overview.
   missing-entity handling, and future mapping health checks.
 - `dashboard/cards/settings-theme.yaml` owns theme identity and token ownership
   references.
-- `dashboard/cards/settings-actions.yaml` owns refresh and local mapping action
-  placement.
-- `dashboard/cards/settings-maintenance.yaml` owns refresh result, climate command
-  result, charging command result, mapping health, dashboard version,
-  diagnostics, and troubleshooting notes.
+- `dashboard/cards/settings-actions.yaml` owns refresh and local vehicle-data
+  detail action placement.
+- `dashboard/cards/settings-maintenance.yaml` owns latest scan, climate command
+  state, charging command state, raw vehicle data, diagnostics, and
+  troubleshooting notes.
 - `dashboard/cards/settings-back-navigation.yaml` owns return navigation to
   Overview.
 
@@ -33,8 +33,8 @@ Settings detail cards use `custom:decluttering-card` wrappers for action buttons
 state rows, section notes, entity diagnostics, and back navigation.
 
 The Refresh Vehicle button uses a reviewed low-risk `button.press` binding through
-`kia_mapped_perform_action_button`. Mapping Details uses `more-info` and remains a
-local read-only action surface.
+`kia_mapped_perform_action_button`. Vehicle Data Details uses `more-info` on the
+raw vehicle data sensor and remains a local read-only action surface.
 
 ## Entity Rules
 
@@ -59,13 +59,14 @@ pattern and remain inert until last-command feedback is available.
 
 ## Feedback Rules
 
-Settings maintenance rows show read-only feedback for last refresh result, future
-climate command result, future charging command result, mapping health, and
-dashboard version. Climate and charging command feedback must exist before those
-medium-risk actions are enabled.
+Settings maintenance rows show read-only feedback available from the current Kia
+integration: latest scan, climate state, charging state, and raw vehicle data.
+Repository-side mapping health remains available through
+`scripts/check_runtime_mapping_health.py` before rendering.
 
 ## Follow-up Work
 
-- Add version and troubleshooting links once installation documentation is added.
+- Add dashboard helper entities for mapping health and dashboard version if they
+  become useful after the first Home Assistant test.
 - Enable medium-risk actions only after their confirmation and feedback behavior
   has been tested in Home Assistant.
