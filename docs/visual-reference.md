@@ -13,13 +13,15 @@ SVG files so GitHub can preview them directly.
 
 ## Implementation Status
 
-The Overview page has the first dark visual card layer using `button-card`,
-`card-mod`, and the Kia Horizon theme tokens. Detail pages still use the lighter
-native Lovelace implementation until their visual pass is completed.
+The Overview and all detail pages now have the first dark visual card layer using
+`button-card`, `card-mod`, and the Kia Horizon theme tokens. Real Home Assistant
+screenshots are still needed to validate the rendered package with live data,
+actual browser sizing, and the target dashboard route.
 
 ## Review Rules
 
-- Treat these renders as layout intent, not generated Home Assistant screenshots.
+- Treat the SVG renders as layout intent, not generated Home Assistant
+  screenshots.
 - Update the relevant render when a PR changes first-screen navigation,
   diagnostics structure, or the implemented visual direction.
 - Add real screenshots next to these renders once a Home Assistant test install
