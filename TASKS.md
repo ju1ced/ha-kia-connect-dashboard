@@ -12,6 +12,7 @@
 
 - [x] Finalize entity mapping schema.
 - [x] Define Lovelace include conventions.
+- [x] Document dashboard extension points.
 
 ## Milestone 3
 
