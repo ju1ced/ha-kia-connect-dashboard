@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added configurable dashboard route rendering for Home Assistant installs that
+  do not use `/lovelace` as the Kia dashboard URL base.
 - Converted the Climate, Energy, Location, and Settings detail pages to the dark
   visual card pattern.
 - Converted the Battery and Vehicle detail pages to the dark visual card pattern.
