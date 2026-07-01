@@ -120,7 +120,8 @@ Check these items first:
   Overview page.
 - The Kia Horizon theme loads correctly.
 - Read-only data rows show values or understandable unavailable states.
-- Settings shows mapping health, refresh result, and dashboard version rows.
+- Settings shows refresh result, climate command result, charging command result,
+  mapping health, and dashboard version rows.
 - Settings Refresh Vehicle calls the mapped refresh button only.
 - Settings Mapping Details opens the mapped entity more-info panel only.
 

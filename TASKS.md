@@ -87,4 +87,4 @@
 - [x] Add confirmation-capable mapped action template.
 - [x] Add Settings feedback rows for refresh result, mapping health, and version.
 - [x] Bind low-risk Settings actions to real targets.
-- [ ] Add feedback rows for last command results.
+- [x] Add feedback rows for last command results.

@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added Settings feedback rows and mapped entities for future climate and
+  charging command results.
 - Bound low-risk Settings actions to reviewed targets for refresh and mapping
   details.
 - Added a reusable mapped perform-action button template for low-risk Home

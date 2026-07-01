@@ -46,6 +46,11 @@ Expected behavior:
 - Clear button label and icon.
 - Visible last-command or session feedback.
 
+Required feedback rows before enablement:
+
+- `controls.last_climate_result` for climate command outcomes.
+- `controls.last_charging_result` for charging command outcomes.
+
 ### High Risk
 
 High-risk actions affect physical access or security.
@@ -85,7 +90,7 @@ Expected behavior:
 
 ## Follow-up Work
 
-- Add last-command feedback before enabling climate or charging controls.
 - Choose the Home Assistant confirmation pattern for medium-risk actions.
 - Decide whether medium-risk service calls should target scripts, buttons, or
   integration services directly.
+- Test climate and charging feedback behavior before enabling real commands.
