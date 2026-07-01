@@ -23,9 +23,9 @@ styles:
     - border-radius: 22px
     - padding: 24px
     - overflow: hidden
-    - background: linear-gradient(145deg, rgba(17, 21, 28, 0.98), rgba(32, 36, 45, 0.94))
-    - border: 1px solid rgba(92, 200, 255, 0.18)
-    - box-shadow: 0 22px 54px rgba(0, 0, 0, 0.36)
+    - background: var(--kia-hero-gradient, linear-gradient(145deg, rgba(17, 21, 28, 0.98), rgba(32, 36, 45, 0.94)))
+    - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.18))
+    - box-shadow: var(--kia-shadow-raised, 0 22px 54px rgba(0, 0, 0, 0.36))
   grid:
     - "grid-template-areas: 'i n locked online battery' 'i l locked online battery' 'car car car car car'"
     - grid-template-columns: 56px 1fr min-content min-content min-content
@@ -34,24 +34,24 @@ styles:
     - row-gap: 8px
   icon:
     - width: 44px
-    - color: var(--kia-text-primary)
+    - color: var(--kia-text-primary, #f4f6f8)
   name:
     - justify-self: start
     - align-self: end
     - font-size: 30px
     - font-weight: 800
-    - color: var(--kia-text-primary)
+    - color: var(--kia-text-primary, #f4f6f8)
   label:
     - justify-self: start
     - font-size: 16px
-    - color: var(--kia-text-secondary)
+    - color: var(--kia-text-secondary, #b7c0cc)
   custom_fields:
     locked:
       - align-self: start
       - padding: 10px 14px
       - border-radius: 14px
       - background: rgba(92, 200, 255, 0.1)
-      - color: var(--kia-brand-primary)
+      - color: var(--kia-brand-primary, #5cc8ff)
       - font-weight: 700
       - white-space: nowrap
     online:
@@ -59,7 +59,7 @@ styles:
       - padding: 10px 14px
       - border-radius: 14px
       - background: rgba(126, 231, 135, 0.1)
-      - color: var(--kia-status-charging)
+      - color: var(--kia-status-charging, #7ee787)
       - font-weight: 700
       - white-space: nowrap
     battery:
@@ -67,15 +67,15 @@ styles:
       - padding: 10px 14px
       - border-radius: 14px
       - background: rgba(92, 200, 255, 0.1)
-      - color: var(--kia-text-primary)
+      - color: var(--kia-text-primary, #f4f6f8)
       - font-weight: 700
       - white-space: nowrap
     car:
       - align-self: center
       - justify-self: center
-      - color: rgba(244, 246, 248, 0.92)
-      - transform: scale(4.8)
-      - opacity: 0.88
+      - color: var(--kia-hero-vehicle-color, rgba(244, 246, 248, 0.78))
+      - transform: scale(4.2)
+      - opacity: 0.82
 card_mod:
   style: |
     ha-card #locked ha-icon,

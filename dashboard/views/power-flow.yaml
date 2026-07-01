@@ -2,6 +2,7 @@
 title: Energy
 path: kia-energy
 icon: mdi:chart-line
+theme: Kia Horizon
 type: sections
 max_columns: 3
 badges: []

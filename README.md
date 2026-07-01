@@ -10,11 +10,10 @@ open-source Hyundai/Kia dashboard for Home Assistant users.
 ## Status
 
 This repository now contains the initial Lovelace dashboard shell, Kia Horizon
-theme tokens, mapped entity contracts, detail pages, read-only entity diagnostics,
-runtime mapping health checks, low-risk Settings actions, a first-test render
-path for Home Assistant, and the first dark visual Overview layer. Real Home
-Assistant screenshots, visual detail-page styling, and medium-risk vehicle
-actions are still in progress.
+theme tokens, mapped entity contracts, a dark visual card layer across Overview
+and detail pages, read-only entity diagnostics, runtime mapping health checks,
+low-risk Settings actions, and a first-test render path for Home Assistant. Real
+Home Assistant screenshots and medium-risk vehicle actions are still in progress.
 
 ## Mission
 
@@ -45,10 +44,17 @@ copy with:
 python scripts/render_dashboard.py
 ```
 
+If your Home Assistant dashboard is mounted under another URL path, pass that
+route base during rendering:
+
+```bash
+python scripts/render_dashboard.py --dashboard-path /kia-ev6
+```
+
 The rendered package is written to `build/home-assistant-dashboard/`.
 
-The visual Overview depends on `decluttering-card`, `button-card`, and `card-mod`
-being registered as Lovelace resources in Home Assistant.
+The visual dashboard depends on `decluttering-card`, `button-card`, and
+`card-mod` being registered as Lovelace resources in Home Assistant.
 
 ## Visual References
 

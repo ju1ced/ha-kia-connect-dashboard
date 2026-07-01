@@ -100,17 +100,17 @@ kia_visual_nav_tile:
         - min-height: 92px
         - border-radius: 16px
         - padding: 16px
-        - background: linear-gradient(145deg, rgba(32, 36, 45, 0.96), rgba(17, 21, 28, 0.96))
-        - border: 1px solid rgba(92, 200, 255, 0.18)
-        - box-shadow: 0 16px 38px rgba(0, 0, 0, 0.32)
+        - background: var(--kia-card-gradient, linear-gradient(145deg, rgba(32, 36, 45, 0.98), rgba(17, 21, 28, 0.98)))
+        - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.14))
+        - box-shadow: var(--kia-card-shadow, 0 16px 38px rgba(0, 0, 0, 0.30))
       icon:
         - width: 32px
-        - color: var(--kia-brand-primary)
+        - color: var(--kia-brand-primary, #5cc8ff)
       name:
         - margin-top: 10px
         - font-size: 15px
         - font-weight: 600
-        - color: var(--kia-text-primary)
+        - color: var(--kia-text-primary, #f4f6f8)
 
 kia_visual_action_tile:
   default:
@@ -128,9 +128,9 @@ kia_visual_action_tile:
         - min-height: 94px
         - border-radius: 16px
         - padding: 16px
-        - background: linear-gradient(145deg, rgba(32, 36, 45, 0.96), rgba(17, 21, 28, 0.96))
-        - border: 1px solid rgba(92, 200, 255, 0.14)
-        - box-shadow: 0 16px 38px rgba(0, 0, 0, 0.3)
+        - background: var(--kia-card-gradient, linear-gradient(145deg, rgba(32, 36, 45, 0.98), rgba(17, 21, 28, 0.98)))
+        - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.14))
+        - box-shadow: var(--kia-card-shadow, 0 16px 38px rgba(0, 0, 0, 0.30))
       icon:
         - width: 34px
         - color: "[[color]]"
@@ -138,7 +138,7 @@ kia_visual_action_tile:
         - margin-top: 10px
         - font-size: 14px
         - font-weight: 600
-        - color: var(--kia-text-primary)
+        - color: var(--kia-text-primary, #f4f6f8)
 
 kia_visual_perform_action_tile:
   default:
@@ -159,9 +159,9 @@ kia_visual_perform_action_tile:
         - min-height: 94px
         - border-radius: 16px
         - padding: 16px
-        - background: linear-gradient(145deg, rgba(32, 36, 45, 0.96), rgba(17, 21, 28, 0.96))
-        - border: 1px solid rgba(92, 200, 255, 0.14)
-        - box-shadow: 0 16px 38px rgba(0, 0, 0, 0.3)
+        - background: var(--kia-card-gradient, linear-gradient(145deg, rgba(32, 36, 45, 0.98), rgba(17, 21, 28, 0.98)))
+        - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.14))
+        - box-shadow: var(--kia-card-shadow, 0 16px 38px rgba(0, 0, 0, 0.30))
       icon:
         - width: 34px
         - color: "[[color]]"
@@ -169,7 +169,7 @@ kia_visual_perform_action_tile:
         - margin-top: 10px
         - font-size: 14px
         - font-weight: 600
-        - color: var(--kia-text-primary)
+        - color: var(--kia-text-primary, #f4f6f8)
 
 kia_visual_stat_tile:
   card:
@@ -187,46 +187,72 @@ kia_visual_stat_tile:
         - min-height: 104px
         - border-radius: 16px
         - padding: 16px
-        - background: linear-gradient(145deg, rgba(32, 36, 45, 0.98), rgba(17, 21, 28, 0.98))
-        - border: 1px solid rgba(92, 200, 255, 0.12)
-        - box-shadow: 0 16px 38px rgba(0, 0, 0, 0.3)
+        - background: var(--kia-card-gradient, linear-gradient(145deg, rgba(32, 36, 45, 0.98), rgba(17, 21, 28, 0.98)))
+        - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.14))
+        - box-shadow: var(--kia-card-shadow, 0 16px 38px rgba(0, 0, 0, 0.30))
       grid:
         - "grid-template-areas: 'i n' 'i s' 'i l'"
         - grid-template-columns: 44px 1fr
         - grid-template-rows: min-content min-content min-content
       icon:
         - width: 28px
-        - color: var(--kia-brand-primary)
+        - color: var(--kia-brand-primary, #5cc8ff)
       name:
         - justify-self: start
         - font-size: 13px
         - font-weight: 600
-        - color: var(--kia-text-secondary)
+        - color: var(--kia-text-secondary, #b7c0cc)
       state:
         - justify-self: start
         - font-size: 24px
         - font-weight: 700
-        - color: var(--kia-text-primary)
+        - color: var(--kia-text-primary, #f4f6f8)
       label:
         - justify-self: start
         - font-size: 12px
-        - color: var(--kia-text-muted)
+        - color: var(--kia-text-muted, #8a94a3)
 
 kia_visual_text_panel:
   card:
-    type: markdown
-    title: "[[title]]"
-    content: >-
+    type: custom:button-card
+    name: "[[title]]"
+    label: >-
       [[content]]
-    card_mod:
-      style: |
-        ha-card {
-          border-radius: 18px;
-          background: linear-gradient(145deg, rgba(32, 36, 45, 0.98), rgba(17, 21, 28, 0.98));
-          border: 1px solid rgba(92, 200, 255, 0.14);
-          box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
-          color: var(--kia-text-primary);
-        }
+    show_icon: false
+    show_label: true
+    show_state: false
+    tap_action:
+      action: none
+    styles:
+      card:
+        - min-height: 128px
+        - align-items: start
+        - justify-content: start
+        - text-align: left
+        - border-radius: 18px
+        - padding: 18px
+        - background: var(--kia-card-gradient, linear-gradient(145deg, rgba(32, 36, 45, 0.98), rgba(17, 21, 28, 0.98)))
+        - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.14))
+        - box-shadow: var(--kia-card-shadow, 0 16px 38px rgba(0, 0, 0, 0.28))
+      grid:
+        - "grid-template-areas: 'n' 'l'"
+        - grid-template-columns: 1fr
+        - grid-template-rows: min-content 1fr
+        - row-gap: 12px
+      name:
+        - justify-self: start
+        - color: var(--kia-text-primary, #f4f6f8)
+        - font-size: 22px
+        - font-weight: 700
+        - white-space: normal
+        - text-align: left
+      label:
+        - justify-self: start
+        - color: var(--kia-text-secondary, #b7c0cc)
+        - font-size: 14px
+        - line-height: 1.45
+        - white-space: normal
+        - text-align: left
 
 kia_back_to_overview:
   card:
@@ -242,14 +268,14 @@ kia_back_to_overview:
         - min-height: 128px
         - border-radius: 18px
         - padding: 18px
-        - background: linear-gradient(145deg, rgba(32, 36, 45, 0.98), rgba(17, 21, 28, 0.98))
-        - border: 1px solid rgba(92, 200, 255, 0.14)
-        - box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28)
+        - background: var(--kia-card-gradient, linear-gradient(145deg, rgba(32, 36, 45, 0.98), rgba(17, 21, 28, 0.98)))
+        - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.14))
+        - box-shadow: var(--kia-card-shadow, 0 16px 38px rgba(0, 0, 0, 0.28))
       icon:
         - width: 48px
-        - color: var(--kia-brand-primary)
+        - color: var(--kia-brand-primary, #5cc8ff)
       name:
         - margin-top: 12px
         - font-size: 15px
         - font-weight: 700
-        - color: var(--kia-text-primary)
+        - color: var(--kia-text-primary, #f4f6f8)
