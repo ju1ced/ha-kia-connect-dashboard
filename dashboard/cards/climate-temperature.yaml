@@ -4,7 +4,7 @@ cards:
   - type: custom:decluttering-card
     template: kia_visual_stat_tile
     variables:
-      - entity: climate.set_temperature
+      - entity: climate / set_temperature
       - name: Set temperature
       - icon: mdi:thermometer
       - label: Cabin target
