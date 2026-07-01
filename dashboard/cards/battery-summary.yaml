@@ -1,10 +1,28 @@
 ---
-type: markdown
-title: Battery
-content: >-
-  - State of charge: `battery.level`
-  - Charging state: `battery.charging_state`
-  - Charging power: `battery.charging_power`
-  - Estimated range: `battery.estimated_range`
-  - Charge limit: `battery.target_charge_limit`
-  - Plug connected: `battery.plug_connected`
+type: vertical-stack
+cards:
+  - type: custom:decluttering-card
+    template: kia_visual_stat_tile
+    variables:
+      - entity: battery.level
+      - name: Battery level
+      - icon: mdi:battery-high
+      - label: State of charge
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: battery.estimated_range
+          - name: Range
+          - icon: mdi:map-marker-distance
+          - label: Estimated
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: battery.charging_state
+          - name: Charging
+          - icon: mdi:battery-charging
+          - label: Current state
