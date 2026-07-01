@@ -199,10 +199,26 @@ kia_visual_text_panel:
 
 kia_back_to_overview:
   card:
-    type: button
+    type: custom:button-card
     name: Back to Overview
     icon: mdi:arrow-left
     show_state: false
     tap_action:
       action: navigate
       navigation_path: /lovelace/overview
+    styles:
+      card:
+        - min-height: 128px
+        - border-radius: 18px
+        - padding: 18px
+        - background: linear-gradient(145deg, rgba(32, 36, 45, 0.98), rgba(17, 21, 28, 0.98))
+        - border: 1px solid rgba(92, 200, 255, 0.14)
+        - box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28)
+      icon:
+        - width: 48px
+        - color: var(--kia-brand-primary)
+      name:
+        - margin-top: 12px
+        - font-size: 15px
+        - font-weight: 700
+        - color: var(--kia-text-primary)
