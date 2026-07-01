@@ -4,8 +4,6 @@ template: kia_visual_text_panel
 variables:
   - title: Status
   - content: >-
-      **All systems normal**
-
-      Review live warnings on Vehicle and Settings during the first Home
-      Assistant test. Medium-risk commands remain disabled until confirmation
-      behavior is validated.
+      All systems normal. Review live warnings on Vehicle and Settings during
+      the first Home Assistant test. Medium-risk commands remain disabled until
+      confirmation behavior is validated.
