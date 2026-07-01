@@ -3,23 +3,35 @@ type: grid
 columns: 2
 square: false
 cards:
-  - type: button
-    name: Refresh
-    icon: mdi:refresh
-    tap_action:
-      action: none
-  - type: button
-    name: Start climate
-    icon: mdi:play-circle
-    tap_action:
-      action: none
-  - type: button
-    name: Stop climate
-    icon: mdi:stop-circle
-    tap_action:
-      action: none
-  - type: button
-    name: Start charging
-    icon: mdi:ev-station
-    tap_action:
-      action: none
+  - type: custom:decluttering-card
+    template: kia_visual_action_tile
+    variables:
+      - entity: controls.refresh
+      - name: Refresh Data
+      - icon: mdi:refresh
+      - color: var(--kia-brand-primary)
+      - action: none
+  - type: custom:decluttering-card
+    template: kia_visual_action_tile
+    variables:
+      - entity: controls.start_climate
+      - name: Start Climate
+      - icon: mdi:fan
+      - color: var(--kia-brand-primary)
+      - action: none
+  - type: custom:decluttering-card
+    template: kia_visual_action_tile
+    variables:
+      - entity: controls.stop_climate
+      - name: Stop Climate
+      - icon: mdi:fan-off
+      - color: var(--kia-status-warning)
+      - action: none
+  - type: custom:decluttering-card
+    template: kia_visual_action_tile
+    variables:
+      - entity: controls.start_charging
+      - name: Start Charging
+      - icon: mdi:ev-plug-type2
+      - color: var(--kia-status-charging)
+      - action: none
