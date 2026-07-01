@@ -1,9 +1,11 @@
 ---
-type: markdown
-title: Vehicle
-content: >-
-  ## Vehicle State
+type: custom:decluttering-card
+template: kia_visual_text_panel
+variables:
+  - title: Vehicle
+  - content: >-
+      **Vehicle state**
 
-  Detail surface for `vehicle`, `locks`, `openings`, and `lights` mapping
-  groups. This page expands the Overview vehicle summary while keeping raw
-  entity IDs inside `dashboard/templates/entities.yaml`.
+      Locks, charge port, doors, windows, trunk, hood, and lights are grouped on
+      this page so the car can be checked quickly before remote actions are
+      enabled.
