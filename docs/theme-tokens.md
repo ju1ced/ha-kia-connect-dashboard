@@ -3,11 +3,22 @@
 ## Purpose
 
 Kia Horizon is the first dashboard theme for HA Kia Connect Dashboard. It defines
-a quiet, high-contrast dark interface inspired by Kia Connect surfaces and
-modern vehicle dashboard UI patterns.
+a quiet, high-contrast interface inspired by Kia Connect surfaces and modern
+vehicle dashboard UI patterns.
 
 The theme separates raw color values from dashboard intent. Cards and views
 should use semantic tokens, not one-off color literals.
+
+## Light And Dark Modes
+
+Kia Horizon defines Home Assistant `light` and `dark` mode values under the same
+theme name. When Home Assistant is set to automatic theme mode, the dashboard
+can follow the active light or dark appearance without switching themes.
+
+The top-level values remain dark defaults for older Home Assistant installs and
+for first paint before mode-specific variables are applied. Visual card templates
+also include CSS fallback values so cards remain readable if the theme is not yet
+loaded.
 
 ## Token Groups
 
@@ -16,6 +27,8 @@ should use semantic tokens, not one-off color literals.
 - `kia-brand-*` tokens define primary interaction and accent colors.
 - `kia-status-*` tokens define vehicle and system state colors.
 - `kia-battery-*` tokens define battery-specific thresholds.
+- `kia-card-*` tokens define reusable visual card surfaces, borders, and shadows.
+- `kia-hero-*` tokens define the Overview hero surface and vehicle accent.
 - `kia-radius-*` tokens define border radius scale.
 - `kia-spacing-*` tokens define spacing scale.
 - `kia-shadow-*` tokens define elevation.
@@ -23,7 +36,8 @@ should use semantic tokens, not one-off color literals.
 ## Usage Rules
 
 - Use semantic tokens such as `var(--kia-status-warning)` in dashboard cards.
-- Avoid raw hex colors in views, cards, or popups.
+- Add a CSS fallback when a custom card uses a token directly.
+- Avoid raw hex colors in views, cards, or popups unless they are fallbacks.
 - Use status colors only for state, warnings, or action feedback.
 - Use brand colors sparingly for primary controls and active states.
 - Keep surface hierarchy clear: base, raised, elevated, then overlay.
@@ -40,3 +54,4 @@ should use semantic tokens, not one-off color literals.
 - New colors have enough contrast for their intended text or icon use.
 - New icons describe dashboard intent, not integration implementation details.
 - New tokens are documented when they introduce a new visual role.
+- New visual cards are readable in both Home Assistant light and dark modes.
