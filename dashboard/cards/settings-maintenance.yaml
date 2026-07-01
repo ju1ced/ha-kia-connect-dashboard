@@ -10,6 +10,18 @@ cards:
   - type: custom:decluttering-card
     template: kia_mapped_state_row
     variables:
+      - entity: controls.last_climate_result
+      - name: Last climate command
+      - icon: mdi:air-conditioner
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: controls.last_charging_result
+      - name: Last charging command
+      - icon: mdi:ev-station
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
       - entity: settings.mapping_health_summary
       - name: Mapping health
       - icon: mdi:heart-pulse
@@ -24,5 +36,6 @@ cards:
     variables:
       - title: Maintenance
       - content: >-
-          Maintenance owns read-only feedback for refresh results, mapping
-          health, dashboard version, and future troubleshooting links.
+          Maintenance owns read-only feedback for refresh results, future climate
+          and charging command results, mapping health, dashboard version, and
+          future troubleshooting links.
