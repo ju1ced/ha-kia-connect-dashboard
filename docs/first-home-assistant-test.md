@@ -17,6 +17,7 @@ Confirm these items in Home Assistant:
 - HACS or another install path provides `decluttering-card`, `button-card`, and
   `card-mod`.
 - YAML mode or a dashboard include workflow is available for Lovelace.
+- You know the dashboard URL path that will host the Kia pages.
 - You can edit the existing Home dashboard button for the Kia EV6 entry point.
 
 ## Prepare The Entity Map
@@ -56,10 +57,18 @@ Fix missing or incorrect mapped entity IDs before rendering the test dashboard.
 
 ## Render The Test Dashboard
 
-Run the render step from the repository root:
+Run the render step from the repository root. The default dashboard path is
+`/lovelace`:
 
 ```bash
 python scripts/render_dashboard.py
+```
+
+If your Kia dashboard is mounted under another URL path, render with the same
+base path. For example:
+
+```bash
+python scripts/render_dashboard.py --dashboard-path /kia-ev6
 ```
 
 The rendered Home Assistant-ready files are written to:
@@ -101,7 +110,8 @@ different path.
 ## Connect The Home Button
 
 Keep the Kia dashboard behind the existing Home dashboard button. Point the
-button to the Kia Overview route:
+button to the Kia Overview route. Use the same dashboard path as the render
+command:
 
 ```yaml
 type: button
@@ -112,8 +122,8 @@ tap_action:
   navigation_path: /lovelace/overview
 ```
 
-If the dashboard is mounted under another Lovelace URL, adjust the route to
-match that local dashboard path.
+If you rendered with `--dashboard-path /kia-ev6`, the button should navigate to
+`/kia-ev6/overview` instead.
 
 ## First Test Scope
 
@@ -123,6 +133,7 @@ Check these items first:
 - The Overview page shows the dark visual card layer.
 - Battery, Vehicle, Climate, Energy, Location, and Settings pages open from the
   Overview page.
+- Back to Overview works from every detail page.
 - The Kia Horizon theme loads correctly.
 - Read-only data rows show values or understandable unavailable states.
 - Settings shows latest scan, climate state, charging state, and vehicle data
@@ -146,8 +157,12 @@ After the first pass, add screenshots for:
 
 - Overview on desktop.
 - Overview on mobile.
+- Battery with live data.
+- Vehicle with live data.
+- Climate with live data.
+- Energy with live data.
+- Location with live data.
 - Settings diagnostics.
-- One detail page with live data.
 
 Store real screenshots next to the current visual references in
 `docs/screenshots/` once the first Home Assistant install is stable.
