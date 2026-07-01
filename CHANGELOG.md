@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Improved visual card text wrapping and Overview navigation readability during
+  the first Home Assistant render tests.
+- Removed markdown formatting from the visual Overview footer to avoid Home
+  Assistant card configuration errors.
 - Added Kia Horizon light and dark mode tokens plus visual card fallbacks so the
   dashboard stays readable when Home Assistant uses automatic theme mode.
 - Added configurable dashboard route rendering for Home Assistant installs that
