@@ -27,7 +27,7 @@ styles:
     - border: 1px solid rgba(92, 200, 255, 0.18)
     - box-shadow: 0 22px 54px rgba(0, 0, 0, 0.36)
   grid:
-    - grid-template-areas: 'i n locked online battery' 'i l locked online battery' 'car car car car car'
+    - "grid-template-areas: 'i n locked online battery' 'i l locked online battery' 'car car car car car'"
     - grid-template-columns: 56px 1fr min-content min-content min-content
     - grid-template-rows: min-content min-content 1fr
     - column-gap: 14px
