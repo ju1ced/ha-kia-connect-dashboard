@@ -1,41 +1,41 @@
 ---
 type: grid
-columns: 3
+columns: 6
 square: false
 cards:
-  - type: button
-    name: Battery
-    icon: mdi:battery-charging-high
-    tap_action:
-      action: navigate
-      navigation_path: /lovelace/kia-battery
-  - type: button
-    name: Vehicle
-    icon: mdi:car-info
-    tap_action:
-      action: navigate
-      navigation_path: /lovelace/kia-vehicle
-  - type: button
-    name: Climate
-    icon: mdi:air-conditioner
-    tap_action:
-      action: navigate
-      navigation_path: /lovelace/kia-climate
-  - type: button
-    name: Energy
-    icon: mdi:chart-line
-    tap_action:
-      action: navigate
-      navigation_path: /lovelace/kia-energy
-  - type: button
-    name: Location
-    icon: mdi:map-marker
-    tap_action:
-      action: navigate
-      navigation_path: /lovelace/kia-location
-  - type: button
-    name: Settings
-    icon: mdi:tune
-    tap_action:
-      action: navigate
-      navigation_path: /lovelace/kia-settings
+  - type: custom:decluttering-card
+    template: kia_visual_nav_tile
+    variables:
+      - name: Battery
+      - icon: mdi:battery-charging-high
+      - path: /lovelace/kia-battery
+  - type: custom:decluttering-card
+    template: kia_visual_nav_tile
+    variables:
+      - name: Vehicle
+      - icon: mdi:car-info
+      - path: /lovelace/kia-vehicle
+  - type: custom:decluttering-card
+    template: kia_visual_nav_tile
+    variables:
+      - name: Climate
+      - icon: mdi:air-conditioner
+      - path: /lovelace/kia-climate
+  - type: custom:decluttering-card
+    template: kia_visual_nav_tile
+    variables:
+      - name: Energy
+      - icon: mdi:chart-line
+      - path: /lovelace/kia-energy
+  - type: custom:decluttering-card
+    template: kia_visual_nav_tile
+    variables:
+      - name: Location
+      - icon: mdi:map-marker
+      - path: /lovelace/kia-location
+  - type: custom:decluttering-card
+    template: kia_visual_nav_tile
+    variables:
+      - name: Settings
+      - icon: mdi:tune
+      - path: /lovelace/kia-settings
