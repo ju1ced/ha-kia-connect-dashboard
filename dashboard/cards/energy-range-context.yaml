@@ -1,26 +1,33 @@
 ---
 type: vertical-stack
 cards:
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: battery.estimated_range
+          - name: Estimated range
+          - icon: mdi:map-marker-distance
+          - label: Remaining range
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: battery.level
+          - name: Battery level
+          - icon: mdi:battery-high
+          - label: State of charge
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: battery.target_charge_limit
+          - name: Charge target
+          - icon: mdi:battery-charging-80
+          - label: AC limit
   - type: custom:decluttering-card
-    template: kia_mapped_state_row
-    variables:
-      - entity: battery.estimated_range
-      - name: Estimated range
-      - icon: mdi:map-marker-distance
-  - type: custom:decluttering-card
-    template: kia_mapped_state_row
-    variables:
-      - entity: battery.level
-      - name: Battery level
-      - icon: mdi:battery-high
-  - type: custom:decluttering-card
-    template: kia_mapped_state_row
-    variables:
-      - entity: battery.target_charge_limit
-      - name: Charge target
-      - icon: mdi:battery-charging-80
-  - type: custom:decluttering-card
-    template: kia_mapped_section_note
+    template: kia_visual_text_panel
     variables:
       - title: Range Context
       - content: >-

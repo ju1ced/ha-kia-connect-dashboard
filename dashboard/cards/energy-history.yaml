@@ -1,6 +1,6 @@
 ---
 type: custom:decluttering-card
-template: kia_mapped_section_note
+template: kia_visual_text_panel
 variables:
   - title: History
   - content: >-

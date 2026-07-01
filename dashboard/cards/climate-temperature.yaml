@@ -2,16 +2,17 @@
 type: vertical-stack
 cards:
   - type: custom:decluttering-card
-    template: kia_mapped_state_row
+    template: kia_visual_stat_tile
     variables:
       - entity: climate / set_temperature
       - name: Set temperature
       - icon: mdi:thermometer
+      - label: Cabin target
   - type: custom:decluttering-card
-    template: kia_mapped_section_note
+    template: kia_visual_text_panel
     variables:
       - title: Temperature
       - content: >-
-          The current Kia integration exposes the configured climate temperature.
-          Cabin and outside temperature rows can be added when matching entities
-          are available.
+          The current Kia integration exposes the configured climate
+          temperature. Cabin and outside temperature rows can be added when
+          matching entities are available.

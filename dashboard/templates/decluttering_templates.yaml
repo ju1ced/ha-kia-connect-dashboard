@@ -140,6 +140,37 @@ kia_visual_action_tile:
         - font-weight: 600
         - color: var(--kia-text-primary)
 
+kia_visual_perform_action_tile:
+  default:
+    - perform_action: button.press
+  card:
+    type: custom:button-card
+    entity: "[[entity]]"
+    name: "[[name]]"
+    icon: "[[icon]]"
+    show_state: false
+    tap_action:
+      action: perform-action
+      perform_action: "[[perform_action]]"
+      target:
+        entity_id: "[[entity]]"
+    styles:
+      card:
+        - min-height: 94px
+        - border-radius: 16px
+        - padding: 16px
+        - background: linear-gradient(145deg, rgba(32, 36, 45, 0.96), rgba(17, 21, 28, 0.96))
+        - border: 1px solid rgba(92, 200, 255, 0.14)
+        - box-shadow: 0 16px 38px rgba(0, 0, 0, 0.3)
+      icon:
+        - width: 34px
+        - color: "[[color]]"
+      name:
+        - margin-top: 10px
+        - font-size: 14px
+        - font-weight: 600
+        - color: var(--kia-text-primary)
+
 kia_visual_stat_tile:
   card:
     type: custom:button-card

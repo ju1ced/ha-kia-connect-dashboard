@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Converted the Climate, Energy, Location, and Settings detail pages to the dark
+  visual card pattern.
 - Converted the Battery and Vehicle detail pages to the dark visual card pattern.
 - Added the first dark visual Overview layer with reusable `button-card` and
   `card-mod` card patterns.

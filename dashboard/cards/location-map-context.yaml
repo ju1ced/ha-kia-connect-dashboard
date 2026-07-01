@@ -2,13 +2,14 @@
 type: vertical-stack
 cards:
   - type: custom:decluttering-card
-    template: kia_mapped_state_row
+    template: kia_visual_stat_tile
     variables:
       - entity: location.tracker
       - name: Tracker
       - icon: mdi:map-marker
+      - label: Last known area
   - type: custom:decluttering-card
-    template: kia_mapped_section_note
+    template: kia_visual_text_panel
     variables:
       - title: Map Context
       - content: >-

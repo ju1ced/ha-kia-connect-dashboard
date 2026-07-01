@@ -95,5 +95,5 @@
 - [x] Document required visual Lovelace resources.
 - [x] Convert Battery detail page to the visual card pattern.
 - [x] Convert Vehicle detail page to the visual card pattern.
-- [ ] Convert Climate, Energy, Location, and Settings pages to the visual card pattern.
+- [x] Convert Climate, Energy, Location, and Settings pages to the visual card pattern.
 - [ ] Capture real Home Assistant screenshots after the visual pass is installed.
