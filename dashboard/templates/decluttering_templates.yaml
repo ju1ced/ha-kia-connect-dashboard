@@ -160,7 +160,7 @@ kia_visual_stat_tile:
         - border: 1px solid rgba(92, 200, 255, 0.12)
         - box-shadow: 0 16px 38px rgba(0, 0, 0, 0.3)
       grid:
-        - grid-template-areas: 'i n' 'i s' 'i l'
+        - "grid-template-areas: 'i n' 'i s' 'i l'"
         - grid-template-columns: 44px 1fr
         - grid-template-rows: min-content min-content min-content
       icon:
