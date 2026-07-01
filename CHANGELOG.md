@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added the first dark visual Overview layer with reusable `button-card` and
+  `card-mod` card patterns.
 - Aligned the first-test entity map and affected Settings, Vehicle, Climate, and
   test documentation with the available Oprit Nebula Home Assistant entities.
 - Refreshed README and roadmap status for first Home Assistant test readiness.
