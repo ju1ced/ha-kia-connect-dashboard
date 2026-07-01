@@ -1,22 +1,28 @@
 ---
 type: vertical-stack
 cards:
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: battery.estimated_range
+          - name: Estimated range
+          - icon: mdi:map-marker-distance
+          - label: Remaining driving range
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: battery.level
+          - name: State of charge
+          - icon: mdi:battery-high
+          - label: EV battery level
   - type: custom:decluttering-card
-    template: kia_mapped_state_row
-    variables:
-      - entity: battery.estimated_range
-      - name: Estimated range
-      - icon: mdi:map-marker-distance
-  - type: custom:decluttering-card
-    template: kia_mapped_state_row
-    variables:
-      - entity: battery.level
-      - name: State of charge
-      - icon: mdi:battery-high
-  - type: custom:decluttering-card
-    template: kia_mapped_section_note
+    template: kia_visual_text_panel
     variables:
       - title: Range Context
       - content: >-
-          Future implementation should add range trends and climate-aware range
-          notes once the shared chart pattern exists.
+          Range trends and climate-aware range notes will live here once the
+          shared chart pattern is added.

@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Converted the Battery and Vehicle detail pages to the dark visual card pattern.
 - Added the first dark visual Overview layer with reusable `button-card` and
   `card-mod` card patterns.
 - Aligned the first-test entity map and affected Settings, Vehicle, Climate, and
