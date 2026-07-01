@@ -8,21 +8,21 @@ cards:
       - type: custom:decluttering-card
         template: kia_visual_stat_tile
         variables:
-          - entity: climate.hvac
+          - entity: climate / hvac
           - name: HVAC state
           - icon: mdi:air-conditioner
           - label: Climate command
       - type: custom:decluttering-card
         template: kia_visual_stat_tile
         variables:
-          - entity: climate.defrost
+          - entity: climate / defrost
           - name: Defrost
           - icon: mdi:car-defrost-front
           - label: Front screen
       - type: custom:decluttering-card
         template: kia_visual_stat_tile
         variables:
-          - entity: climate.steering_wheel_heater
+          - entity: climate / steering_wheel_heater
           - name: Steering wheel heater
           - icon: mdi:steering
           - label: Comfort state
