@@ -4,23 +4,26 @@ columns: 3
 square: false
 cards:
   - type: custom:decluttering-card
-    template: kia_mapped_action_button
+    template: kia_visual_action_tile
     variables:
       - entity: controls.start_charging
-      - name: Start charging
+      - name: Start Charging
       - icon: mdi:ev-station
+      - color: var(--kia-status-charging)
       - action: none
   - type: custom:decluttering-card
-    template: kia_mapped_action_button
+    template: kia_visual_action_tile
     variables:
       - entity: controls.stop_charging
-      - name: Stop charging
+      - name: Stop Charging
       - icon: mdi:stop-circle
+      - color: var(--kia-status-warning)
       - action: none
   - type: custom:decluttering-card
-    template: kia_mapped_action_button
+    template: kia_visual_action_tile
     variables:
       - entity: controls.refresh
-      - name: Refresh
+      - name: Refresh Data
       - icon: mdi:refresh
+      - color: var(--kia-brand-primary)
       - action: none
