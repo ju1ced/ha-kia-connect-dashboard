@@ -1,11 +1,10 @@
 ---
-type: markdown
-title: Location
-content: >-
-  ## Position Context
+type: custom:decluttering-card
+template: kia_visual_text_panel
+variables:
+  - title: Location
+  - content: >-
+      **Position context**
 
-  Detail surface for vehicle tracker state, odometer context, parking notes, and
-  future map-focused components.
-
-  The first shell keeps Overview lightweight while giving location data a clear
-  destination of its own.
+      Tracker state, odometer, parking notes, and future map components are
+      grouped here so location data has a clear destination of its own.
