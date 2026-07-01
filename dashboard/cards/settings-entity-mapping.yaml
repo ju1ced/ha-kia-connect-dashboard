@@ -2,14 +2,14 @@
 type: vertical-stack
 cards:
   - type: custom:decluttering-card
-    template: kia_mapped_section_note
+    template: kia_visual_text_panel
     variables:
       - title: Entity Mapping
       - content: >-
           Entity IDs are configured in dashboard/templates/entities.yaml only.
           Keep logical keys stable and update mapped entity values there.
   - type: custom:decluttering-card
-    template: kia_mapped_entity_diagnostics
+    template: kia_visual_text_panel
     variables:
       - title: Missing Entity Handling
       - content: >-
@@ -17,7 +17,7 @@ cards:
           value in dashboard/templates/entities.yaml first. Card files should
           keep using logical keys so the package remains portable.
   - type: custom:decluttering-card
-    template: kia_mapped_entity_diagnostics
+    template: kia_visual_text_panel
     variables:
       - title: Validation Coverage
       - content: >-
