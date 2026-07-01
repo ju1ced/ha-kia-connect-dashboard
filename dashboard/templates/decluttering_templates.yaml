@@ -87,6 +87,116 @@ kia_inline_mapping_alert:
 
       [[content]]
 
+kia_visual_nav_tile:
+  card:
+    type: custom:button-card
+    name: "[[name]]"
+    icon: "[[icon]]"
+    tap_action:
+      action: navigate
+      navigation_path: "[[path]]"
+    styles:
+      card:
+        - min-height: 92px
+        - border-radius: 16px
+        - padding: 16px
+        - background: linear-gradient(145deg, rgba(32, 36, 45, 0.96), rgba(17, 21, 28, 0.96))
+        - border: 1px solid rgba(92, 200, 255, 0.18)
+        - box-shadow: 0 16px 38px rgba(0, 0, 0, 0.32)
+      icon:
+        - width: 32px
+        - color: var(--kia-brand-primary)
+      name:
+        - margin-top: 10px
+        - font-size: 15px
+        - font-weight: 600
+        - color: var(--kia-text-primary)
+
+kia_visual_action_tile:
+  default:
+    - action: none
+  card:
+    type: custom:button-card
+    entity: "[[entity]]"
+    name: "[[name]]"
+    icon: "[[icon]]"
+    show_state: false
+    tap_action:
+      action: "[[action]]"
+    styles:
+      card:
+        - min-height: 94px
+        - border-radius: 16px
+        - padding: 16px
+        - background: linear-gradient(145deg, rgba(32, 36, 45, 0.96), rgba(17, 21, 28, 0.96))
+        - border: 1px solid rgba(92, 200, 255, 0.14)
+        - box-shadow: 0 16px 38px rgba(0, 0, 0, 0.3)
+      icon:
+        - width: 34px
+        - color: "[[color]]"
+      name:
+        - margin-top: 10px
+        - font-size: 14px
+        - font-weight: 600
+        - color: var(--kia-text-primary)
+
+kia_visual_stat_tile:
+  card:
+    type: custom:button-card
+    entity: "[[entity]]"
+    name: "[[name]]"
+    icon: "[[icon]]"
+    show_state: true
+    show_label: true
+    label: "[[label]]"
+    tap_action:
+      action: more-info
+    styles:
+      card:
+        - min-height: 104px
+        - border-radius: 16px
+        - padding: 16px
+        - background: linear-gradient(145deg, rgba(32, 36, 45, 0.98), rgba(17, 21, 28, 0.98))
+        - border: 1px solid rgba(92, 200, 255, 0.12)
+        - box-shadow: 0 16px 38px rgba(0, 0, 0, 0.3)
+      grid:
+        - "grid-template-areas: 'i n' 'i s' 'i l'"
+        - grid-template-columns: 44px 1fr
+        - grid-template-rows: min-content min-content min-content
+      icon:
+        - width: 28px
+        - color: var(--kia-brand-primary)
+      name:
+        - justify-self: start
+        - font-size: 13px
+        - font-weight: 600
+        - color: var(--kia-text-secondary)
+      state:
+        - justify-self: start
+        - font-size: 24px
+        - font-weight: 700
+        - color: var(--kia-text-primary)
+      label:
+        - justify-self: start
+        - font-size: 12px
+        - color: var(--kia-text-muted)
+
+kia_visual_text_panel:
+  card:
+    type: markdown
+    title: "[[title]]"
+    content: >-
+      [[content]]
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: 18px;
+          background: linear-gradient(145deg, rgba(32, 36, 45, 0.98), rgba(17, 21, 28, 0.98));
+          border: 1px solid rgba(92, 200, 255, 0.14);
+          box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
+          color: var(--kia-text-primary);
+        }
+
 kia_back_to_overview:
   card:
     type: button

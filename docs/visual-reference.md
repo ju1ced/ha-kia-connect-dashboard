@@ -11,10 +11,16 @@ SVG files so GitHub can preview them directly.
 - `docs/screenshots/navigation-flow-reference.svg` shows how an existing Home
   Assistant dashboard links into the Kia Overview and detail pages.
 
+## Implementation Status
+
+The Overview page has the first dark visual card layer using `button-card`,
+`card-mod`, and the Kia Horizon theme tokens. Detail pages still use the lighter
+native Lovelace implementation until their visual pass is completed.
+
 ## Review Rules
 
 - Treat these renders as layout intent, not generated Home Assistant screenshots.
-- Update the relevant render when a PR changes first-screen navigation or
-  diagnostics structure.
+- Update the relevant render when a PR changes first-screen navigation,
+  diagnostics structure, or the implemented visual direction.
 - Add real screenshots next to these renders once a Home Assistant test install
   is available.

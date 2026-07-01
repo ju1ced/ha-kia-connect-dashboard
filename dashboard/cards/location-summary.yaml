@@ -1,9 +1,27 @@
 ---
-type: markdown
-title: Location
-content: >-
-  - Tracker: `location.tracker`
-  - Odometer: `location.odometer`
-
-  Map and route context will be connected after the Overview data cards consume
-  mapped Home Assistant entities.
+type: vertical-stack
+cards:
+  - type: custom:decluttering-card
+    template: kia_visual_text_panel
+    variables:
+      - title: Location
+      - content: >-
+          Vehicle position and odometer context.
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: location.tracker
+          - name: Tracker
+          - icon: mdi:map-marker
+          - label: Last known area
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: location.odometer
+          - name: Odometer
+          - icon: mdi:counter
+          - label: Vehicle mileage

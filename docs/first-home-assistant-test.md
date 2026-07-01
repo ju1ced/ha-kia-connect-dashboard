@@ -14,7 +14,8 @@ bindings have their own safety pass.
 Confirm these items in Home Assistant:
 
 - The Kia integration is already installed and exposing vehicle entities.
-- HACS or another install path provides `decluttering-card`.
+- HACS or another install path provides `decluttering-card`, `button-card`, and
+  `card-mod`.
 - YAML mode or a dashboard include workflow is available for Lovelace.
 - You can edit the existing Home dashboard button for the Kia EV6 entry point.
 
@@ -81,17 +82,20 @@ dashboard/themes/
 into your Home Assistant themes folder, then reload themes in Home Assistant.
 Select the theme before doing the visual pass.
 
-## Register Required Resource
+## Register Required Resources
 
-Make sure `decluttering-card` is available as a Lovelace resource. A typical
-resource entry looks like this:
+Make sure these Lovelace resources are available before opening the dashboard:
 
 ```yaml
-url: /hacsfiles/lovelace-decluttering-card/decluttering-card.js
-type: module
+- url: /hacsfiles/lovelace-decluttering-card/decluttering-card.js
+  type: module
+- url: /hacsfiles/button-card/button-card.js
+  type: module
+- url: /hacsfiles/lovelace-card-mod/card-mod.js
+  type: module
 ```
 
-Adjust the URL if your Home Assistant instance exposes HACS resources under a
+Adjust the URLs if your Home Assistant instance exposes HACS resources under a
 different path.
 
 ## Connect The Home Button
@@ -116,7 +120,7 @@ match that local dashboard path.
 Check these items first:
 
 - The Home dashboard button opens the Kia Overview page.
-- The Overview page shows the main vehicle sections.
+- The Overview page shows the dark visual card layer.
 - Battery, Vehicle, Climate, Energy, Location, and Settings pages open from the
   Overview page.
 - The Kia Horizon theme loads correctly.

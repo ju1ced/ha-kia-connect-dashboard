@@ -1,9 +1,87 @@
 ---
-type: markdown
-title: Kia EV6
-content: >-
-  ## Kia EV6 GT-Line RWD
-
-  Snow White Pearl reference vehicle with a dashboard shell ready for mapped
-  vehicle data. This card will consume `vehicle`, `battery`, `location`, and
-  `controls` mapping keys as implementation cards mature.
+type: custom:button-card
+name: Kia EV6
+label: GT-Line RWD
+icon: mdi:car-electric
+show_label: true
+show_state: false
+tap_action:
+  action: more-info
+  entity: location.tracker
+custom_fields:
+  locked: |
+    [[[ return '<ha-icon icon="mdi:lock"></ha-icon><span>Locked</span>'; ]]]
+  online: |
+    [[[ return '<ha-icon icon="mdi:wifi"></ha-icon><span>Online</span>'; ]]]
+  battery: |
+    [[[ return '<ha-icon icon="mdi:battery-high"></ha-icon><span>EV6</span>'; ]]]
+  car: |
+    [[[ return '<ha-icon icon="mdi:car-side"></ha-icon>'; ]]]
+styles:
+  card:
+    - min-height: 230px
+    - border-radius: 22px
+    - padding: 24px
+    - overflow: hidden
+    - background: linear-gradient(145deg, rgba(17, 21, 28, 0.98), rgba(32, 36, 45, 0.94))
+    - border: 1px solid rgba(92, 200, 255, 0.18)
+    - box-shadow: 0 22px 54px rgba(0, 0, 0, 0.36)
+  grid:
+    - "grid-template-areas: 'i n locked online battery' 'i l locked online battery' 'car car car car car'"
+    - grid-template-columns: 56px 1fr min-content min-content min-content
+    - grid-template-rows: min-content min-content 1fr
+    - column-gap: 14px
+    - row-gap: 8px
+  icon:
+    - width: 44px
+    - color: var(--kia-text-primary)
+  name:
+    - justify-self: start
+    - align-self: end
+    - font-size: 30px
+    - font-weight: 800
+    - color: var(--kia-text-primary)
+  label:
+    - justify-self: start
+    - font-size: 16px
+    - color: var(--kia-text-secondary)
+  custom_fields:
+    locked:
+      - align-self: start
+      - padding: 10px 14px
+      - border-radius: 14px
+      - background: rgba(92, 200, 255, 0.1)
+      - color: var(--kia-brand-primary)
+      - font-weight: 700
+      - white-space: nowrap
+    online:
+      - align-self: start
+      - padding: 10px 14px
+      - border-radius: 14px
+      - background: rgba(126, 231, 135, 0.1)
+      - color: var(--kia-status-charging)
+      - font-weight: 700
+      - white-space: nowrap
+    battery:
+      - align-self: start
+      - padding: 10px 14px
+      - border-radius: 14px
+      - background: rgba(92, 200, 255, 0.1)
+      - color: var(--kia-text-primary)
+      - font-weight: 700
+      - white-space: nowrap
+    car:
+      - align-self: center
+      - justify-self: center
+      - color: rgba(244, 246, 248, 0.92)
+      - transform: scale(4.8)
+      - opacity: 0.88
+card_mod:
+  style: |
+    ha-card #locked ha-icon,
+    ha-card #online ha-icon,
+    ha-card #battery ha-icon {
+      width: 18px;
+      margin-right: 8px;
+      vertical-align: -4px;
+    }
