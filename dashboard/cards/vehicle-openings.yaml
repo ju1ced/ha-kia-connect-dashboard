@@ -40,6 +40,24 @@ cards:
   - type: custom:decluttering-card
     template: kia_mapped_state_row
     variables:
-      - entity: openings.windows
-      - name: Windows
+      - entity: openings.front_left_window
+      - name: Front left window
+      - icon: mdi:car-door
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: openings.front_right_window
+      - name: Front right window
+      - icon: mdi:car-door
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: openings.rear_left_window
+      - name: Rear left window
+      - icon: mdi:car-door
+  - type: custom:decluttering-card
+    template: kia_mapped_state_row
+    variables:
+      - entity: openings.rear_right_window
+      - name: Rear right window
       - icon: mdi:car-door

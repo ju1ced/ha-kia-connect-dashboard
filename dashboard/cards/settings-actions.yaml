@@ -14,6 +14,6 @@ cards:
     template: kia_mapped_action_button
     variables:
       - entity: settings / mapping
-      - name: Mapping Details
+      - name: Vehicle Data Details
       - icon: mdi:file-cog
       - action: more-info
