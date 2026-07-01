@@ -28,7 +28,7 @@ styles:
     - box-shadow: var(--kia-shadow-raised, 0 22px 54px rgba(0, 0, 0, 0.36))
   grid:
     - "grid-template-areas: 'i n locked online battery' 'i l locked online battery' 'car car car car car'"
-    - grid-template-columns: 56px 1fr min-content min-content min-content
+    - grid-template-columns: 56px minmax(0, 1fr) min-content min-content min-content
     - grid-template-rows: min-content min-content 1fr
     - column-gap: 14px
     - row-gap: 8px
@@ -38,12 +38,22 @@ styles:
   name:
     - justify-self: start
     - align-self: end
+    - width: 100%
     - font-size: 30px
     - font-weight: 800
+    - line-height: 1.1
+    - white-space: normal
+    - overflow: visible
+    - text-overflow: unset
     - color: var(--kia-text-primary, #f4f6f8)
   label:
     - justify-self: start
+    - width: 100%
     - font-size: 16px
+    - line-height: 1.25
+    - white-space: normal
+    - overflow: visible
+    - text-overflow: unset
     - color: var(--kia-text-secondary, #b7c0cc)
   custom_fields:
     locked:
@@ -74,8 +84,8 @@ styles:
       - align-self: center
       - justify-self: center
       - color: var(--kia-hero-vehicle-color, rgba(244, 246, 248, 0.78))
-      - transform: scale(4.2)
-      - opacity: 0.82
+      - transform: scale(3.6)
+      - opacity: 0.72
 card_mod:
   style: |
     ha-card #locked ha-icon,

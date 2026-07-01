@@ -1,6 +1,6 @@
 ---
 type: grid
-columns: 6
+columns: 3
 square: false
 cards:
   - type: custom:decluttering-card
