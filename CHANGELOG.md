@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added Kia Horizon light and dark mode tokens plus visual card fallbacks so the
+  dashboard stays readable when Home Assistant uses automatic theme mode.
 - Added configurable dashboard route rendering for Home Assistant installs that
   do not use `/lovelace` as the Kia dashboard URL base.
 - Converted the Climate, Energy, Location, and Settings detail pages to the dark
