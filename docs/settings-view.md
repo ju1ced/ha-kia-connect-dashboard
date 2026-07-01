@@ -19,8 +19,8 @@ maintenance notes, and a return path to Overview.
   missing-entity handling, and future mapping health checks.
 - `dashboard/cards/settings-theme.yaml` owns theme identity and token ownership
   references.
-- `dashboard/cards/settings-actions.yaml` owns future refresh and configuration
-  action placement.
+- `dashboard/cards/settings-actions.yaml` owns refresh and local mapping action
+  placement.
 - `dashboard/cards/settings-maintenance.yaml` owns refresh result, mapping health,
   dashboard version, diagnostics, and troubleshooting notes.
 - `dashboard/cards/settings-back-navigation.yaml` owns return navigation to
@@ -28,10 +28,12 @@ maintenance notes, and a return path to Overview.
 
 ## Mapped Template Usage
 
-Settings detail cards use `custom:decluttering-card` wrappers for confirm action
-buttons, state rows, section notes, entity diagnostics, and back navigation.
-Action buttons stay inert with `action: none` until refresh and mapping workflows
-have documented service targets.
+Settings detail cards use `custom:decluttering-card` wrappers for action buttons,
+state rows, section notes, entity diagnostics, and back navigation.
+
+The Refresh Vehicle button uses a reviewed low-risk `button.press` binding through
+`kia_mapped_perform_action_button`. Mapping Details uses `more-info` and remains a
+local read-only action surface.
 
 ## Entity Rules
 
@@ -50,9 +52,9 @@ Runtime mapping health states are defined in `docs/runtime-mapping-health.md`.
 
 ## Action Rules
 
-Settings action buttons use the confirmation-capable template even while they
-remain inert. This keeps the safety pattern visible before refresh or mapping
-navigation targets are enabled.
+Only low-risk Settings actions are active before the first Home Assistant test.
+Medium-risk and high-risk vehicle actions must stay behind the confirmation
+pattern and remain inert until last-command feedback is available.
 
 ## Feedback Rules
 
@@ -62,7 +64,5 @@ mapping actions are wired to real targets.
 
 ## Follow-up Work
 
-- Bind refresh actions to the mapped controls once the shared action pattern is
-  documented.
-- Add runtime mapping health checks after the diagnostic source contract exists.
+- Add last-command feedback rows for future medium-risk commands.
 - Add version and troubleshooting links once installation documentation is added.

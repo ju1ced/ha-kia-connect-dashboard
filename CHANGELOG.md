@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Bound low-risk Settings actions to reviewed targets for refresh and mapping
+  details.
+- Added a reusable mapped perform-action button template for low-risk Home
+  Assistant button actions.
 - Added inline unavailable alert placement rules and a reusable inline mapping
   alert template.
 - Added a runtime mapping health check script for comparing mapped entities with

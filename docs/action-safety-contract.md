@@ -3,9 +3,9 @@
 ## Purpose
 
 Remote vehicle actions must be reviewed before they are enabled. The dashboard
-currently keeps action buttons inert with `action: none`; this contract defines
-what must be true before refresh, climate, charging, lock, or maintenance actions
-become active.
+currently keeps medium-risk and high-risk action buttons inert with
+`action: none`; this contract defines what must be true before refresh, climate,
+charging, lock, or maintenance actions become active.
 
 ## Action Classes
 
@@ -22,6 +22,11 @@ Expected behavior:
 
 - No confirmation required unless the action calls an external service.
 - Clear visual feedback after activation.
+
+Active low-risk Settings bindings:
+
+- `controls.refresh` uses `button.press` through `kia_mapped_perform_action_button`.
+- `settings.mapping` uses `more-info` through `kia_mapped_action_button`.
 
 ### Medium Risk
 
@@ -59,8 +64,10 @@ Expected behavior:
 
 ## Template Rules
 
-- Keep `kia_mapped_action_button` inert until a service or confirmation pattern
-  is reviewed.
+- Use `kia_mapped_perform_action_button` only for low-risk mapped button entities
+  that have a documented `perform_action` target.
+- Keep `kia_mapped_action_button` inert until a service, more-info, or navigation
+  pattern is reviewed.
 - Use `kia_mapped_confirm_action_button` when an action will need a confirmation
   prompt before activation.
 - Keep confirm-action buttons on `action: none` until the real service or
@@ -78,7 +85,7 @@ Expected behavior:
 
 ## Follow-up Work
 
-- Choose the Home Assistant confirmation pattern for medium-risk actions.
-- Decide whether service calls should target scripts, buttons, or integration
-  services directly.
 - Add last-command feedback before enabling climate or charging controls.
+- Choose the Home Assistant confirmation pattern for medium-risk actions.
+- Decide whether medium-risk service calls should target scripts, buttons, or
+  integration services directly.

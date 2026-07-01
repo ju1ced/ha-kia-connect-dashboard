@@ -23,6 +23,22 @@ kia_mapped_action_button:
     tap_action:
       action: "[[action]]"
 
+kia_mapped_perform_action_button:
+  default:
+    - icon: mdi:gesture-tap-button
+    - perform_action: button.press
+  card:
+    type: button
+    entity: "[[entity]]"
+    name: "[[name]]"
+    icon: "[[icon]]"
+    show_state: false
+    tap_action:
+      action: perform-action
+      perform_action: "[[perform_action]]"
+      target:
+        entity_id: "[[entity]]"
+
 kia_mapped_confirm_action_button:
   default:
     - icon: mdi:gesture-tap-button
