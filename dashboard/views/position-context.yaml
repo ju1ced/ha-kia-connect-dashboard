@@ -2,6 +2,7 @@
 title: Location
 path: kia-location
 icon: mdi:map-marker
+theme: Kia Horizon
 type: sections
 max_columns: 3
 badges: []
