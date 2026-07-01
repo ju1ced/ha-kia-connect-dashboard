@@ -21,13 +21,14 @@ Confirm these items in Home Assistant:
 ## Prepare The Entity Map
 
 Update `dashboard/templates/entities.yaml` with the real entity IDs from your
-Home Assistant instance. Keep all other dashboard files unchanged.
+Home Assistant instance. Keep all other dashboard files unchanged unless a real
+entity shape differs from the dashboard assumption.
 
 Example:
 
 ```yaml
 battery:
-  level: sensor.kia_ev6_battery_level
+  level: sensor.oprit_nebula_ev_battery_level
 ```
 
 The source dashboard uses logical keys such as `battery.level`. The render step
@@ -120,10 +121,11 @@ Check these items first:
   Overview page.
 - The Kia Horizon theme loads correctly.
 - Read-only data rows show values or understandable unavailable states.
-- Settings shows refresh result, climate command result, charging command result,
-  mapping health, and dashboard version rows.
+- Settings shows latest scan, climate state, charging state, and vehicle data
+  details.
 - Settings Refresh Vehicle calls the mapped refresh button only.
-- Settings Mapping Details opens the mapped entity more-info panel only.
+- Settings Vehicle Data Details opens the mapped vehicle data more-info panel
+  only.
 
 ## Do Not Test Yet
 
