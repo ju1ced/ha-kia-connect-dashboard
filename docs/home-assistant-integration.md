@@ -43,6 +43,22 @@ The package currently uses these route assumptions:
 Adjust these paths if the dashboard is mounted under a different Lovelace URL in
 your Home Assistant instance.
 
+## Required Lovelace Resources
+
+The visual Overview uses these custom Lovelace resources:
+
+```yaml
+- url: /hacsfiles/lovelace-decluttering-card/decluttering-card.js
+  type: module
+- url: /hacsfiles/button-card/button-card.js
+  type: module
+- url: /hacsfiles/lovelace-card-mod/card-mod.js
+  type: module
+```
+
+Adjust the URLs if your Home Assistant instance exposes HACS resources under a
+different path.
+
 ## Example Home Button
 
 Use this shape on an existing Home Assistant dashboard button:
@@ -80,6 +96,6 @@ The rendered Home Assistant-ready files are written to
 ## First Test Guide
 
 Use `docs/first-home-assistant-test.md` for the first manual test pass. It
-covers the required custom card resource, theme install, existing Home dashboard
+covers the required custom card resources, theme install, existing Home dashboard
 button, first navigation checks, and the actions that should remain untested
 until the safety binding milestone is complete.
