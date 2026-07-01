@@ -1,6 +1,11 @@
 ---
-type: markdown
-content: >-
-  Overview shell for Milestone 4. Implementation cards should replace placeholder
-  mapping keys with reusable card templates while keeping entity IDs inside
-  `dashboard/templates/entities.yaml`.
+type: custom:decluttering-card
+template: kia_visual_text_panel
+variables:
+  - title: Status
+  - content: >-
+      **All systems normal**
+
+      Review live warnings on Vehicle and Settings during the first Home
+      Assistant test. Medium-risk commands remain disabled until confirmation
+      behavior is validated.
