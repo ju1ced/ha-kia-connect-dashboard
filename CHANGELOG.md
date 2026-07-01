@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Aligned the first-test entity map and affected Settings, Vehicle, Climate, and
+  test documentation with the available Oprit Nebula Home Assistant entities.
 - Refreshed README and roadmap status for first Home Assistant test readiness.
 - Added Settings feedback rows and mapped entities for future climate and
   charging command results.
