@@ -21,8 +21,9 @@ maintenance notes, and a return path to Overview.
   references.
 - `dashboard/cards/settings-actions.yaml` owns refresh and local mapping action
   placement.
-- `dashboard/cards/settings-maintenance.yaml` owns refresh result, mapping health,
-  dashboard version, diagnostics, and troubleshooting notes.
+- `dashboard/cards/settings-maintenance.yaml` owns refresh result, climate command
+  result, charging command result, mapping health, dashboard version,
+  diagnostics, and troubleshooting notes.
 - `dashboard/cards/settings-back-navigation.yaml` owns return navigation to
   Overview.
 
@@ -58,11 +59,13 @@ pattern and remain inert until last-command feedback is available.
 
 ## Feedback Rules
 
-Settings maintenance rows show read-only feedback for last refresh result,
-mapping health, and dashboard version. These rows must exist before refresh or
-mapping actions are wired to real targets.
+Settings maintenance rows show read-only feedback for last refresh result, future
+climate command result, future charging command result, mapping health, and
+dashboard version. Climate and charging command feedback must exist before those
+medium-risk actions are enabled.
 
 ## Follow-up Work
 
-- Add last-command feedback rows for future medium-risk commands.
 - Add version and troubleshooting links once installation documentation is added.
+- Enable medium-risk actions only after their confirmation and feedback behavior
+  has been tested in Home Assistant.
