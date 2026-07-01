@@ -1,8 +1,33 @@
 ---
-type: markdown
-title: Tire Status
-content: >-
-  - Front left: `tires.front_left_pressure`
-  - Front right: `tires.front_right_pressure`
-  - Rear left: `tires.rear_left_pressure`
-  - Rear right: `tires.rear_right_pressure`
+type: grid
+columns: 2
+square: false
+cards:
+  - type: custom:decluttering-card
+    template: kia_visual_stat_tile
+    variables:
+      - entity: tires.front_left_pressure
+      - name: Front left
+      - icon: mdi:tire
+      - label: Tire status
+  - type: custom:decluttering-card
+    template: kia_visual_stat_tile
+    variables:
+      - entity: tires.front_right_pressure
+      - name: Front right
+      - icon: mdi:tire
+      - label: Tire status
+  - type: custom:decluttering-card
+    template: kia_visual_stat_tile
+    variables:
+      - entity: tires.rear_left_pressure
+      - name: Rear left
+      - icon: mdi:tire
+      - label: Tire status
+  - type: custom:decluttering-card
+    template: kia_visual_stat_tile
+    variables:
+      - entity: tires.rear_right_pressure
+      - name: Rear right
+      - icon: mdi:tire
+      - label: Tire status
