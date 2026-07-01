@@ -1,28 +1,35 @@
 ---
 type: vertical-stack
 cards:
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: battery.target_charge_limit
+          - name: Charge limit
+          - icon: mdi:battery-sync
+          - label: AC target
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: battery.plug_connected
+          - name: Plug connected
+          - icon: mdi:power-plug
+          - label: Cable state
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: battery.charging_state
+          - name: Charging state
+          - icon: mdi:battery-charging
+          - label: Current session
   - type: custom:decluttering-card
-    template: kia_mapped_state_row
-    variables:
-      - entity: battery.target_charge_limit
-      - name: Charge limit
-      - icon: mdi:battery-sync
-  - type: custom:decluttering-card
-    template: kia_mapped_state_row
-    variables:
-      - entity: battery.plug_connected
-      - name: Plug connected
-      - icon: mdi:power-plug
-  - type: custom:decluttering-card
-    template: kia_mapped_state_row
-    variables:
-      - entity: battery.charging_state
-      - name: Charging state
-      - icon: mdi:battery-charging
-  - type: custom:decluttering-card
-    template: kia_mapped_section_note
+    template: kia_visual_text_panel
     variables:
       - title: Battery Health
       - content: >-
-          Battery health metrics can be added when the mapped integration
-          exposes them.
+          Battery health metrics can be added here when the mapped integration
+          exposes state of health or temperature entities.
