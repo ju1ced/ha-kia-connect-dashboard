@@ -10,9 +10,10 @@ open-source Hyundai/Kia dashboard for Home Assistant users.
 ## Status
 
 This repository now contains the initial Lovelace dashboard shell, Kia Horizon
-theme tokens, mapped entity contracts, detail pages, read-only entity diagnostics
-guidance, and a first-test render path for Home Assistant. Runtime health checks,
-safe service actions, and real Home Assistant screenshots are still in progress.
+theme tokens, mapped entity contracts, detail pages, read-only entity diagnostics,
+runtime mapping health checks, low-risk Settings actions, and a first-test render
+path for Home Assistant. Real Home Assistant screenshots and medium-risk vehicle
+actions are still in progress.
 
 ## Mission
 
