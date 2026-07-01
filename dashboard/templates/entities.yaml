@@ -7,58 +7,57 @@ vehicle:
   year: 2026
 
 battery:
-  level: sensor.kia_ev6_battery_level
-  charging_state: sensor.kia_ev6_charging_state
-  charging_power: sensor.kia_ev6_charging_power
-  estimated_range: sensor.kia_ev6_estimated_range
-  target_charge_limit: number.kia_ev6_charge_limit
-  plug_connected: binary_sensor.kia_ev6_plug_connected
+  level: sensor.oprit_nebula_ev_battery_level
+  charging_state: binary_sensor.oprit_nebula_ev_battery_charge
+  charging_power: sensor.oprit_nebula_ev_charging_power
+  estimated_range: sensor.oprit_nebula_ev_range
+  target_charge_limit: number.oprit_nebula_ac_charging_limit
+  plug_connected: binary_sensor.oprit_nebula_ev_battery_plug
 
 climate:
-  cabin_temperature: sensor.kia_ev6_cabin_temperature
-  outside_temperature: sensor.kia_ev6_outside_temperature
-  hvac: climate.kia_ev6_climate
-  defrost: switch.kia_ev6_defrost
-  steering_wheel_heater: switch.kia_ev6_steering_wheel_heater
+  set_temperature: sensor.oprit_nebula_set_temperature
+  hvac: climate.oprit_nebula_climate_control
+  defrost: binary_sensor.oprit_nebula_defrost
+  steering_wheel_heater: binary_sensor.oprit_nebula_steering_wheel_heater
 
 location:
-  tracker: device_tracker.kia_ev6_location
-  odometer: sensor.kia_ev6_odometer
+  tracker: device_tracker.oprit_nebula_location
+  odometer: sensor.oprit_nebula_odometer
 
 locks:
-  door_lock: lock.kia_ev6_door_lock
-  charging_port_lock: lock.kia_ev6_charging_port_lock
+  door_lock: lock.oprit_nebula_door_lock
+  charging_port: binary_sensor.oprit_nebula_ev_charge_port
 
 openings:
-  front_left_door: binary_sensor.kia_ev6_front_left_door
-  front_right_door: binary_sensor.kia_ev6_front_right_door
-  rear_left_door: binary_sensor.kia_ev6_rear_left_door
-  rear_right_door: binary_sensor.kia_ev6_rear_right_door
-  trunk: binary_sensor.kia_ev6_trunk
-  hood: binary_sensor.kia_ev6_hood
-  windows: binary_sensor.kia_ev6_windows
+  front_left_door: binary_sensor.oprit_nebula_front_left_door
+  front_right_door: binary_sensor.oprit_nebula_front_right_door
+  rear_left_door: binary_sensor.oprit_nebula_back_left_door
+  rear_right_door: binary_sensor.oprit_nebula_back_right_door
+  trunk: binary_sensor.oprit_nebula_trunk
+  hood: binary_sensor.oprit_nebula_hood
+  front_left_window: binary_sensor.oprit_nebula_front_left_window
+  front_right_window: binary_sensor.oprit_nebula_front_right_window
+  rear_left_window: binary_sensor.oprit_nebula_back_left_window
+  rear_right_window: binary_sensor.oprit_nebula_back_right_window
 
 lights:
-  headlights: binary_sensor.kia_ev6_headlights
-  hazard_lights: switch.kia_ev6_hazard_lights
+  headlights: binary_sensor.oprit_nebula_headlamp_status
 
 tires:
-  front_left_pressure: sensor.kia_ev6_front_left_tire_pressure
-  front_right_pressure: sensor.kia_ev6_front_right_tire_pressure
-  rear_left_pressure: sensor.kia_ev6_rear_left_tire_pressure
-  rear_right_pressure: sensor.kia_ev6_rear_right_tire_pressure
+  front_left_pressure: binary_sensor.oprit_nebula_tire_pressure_front_left
+  front_right_pressure: binary_sensor.oprit_nebula_tire_pressure_front_right
+  rear_left_pressure: binary_sensor.oprit_nebula_tire_pressure_rear_left
+  rear_right_pressure: binary_sensor.oprit_nebula_tire_pressure_rear_right
 
 controls:
-  refresh: button.kia_ev6_refresh
-  start_climate: button.kia_ev6_start_climate
-  stop_climate: button.kia_ev6_stop_climate
-  start_charging: button.kia_ev6_start_charging
-  stop_charging: button.kia_ev6_stop_charging
-  last_refresh_result: sensor.kia_ev6_last_refresh_result
-  last_climate_result: sensor.kia_ev6_last_climate_result
-  last_charging_result: sensor.kia_ev6_last_charging_result
+  refresh: button.oprit_nebula_force_refresh
+  start_climate: switch.oprit_nebula_climate
+  stop_climate: switch.oprit_nebula_climate
+  start_charging: switch.oprit_nebula_ev_charging
+  stop_charging: switch.oprit_nebula_ev_charging
+  last_refresh_result: sensor.oprit_nebula_laatste_scan
+  last_climate_result: switch.oprit_nebula_climate
+  last_charging_result: switch.oprit_nebula_ev_charging
 
 settings:
-  mapping: button.kia_ev6_open_mapping
-  mapping_health_summary: sensor.kia_ev6_mapping_health_summary
-  dashboard_version: sensor.kia_ev6_dashboard_version
+  mapping: sensor.oprit_nebula_data
