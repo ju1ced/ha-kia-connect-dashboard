@@ -2,6 +2,7 @@
 title: Settings
 path: kia-settings
 icon: mdi:tune
+theme: Kia Horizon
 type: sections
 max_columns: 3
 badges: []
