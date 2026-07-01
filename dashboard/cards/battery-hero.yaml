@@ -1,12 +1,11 @@
 ---
-type: markdown
-title: Battery
-content: >-
-  ## Battery Overview
+type: custom:decluttering-card
+template: kia_visual_text_panel
+variables:
+  - title: Battery
+  - content: >-
+      **EV battery overview**
 
-  Primary battery detail surface for `battery.level`,
-  `battery.charging_state`, `battery.charging_power`, and
-  `battery.estimated_range`.
-
-  This page expands the Overview summary while keeping raw Home Assistant entity
-  IDs inside `dashboard/templates/entities.yaml`.
+      Range, charge state, charging power, plug state, and configured AC charge
+      limit are grouped here for quick review before any remote charging action
+      is used.
