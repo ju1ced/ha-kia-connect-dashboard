@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Refreshed README and roadmap status for first Home Assistant test readiness.
 - Added Settings feedback rows and mapped entities for future climate and
   charging command results.
 - Bound low-risk Settings actions to reviewed targets for refresh and mapping
