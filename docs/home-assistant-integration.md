@@ -30,7 +30,7 @@ Home dashboard
 
 ## Dashboard Package Route
 
-The package currently uses these route assumptions:
+The package defaults to these route assumptions:
 
 - Overview: `/lovelace/overview`
 - Battery: `/lovelace/kia-battery`
@@ -40,12 +40,19 @@ The package currently uses these route assumptions:
 - Location: `/lovelace/kia-location`
 - Settings: `/lovelace/kia-settings`
 
-Adjust these paths if the dashboard is mounted under a different Lovelace URL in
-your Home Assistant instance.
+If the dashboard is mounted under another Lovelace URL path, render with that
+path so internal navigation is rewritten in the output package:
+
+```bash
+python scripts/render_dashboard.py --dashboard-path /kia-ev6
+```
+
+That example renders Overview as `/kia-ev6/overview` and rewrites the internal
+menu and Back to Overview buttons to the same route base.
 
 ## Required Lovelace Resources
 
-The visual Overview uses these custom Lovelace resources:
+The visual dashboard uses these custom Lovelace resources:
 
 ```yaml
 - url: /hacsfiles/lovelace-decluttering-card/decluttering-card.js
@@ -61,7 +68,8 @@ different path.
 
 ## Example Home Button
 
-Use this shape on an existing Home Assistant dashboard button:
+Use this shape on an existing Home Assistant dashboard button. The
+`navigation_path` must use the same route base as the rendered dashboard:
 
 ```yaml
 type: button
@@ -71,6 +79,9 @@ tap_action:
   action: navigate
   navigation_path: /lovelace/overview
 ```
+
+If you rendered with `--dashboard-path /kia-ev6`, use
+`navigation_path: /kia-ev6/overview`.
 
 ## Internal Navigation Rule
 
