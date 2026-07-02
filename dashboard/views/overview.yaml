@@ -9,10 +9,10 @@ cards:
   - type: custom:layout-card
     layout_type: custom:grid-layout
     layout:
-      margin: 0
+      margin: 0 auto
       padding: 18px 24px 24px
-      max_width: 1500px
-      grid-gap: 10px
+      max_width: 1540px
+      grid-gap: 12px
       grid-template-columns: repeat(12, minmax(0, 1fr))
       grid-template-areas: |
         "hero hero hero hero hero hero hero hero hero hero hero hero"
@@ -21,6 +21,7 @@ cards:
         "location location location location tires tires tires tires status status status status"
       mediaquery:
         "(max-width: 1180px)":
+          padding: 14px
           grid-template-columns: repeat(6, minmax(0, 1fr))
           grid-template-areas: |
             "hero hero hero hero hero hero"
@@ -30,7 +31,7 @@ cards:
             "location location location tires tires tires"
             "status status status status status status"
         "(max-width: 760px)":
-          padding: 12px
+          padding: 10px
           grid-gap: 10px
           grid-template-columns: minmax(0, 1fr)
           grid-template-areas: |
