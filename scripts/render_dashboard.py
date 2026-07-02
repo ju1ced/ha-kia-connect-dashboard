@@ -33,6 +33,12 @@ NAVIGATION_LINE = re.compile(
     r"(?P=quote)(?P<suffix>\s*)$"
 )
 LOGICAL_KEY = re.compile(r"^([a-z][a-z0-9_]*)\s*(?:\.|/)\s*([a-z][a-z0-9_]*)$")
+REAL_ENTITY = re.compile(
+    r"^(?:sensor|binary_sensor|switch|lock|climate|device_tracker|button|"
+    r"number|select|input_boolean|input_number|input_select)\."
+    r"[a-zA-Z0-9_]+$"
+)
+IGNORED_VALUE_KEYS = {"perform_action"}
 
 
 def parse_args() -> argparse.Namespace:
@@ -88,6 +94,8 @@ def load_entity_map(path: Path) -> dict[str, str]:
 def normalize_logical_key(value: str) -> str | None:
     if value.startswith("[[") and value.endswith("]]"):
         return None
+    if REAL_ENTITY.match(value.strip()):
+        return None
 
     match = LOGICAL_KEY.match(value.strip())
     if not match:
@@ -107,11 +115,18 @@ def rewrite_navigation_path(line: str, dashboard_path: str) -> str:
     return f"{match.group('prefix')}{match.group('quote')}{rendered_path}{match.group('quote')}{match.group('suffix')}"
 
 
+def should_ignore_value_line(prefix: str) -> bool:
+    key_match = re.match(r"^\s*(?:-\s*)?([a-z][a-z0-9_]*):", prefix)
+    return bool(key_match and key_match.group(1) in IGNORED_VALUE_KEYS)
+
+
 def rewrite_logical_value(line: str, mapping: dict[str, str]) -> tuple[str, str | None]:
     for pattern in (ENTITY_LINE, LOGICAL_VALUE_LINE, LOGICAL_LIST_ITEM_LINE):
         match = pattern.match(line)
         if not match:
             continue
+        if should_ignore_value_line(match.group("prefix")):
+            return line, None
 
         logical_key = normalize_logical_key(match.group("value"))
         if not logical_key:
