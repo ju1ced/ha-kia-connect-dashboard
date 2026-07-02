@@ -30,10 +30,11 @@ custom_fields:
         var unit = e.attributes && e.attributes.unit_of_measurement ? ' ' + e.attributes.unit_of_measurement : '';
         return e.state + unit;
       }
+      var image = '/local/vehicles/' + 'ev6_top.png';
       return '<div class="tire-diagram">'
         + '<div class="tire fl"><strong>' + value(variables.front_left_entity) + '</strong><span>Front left</span></div>'
         + '<div class="tire fr"><strong>' + value(variables.front_right_entity) + '</strong><span>Front right</span></div>'
-        + '<img src="/local/vehicles/ev6_top.png" alt="EV6 top view">'
+        + '<img src="' + image + '" alt="EV6 top view">'
         + '<div class="tire rl"><strong>' + value(variables.rear_left_entity) + '</strong><span>Rear left</span></div>'
         + '<div class="tire rr"><strong>' + value(variables.rear_right_entity) + '</strong><span>Rear right</span></div>'
         + '</div>';
