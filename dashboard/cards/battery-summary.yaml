@@ -1,4 +1,6 @@
 ---
+view_layout:
+  grid-area: battery
 type: vertical-stack
 cards:
   - type: custom:decluttering-card
@@ -18,7 +20,7 @@ cards:
           - entity: battery.estimated_range
           - name: Range
           - icon: mdi:map-marker-distance
-          - label: Estimated
+          - label: Estimated range
       - type: custom:decluttering-card
         template: kia_visual_stat_tile
         variables:

@@ -3,21 +3,51 @@ title: Overview
 path: overview
 icon: mdi:car-electric
 theme: Kia Horizon
-type: sections
-max_columns: 3
+type: panel
 badges: []
-sections:
-  - type: grid
+cards:
+  - type: custom:layout-card
+    layout_type: custom:grid-layout
+    layout:
+      margin: 0
+      padding: 24px
+      max_width: 1500px
+      grid-gap: 12px
+      grid-template-columns: repeat(12, minmax(0, 1fr))
+      grid-template-areas: |
+        "hero hero hero hero actions actions actions actions location location location location"
+        "hero hero hero hero vehicle vehicle vehicle vehicle location location location location"
+        "nav nav nav nav vehicle vehicle vehicle vehicle tires tires tires tires"
+        "battery battery battery battery battery tires tires tires tires tires tires tires"
+        "battery battery battery battery battery status status status status status status status"
+      mediaquery:
+        "(max-width: 1180px)":
+          grid-template-columns: repeat(6, minmax(0, 1fr))
+          grid-template-areas: |
+            "hero hero hero hero hero hero"
+            "nav nav nav nav nav nav"
+            "actions actions actions vehicle vehicle vehicle"
+            "battery battery battery location location location"
+            "tires tires tires status status status"
+        "(max-width: 760px)":
+          padding: 12px
+          grid-gap: 10px
+          grid-template-columns: minmax(0, 1fr)
+          grid-template-areas: |
+            "hero"
+            "nav"
+            "actions"
+            "battery"
+            "vehicle"
+            "location"
+            "tires"
+            "status"
     cards:
       - !include ../cards/overview-hero.yaml
       - !include ../cards/section-navigation.yaml
-      - !include ../cards/battery-summary.yaml
-  - type: grid
-    cards:
       - !include ../cards/quick-actions.yaml
+      - !include ../cards/battery-summary.yaml
       - !include ../cards/vehicle-status.yaml
-  - type: grid
-    cards:
       - !include ../cards/location-summary.yaml
       - !include ../cards/tire-status.yaml
       - !include ../cards/overview-footer.yaml

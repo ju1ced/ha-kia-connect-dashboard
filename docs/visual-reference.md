@@ -13,10 +13,11 @@ SVG files so GitHub can preview them directly.
 
 ## Implementation Status
 
-The Overview and all detail pages now have the first dark visual card layer using
-`button-card`, `card-mod`, and the Kia Horizon theme tokens. Real Home Assistant
-screenshots are still needed to validate the rendered package with live data,
-actual browser sizing, and the target dashboard route.
+The Overview now uses a responsive `layout-card` grid so desktop, tablet, and
+mobile widths can move toward the visual reference instead of relying on Home
+Assistant section columns. Detail pages still use the dark visual card pattern
+and remain candidates for the same responsive layout treatment after the
+Overview stabilizes with real Home Assistant screenshots.
 
 ## Review Rules
 

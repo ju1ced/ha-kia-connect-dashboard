@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Rebuilt the Overview page around a responsive `layout-card` grid so the first
+  Home Assistant test can better match the visual dashboard reference across
+  desktop, tablet, and mobile widths.
 - Improved visual card text wrapping and Overview navigation readability during
   the first Home Assistant render tests.
 - Removed markdown formatting from the visual Overview footer to avoid Home
