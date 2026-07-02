@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added real EV6 Overview hero imagery with status-aware switching for charging
+  and active climate states.
 - Rebuilt the Overview page around a responsive `layout-card` grid so the first
   Home Assistant test can better match the visual dashboard reference across
   desktop, tablet, and mobile widths.

@@ -19,6 +19,8 @@ Confirm these items in Home Assistant:
 - YAML mode or a dashboard include workflow is available for Lovelace.
 - You know the dashboard URL path that will host the Kia pages.
 - You can edit the existing Home dashboard button for the Kia EV6 entry point.
+- EV6 hero images are available under `/config/www/vehicles/`, including
+  `ev6_side.png`, `ev6_charging.png`, and `ev6_climate.png`.
 
 ## Prepare The Entity Map
 
@@ -133,6 +135,8 @@ Check these items first:
 
 - The Home dashboard button opens the Kia Overview page.
 - The Overview page shows the responsive dark visual card layer.
+- The Overview hero switches to the charging image while charging and the
+  climate image while climate is active.
 - Battery, Vehicle, Climate, Energy, Location, and Settings pages open from the
   Overview page.
 - Back to Overview works from every detail page.

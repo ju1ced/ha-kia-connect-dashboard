@@ -56,6 +56,11 @@ The rendered package is written to `build/home-assistant-dashboard/`.
 The visual dashboard depends on `decluttering-card`, `button-card`, `card-mod`,
 and `layout-card` being registered as Lovelace resources in Home Assistant.
 
+The Overview hero expects EV6 visual assets under Home Assistant's `/local`
+static path, for example `/config/www/vehicles/ev6_side.png`,
+`/config/www/vehicles/ev6_charging.png`, and
+`/config/www/vehicles/ev6_climate.png`.
+
 ## Visual References
 
 Reference renders are available in `docs/screenshots/` and documented in

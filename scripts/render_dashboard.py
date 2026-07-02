@@ -19,12 +19,26 @@ ENTITY_LINE = re.compile(
     r"^(?P<prefix>\s*(?:-\s*)?entity:\s*)(?P<quote>[\"']?)"
     r"(?P<value>[^\"'#]+?)(?P=quote)(?P<suffix>\s*)$"
 )
+LOGICAL_VALUE_LINE = re.compile(
+    r"^(?P<prefix>\s*(?:-\s*)?[a-z][a-z0-9_]*:\s*)(?P<quote>[\"']?)"
+    r"(?P<value>[a-z][a-z0-9_]*(?:\.|/)[a-z][a-z0-9_]*)(?P=quote)(?P<suffix>\s*)$"
+)
+LOGICAL_LIST_ITEM_LINE = re.compile(
+    r"^(?P<prefix>\s*-\s*)(?P<quote>[\"']?)"
+    r"(?P<value>[a-z][a-z0-9_]*(?:\.|/)[a-z][a-z0-9_]*)(?P=quote)(?P<suffix>\s*)$"
+)
 NAVIGATION_LINE = re.compile(
     r"^(?P<prefix>\s*(?:-\s*)?(?:navigation_path|path):\s*)"
     r"(?P<quote>[\"']?)(?P<value>/lovelace(?:/[^\"']*)?)"
     r"(?P=quote)(?P<suffix>\s*)$"
 )
 LOGICAL_KEY = re.compile(r"^([a-z][a-z0-9_]*)\s*(?:\.|/)\s*([a-z][a-z0-9_]*)$")
+REAL_ENTITY = re.compile(
+    r"^(?:sensor|binary_sensor|switch|lock|climate|device_tracker|button|"
+    r"number|select|input_boolean|input_number|input_select)\."
+    r"[a-zA-Z0-9_]+$"
+)
+IGNORED_VALUE_KEYS = {"perform_action"}
 
 
 def parse_args() -> argparse.Namespace:
@@ -80,6 +94,8 @@ def load_entity_map(path: Path) -> dict[str, str]:
 def normalize_logical_key(value: str) -> str | None:
     if value.startswith("[[") and value.endswith("]]"):
         return None
+    if REAL_ENTITY.match(value.strip()):
+        return None
 
     match = LOGICAL_KEY.match(value.strip())
     if not match:
@@ -99,28 +115,41 @@ def rewrite_navigation_path(line: str, dashboard_path: str) -> str:
     return f"{match.group('prefix')}{match.group('quote')}{rendered_path}{match.group('quote')}{match.group('suffix')}"
 
 
+def should_ignore_value_line(prefix: str) -> bool:
+    key_match = re.match(r"^\s*(?:-\s*)?([a-z][a-z0-9_]*):", prefix)
+    return bool(key_match and key_match.group(1) in IGNORED_VALUE_KEYS)
+
+
+def rewrite_logical_value(line: str, mapping: dict[str, str]) -> tuple[str, str | None]:
+    for pattern in (ENTITY_LINE, LOGICAL_VALUE_LINE, LOGICAL_LIST_ITEM_LINE):
+        match = pattern.match(line)
+        if not match:
+            continue
+        if should_ignore_value_line(match.group("prefix")):
+            return line, None
+
+        logical_key = normalize_logical_key(match.group("value"))
+        if not logical_key:
+            return line, None
+
+        if logical_key not in mapping:
+            return line, logical_key
+
+        return f"{match.group('prefix')}{mapping[logical_key]}{match.group('suffix')}", None
+
+    return line, None
+
+
 def render_yaml_file(path: Path, mapping: dict[str, str], dashboard_path: str) -> list[str]:
     missing: list[str] = []
     rendered_lines: list[str] = []
 
     for line in path.read_text(encoding="utf-8").splitlines():
         rewritten_line = rewrite_navigation_path(line, dashboard_path)
-        match = ENTITY_LINE.match(rewritten_line)
-        if not match:
-            rendered_lines.append(rewritten_line)
-            continue
-
-        logical_key = normalize_logical_key(match.group("value"))
-        if not logical_key:
-            rendered_lines.append(rewritten_line)
-            continue
-
-        if logical_key not in mapping:
-            missing.append(logical_key)
-            rendered_lines.append(rewritten_line)
-            continue
-
-        rendered_lines.append(f"{match.group('prefix')}{mapping[logical_key]}{match.group('suffix')}")
+        rendered_line, missing_key = rewrite_logical_value(rewritten_line, mapping)
+        if missing_key:
+            missing.append(missing_key)
+        rendered_lines.append(rendered_line)
 
     path.write_text("\n".join(rendered_lines) + "\n", encoding="utf-8")
     return missing
