@@ -1,4 +1,6 @@
 ---
+view_layout:
+  grid-area: hero
 type: custom:button-card
 name: Kia EV6
 label: GT-Line RWD
@@ -19,7 +21,7 @@ custom_fields:
     [[[ return '<ha-icon icon="mdi:car-side"></ha-icon>'; ]]]
 styles:
   card:
-    - min-height: 230px
+    - min-height: 286px
     - border-radius: 22px
     - padding: 24px
     - overflow: hidden
@@ -39,7 +41,7 @@ styles:
     - justify-self: start
     - align-self: end
     - width: 100%
-    - font-size: 30px
+    - font-size: clamp(26px, 2.4vw, 34px)
     - font-weight: 800
     - line-height: 1.1
     - white-space: normal
@@ -81,11 +83,13 @@ styles:
       - font-weight: 700
       - white-space: nowrap
     car:
-      - align-self: center
-      - justify-self: center
+      - align-self: end
+      - justify-self: end
+      - padding-right: 34px
+      - padding-bottom: 18px
       - color: var(--kia-hero-vehicle-color, rgba(244, 246, 248, 0.78))
-      - transform: scale(3.6)
-      - opacity: 0.72
+      - transform: scale(4.2)
+      - opacity: 0.62
 card_mod:
   style: |
     ha-card #locked ha-icon,
