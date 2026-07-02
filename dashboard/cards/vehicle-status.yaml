@@ -1,4 +1,6 @@
 ---
+view_layout:
+  grid-area: vehicle
 type: vertical-stack
 cards:
   - type: custom:decluttering-card
