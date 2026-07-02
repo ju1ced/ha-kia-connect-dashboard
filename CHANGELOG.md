@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Rebuilt the Overview content cards as render-like dashboard panels with a
+  battery ring, quick-action panel, compact vehicle status list, map-style
+  location summary, tire diagram, and systems status panel.
 - Reworked the Overview composition toward the visual reference with a calmer
   left-weighted hero, single-row navigation, and more compact visual cards.
 - Added real EV6 Overview hero imagery with status-aware switching for charging
