@@ -15,15 +15,15 @@ variables:
   battery_entity: battery.level
   odometer_entity: location.odometer
   updated_entity: controls.last_refresh_result
-name: Kia EV6
-label: GT-Line RWD
-icon: mdi:car-electric
-show_label: true
+show_icon: false
+show_name: false
 show_state: false
 tap_action:
   action: more-info
   entity: location.tracker
 custom_fields:
+  identity: |
+    [[[ return '<div class="hero-identity"><ha-icon icon="mdi:car-electric"></ha-icon><div><strong>Kia EV6</strong><span>GT-Line RWD</span></div></div>'; ]]]
   locked: |
     [[[ return '<ha-icon icon="mdi:lock"></ha-icon><span>Locked</span>'; ]]]
   online: |
@@ -31,10 +31,9 @@ custom_fields:
   battery: |
     [[[
       var entity = states[variables.battery_entity] || null;
-      var state = entity && entity.state && entity.state !== 'unknown' ? entity.state : 'EV6';
+      var state = entity && entity.state && entity.state !== 'unknown' ? entity.state : '--';
       var unit = entity && entity.attributes && entity.attributes.unit_of_measurement ? entity.attributes.unit_of_measurement : '%';
-      var value = state === 'EV6' ? state : state + unit;
-      return '<ha-icon icon="mdi:battery-high"></ha-icon><span>' + value + '</span><small>Battery</small>';
+      return '<ha-icon icon="mdi:battery-high"></ha-icon><span>' + state + unit + '</span><small>Battery</small>';
     ]]]
   car: |
     [[[
@@ -47,72 +46,47 @@ custom_fields:
       var image = charging ? 'ev6_charging.png' : (!inactiveClimate ? 'ev6_climate.png' : 'ev6_side.png');
       return '<img src="/local/vehicles/' + image + '" alt="Kia EV6" loading="eager">';
     ]]]
-  odometer: |
+  metrics: |
     [[[
-      var entity = states[variables.odometer_entity] || null;
-      var state = entity && entity.state && entity.state !== 'unknown' ? entity.state : '--';
-      var unit = entity && entity.attributes && entity.attributes.unit_of_measurement ? entity.attributes.unit_of_measurement : 'km';
-      return '<ha-icon icon="mdi:speedometer"></ha-icon><span>Odometer</span><strong>' + state + ' ' + unit + '</strong>';
-    ]]]
-  charging: |
-    [[[
-      var entity = states[variables.charging_entity] || null;
-      var state = entity && entity.state ? String(entity.state).toLowerCase() : 'unknown';
-      var active = state === 'on' || state === 'charging';
-      return '<ha-icon icon="mdi:ev-plug-type2"></ha-icon><span>Charging state</span><strong>' + (active ? 'Charging' : 'Not charging') + '</strong>';
-    ]]]
-  updated: |
-    [[[
-      var entity = states[variables.updated_entity] || null;
-      var value = entity && entity.state && entity.state !== 'unknown' ? entity.state : '--';
-      return '<ha-icon icon="mdi:calendar-clock"></ha-icon><span>Last updated</span><strong>' + value + '</strong>';
-    ]]]
-  climate: |
-    [[[
-      var entity = states[variables.climate_entity] || null;
-      var state = entity && entity.state ? String(entity.state).toLowerCase() : 'unknown';
-      var inactive = ['off', 'unavailable', 'unknown', 'none', ''].indexOf(state) !== -1;
-      return '<ha-icon icon="mdi:thermometer"></ha-icon><span>Climate</span><strong>' + (inactive ? 'Off' : state) + '</strong>';
+      function value(id, fallback) {
+        var e = states[id] || null;
+        if (!e || !e.state || e.state === 'unknown' || e.state === 'unavailable') return fallback;
+        var unit = e.attributes && e.attributes.unit_of_measurement ? ' ' + e.attributes.unit_of_measurement : '';
+        return e.state + unit;
+      }
+      var chargingEntity = states[variables.charging_entity] || null;
+      var chargingState = chargingEntity && chargingEntity.state ? String(chargingEntity.state).toLowerCase() : '';
+      var charging = chargingState === 'on' || chargingState === 'charging';
+      var climateEntity = states[variables.climate_entity] || null;
+      var climateState = climateEntity && climateEntity.state ? String(climateEntity.state).toLowerCase() : 'unknown';
+      var climate = ['off', 'unknown', 'unavailable', 'none', ''].indexOf(climateState) !== -1 ? 'Off' : climateState;
+      return '<div class="metric-grid">'
+        + '<div><ha-icon icon="mdi:speedometer"></ha-icon><span>Odometer</span><strong>' + value(variables.odometer_entity, '--') + '</strong></div>'
+        + '<div><ha-icon icon="mdi:ev-plug-type2"></ha-icon><span>Charging state</span><strong class="' + (charging ? 'ok' : 'muted') + '">' + (charging ? 'Charging' : 'Not charging') + '</strong></div>'
+        + '<div><ha-icon icon="mdi:calendar-clock"></ha-icon><span>Last updated</span><strong>' + value(variables.updated_entity, '--') + '</strong></div>'
+        + '<div><ha-icon icon="mdi:thermometer"></ha-icon><span>Climate</span><strong>' + climate + '</strong></div>'
+        + '</div>';
     ]]]
 styles:
   card:
-    - min-height: 252px
+    - min-height: 238px
     - border-radius: 18px
-    - padding: 20px 22px
+    - padding: 18px 20px
     - overflow: hidden
     - background: var(--kia-hero-gradient, linear-gradient(145deg, rgba(17, 21, 28, 0.98), rgba(32, 36, 45, 0.94)))
     - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.18))
     - box-shadow: var(--kia-shadow-raised, 0 22px 54px rgba(0, 0, 0, 0.36))
   grid:
-    - "grid-template-areas: 'i n locked online battery' 'i l locked online battery' 'car car car odometer charging' 'car car car updated climate'"
-    - grid-template-columns: 54px minmax(0, 1.1fr) minmax(0, 1fr) minmax(170px, 0.75fr) minmax(170px, 0.75fr)
-    - grid-template-rows: min-content min-content 1fr 1fr
+    - "grid-template-areas: 'identity identity identity locked online battery' 'car car car car metrics metrics'"
+    - grid-template-columns: minmax(140px, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(118px, auto) minmax(118px, auto) minmax(118px, auto)
+    - grid-template-rows: min-content 1fr
     - column-gap: 14px
-    - row-gap: 10px
-  icon:
-    - width: 42px
-    - color: var(--kia-text-primary, #f4f6f8)
-  name:
-    - justify-self: start
-    - align-self: end
-    - width: 100%
-    - font-size: clamp(28px, 2.2vw, 38px)
-    - font-weight: 800
-    - line-height: 1.05
-    - white-space: normal
-    - overflow: visible
-    - text-overflow: unset
-    - color: var(--kia-text-primary, #f4f6f8)
-  label:
-    - justify-self: start
-    - width: 100%
-    - font-size: 16px
-    - line-height: 1.25
-    - white-space: normal
-    - overflow: visible
-    - text-overflow: unset
-    - color: var(--kia-text-secondary, #b7c0cc)
+    - row-gap: 12px
   custom_fields:
+    identity:
+      - align-self: start
+      - justify-self: start
+      - min-width: 0
     locked:
       - align-self: start
       - justify-self: end
@@ -142,35 +116,40 @@ styles:
       - white-space: nowrap
     car:
       - align-self: end
-      - justify-self: start
-      - width: min(690px, 48vw)
-      - max-width: 100%
-      - height: 172px
+      - justify-self: stretch
+      - height: 166px
+      - min-width: 0
       - pointer-events: none
-      - margin-left: 42px
-      - margin-bottom: -4px
-    odometer:
-      - border-left: 1px solid rgba(183, 192, 204, 0.14)
-      - padding-left: 18px
+    metrics:
       - align-self: center
       - justify-self: stretch
-      - text-align: left
-    charging:
-      - align-self: center
-      - justify-self: stretch
-      - text-align: left
-    updated:
-      - border-left: 1px solid rgba(183, 192, 204, 0.14)
-      - padding-left: 18px
-      - align-self: center
-      - justify-self: stretch
-      - text-align: left
-    climate:
-      - align-self: center
-      - justify-self: stretch
-      - text-align: left
+      - min-width: 0
 card_mod:
   style: |
+    ha-card .hero-identity {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: var(--kia-text-primary, #f4f6f8);
+    }
+    ha-card .hero-identity ha-icon {
+      width: 46px;
+      height: 46px;
+      color: var(--kia-text-primary, #f4f6f8);
+    }
+    ha-card .hero-identity strong {
+      display: block;
+      font-size: clamp(28px, 2.2vw, 38px);
+      line-height: 1.05;
+      font-weight: 800;
+    }
+    ha-card .hero-identity span {
+      color: var(--kia-text-secondary, #b7c0cc);
+      display: block;
+      font-size: 16px;
+      line-height: 1.2;
+      margin-top: 3px;
+    }
     ha-card #locked ha-icon,
     ha-card #online ha-icon,
     ha-card #battery ha-icon {
@@ -192,48 +171,60 @@ card_mod:
       height: 100%;
       object-fit: contain;
       object-position: left bottom;
-      filter: drop-shadow(0 20px 28px rgba(0, 0, 0, 0.42));
+      filter: drop-shadow(0 20px 28px rgba(0, 0, 0, 0.45));
     }
-    ha-card #odometer ha-icon,
-    ha-card #charging ha-icon,
-    ha-card #updated ha-icon,
-    ha-card #climate ha-icon {
-      color: var(--kia-text-secondary, #b7c0cc);
+    ha-card .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px 28px;
+      border-left: 1px solid rgba(183, 192, 204, 0.16);
+      padding-left: 30px;
+    }
+    ha-card .metric-grid div {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      grid-template-areas: 'icon label' 'icon value';
+      align-items: center;
+      min-width: 0;
+    }
+    ha-card .metric-grid ha-icon {
+      grid-area: icon;
       width: 24px;
-      margin-right: 12px;
-      vertical-align: -7px;
-    }
-    ha-card #odometer span,
-    ha-card #charging span,
-    ha-card #updated span,
-    ha-card #climate span {
       color: var(--kia-text-secondary, #b7c0cc);
-      display: inline-block;
-      font-size: 14px;
-      min-width: 116px;
     }
-    ha-card #odometer strong,
-    ha-card #charging strong,
-    ha-card #updated strong,
-    ha-card #climate strong {
+    ha-card .metric-grid span {
+      grid-area: label;
+      color: var(--kia-text-secondary, #b7c0cc);
+      font-size: 13px;
+      line-height: 1.15;
+    }
+    ha-card .metric-grid strong {
+      grid-area: value;
       color: var(--kia-text-primary, #f4f6f8);
-      display: block;
       font-size: 16px;
       font-weight: 700;
-      margin-left: 40px;
-      margin-top: 2px;
+      line-height: 1.15;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
+    ha-card .metric-grid strong.ok { color: var(--kia-status-charging, #7ee787); }
+    ha-card .metric-grid strong.muted { color: var(--kia-status-charging, #7ee787); }
     @media (max-width: 760px) {
       ha-card {
         min-height: 420px !important;
       }
-      ha-card #car {
-        width: 100% !important;
-        height: 140px !important;
-        margin-left: 0 !important;
+      ha-card #locked,
+      ha-card #online,
+      ha-card #battery {
+        justify-self: start !important;
       }
-      ha-card #odometer,
-      ha-card #updated {
+      ha-card #car {
+        height: 150px !important;
+      }
+      ha-card .metric-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
         border-left: 0 !important;
         padding-left: 0 !important;
       }
