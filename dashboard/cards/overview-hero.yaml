@@ -30,48 +30,49 @@ custom_fields:
     [[[ return '<ha-icon icon="mdi:wifi"></ha-icon><span>Online</span>'; ]]]
   battery: |
     [[[
-      const entity = states[variables.battery_entity];
-      const value = entity?.state && entity.state !== 'unknown' ? `${entity.state}${entity.attributes?.unit_of_measurement || '%'}` : 'EV6';
-      return `<ha-icon icon="mdi:battery-high"></ha-icon><span>${value}</span><small>Battery</small>`;
+      var entity = states[variables.battery_entity] || null;
+      var state = entity && entity.state && entity.state !== 'unknown' ? entity.state : 'EV6';
+      var unit = entity && entity.attributes && entity.attributes.unit_of_measurement ? entity.attributes.unit_of_measurement : '%';
+      var value = state === 'EV6' ? state : state + unit;
+      return '<ha-icon icon="mdi:battery-high"></ha-icon><span>' + value + '</span><small>Battery</small>';
     ]]]
   car: |
     [[[
-      const chargingState = states[variables.charging_entity]?.state;
-      const climateState = states[variables.climate_entity]?.state;
-      const charging = ['on', 'charging'].includes(String(chargingState).toLowerCase());
-      const climateActive = !['off', 'unavailable', 'unknown', 'none', ''].includes(String(climateState).toLowerCase());
-      const image = charging
-        ? 'ev6_charging.png'
-        : climateActive
-          ? 'ev6_climate.png'
-          : 'ev6_side.png';
-      return `<img src="/local/vehicles/${image}" alt="Kia EV6" loading="eager">`;
+      var chargingEntity = states[variables.charging_entity] || null;
+      var climateEntity = states[variables.climate_entity] || null;
+      var chargingState = chargingEntity && chargingEntity.state ? String(chargingEntity.state).toLowerCase() : '';
+      var climateState = climateEntity && climateEntity.state ? String(climateEntity.state).toLowerCase() : '';
+      var charging = chargingState === 'on' || chargingState === 'charging';
+      var inactiveClimate = ['off', 'unavailable', 'unknown', 'none', ''].indexOf(climateState) !== -1;
+      var image = charging ? 'ev6_charging.png' : (!inactiveClimate ? 'ev6_climate.png' : 'ev6_side.png');
+      return '<img src="/local/vehicles/' + image + '" alt="Kia EV6" loading="eager">';
     ]]]
   odometer: |
     [[[
-      const entity = states[variables.odometer_entity];
-      const state = entity?.state && entity.state !== 'unknown' ? entity.state : '--';
-      const unit = entity?.attributes?.unit_of_measurement || 'km';
-      return `<ha-icon icon="mdi:speedometer"></ha-icon><span>Odometer</span><strong>${state} ${unit}</strong>`;
+      var entity = states[variables.odometer_entity] || null;
+      var state = entity && entity.state && entity.state !== 'unknown' ? entity.state : '--';
+      var unit = entity && entity.attributes && entity.attributes.unit_of_measurement ? entity.attributes.unit_of_measurement : 'km';
+      return '<ha-icon icon="mdi:speedometer"></ha-icon><span>Odometer</span><strong>' + state + ' ' + unit + '</strong>';
     ]]]
   charging: |
     [[[
-      const state = states[variables.charging_entity]?.state || 'unknown';
-      const active = ['on', 'charging'].includes(String(state).toLowerCase());
-      const label = active ? 'Charging' : 'Not charging';
-      return `<ha-icon icon="mdi:ev-plug-type2"></ha-icon><span>Charging state</span><strong>${label}</strong>`;
+      var entity = states[variables.charging_entity] || null;
+      var state = entity && entity.state ? String(entity.state).toLowerCase() : 'unknown';
+      var active = state === 'on' || state === 'charging';
+      return '<ha-icon icon="mdi:ev-plug-type2"></ha-icon><span>Charging state</span><strong>' + (active ? 'Charging' : 'Not charging') + '</strong>';
     ]]]
   updated: |
     [[[
-      const entity = states[variables.updated_entity];
-      const value = entity?.state && entity.state !== 'unknown' ? entity.state : '--';
-      return `<ha-icon icon="mdi:calendar-clock"></ha-icon><span>Last updated</span><strong>${value}</strong>`;
+      var entity = states[variables.updated_entity] || null;
+      var value = entity && entity.state && entity.state !== 'unknown' ? entity.state : '--';
+      return '<ha-icon icon="mdi:calendar-clock"></ha-icon><span>Last updated</span><strong>' + value + '</strong>';
     ]]]
   climate: |
     [[[
-      const state = states[variables.climate_entity]?.state || 'unknown';
-      const active = !['off', 'unavailable', 'unknown', 'none', ''].includes(String(state).toLowerCase());
-      return `<ha-icon icon="mdi:thermometer"></ha-icon><span>Climate</span><strong>${active ? state : 'Off'}</strong>`;
+      var entity = states[variables.climate_entity] || null;
+      var state = entity && entity.state ? String(entity.state).toLowerCase() : 'unknown';
+      var inactive = ['off', 'unavailable', 'unknown', 'none', ''].indexOf(state) !== -1;
+      return '<ha-icon icon="mdi:thermometer"></ha-icon><span>Climate</span><strong>' + (inactive ? 'Off' : state) + '</strong>';
     ]]]
 styles:
   card:
