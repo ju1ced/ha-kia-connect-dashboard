@@ -6,9 +6,15 @@ entity: battery.charging_state
 triggers_update:
   - battery.charging_state
   - climate/hvac
+  - battery.level
+  - location.odometer
+  - controls.last_refresh_result
 variables:
   charging_entity: battery.charging_state
   climate_entity: climate/hvac
+  battery_entity: battery.level
+  odometer_entity: location.odometer
+  updated_entity: controls.last_refresh_result
 name: Kia EV6
 label: GT-Line RWD
 icon: mdi:car-electric
@@ -23,9 +29,11 @@ custom_fields:
   online: |
     [[[ return '<ha-icon icon="mdi:wifi"></ha-icon><span>Online</span>'; ]]]
   battery: |
-    [[[ return '<ha-icon icon="mdi:battery-high"></ha-icon><span>EV6</span>'; ]]]
-  copy: |
-    [[[ return '<span>Live vehicle overview</span><small>Battery, charging, vehicle state and location at a glance.</small>'; ]]]
+    [[[
+      const entity = states[variables.battery_entity];
+      const value = entity?.state && entity.state !== 'unknown' ? `${entity.state}${entity.attributes?.unit_of_measurement || '%'}` : 'EV6';
+      return `<ha-icon icon="mdi:battery-high"></ha-icon><span>${value}</span><small>Battery</small>`;
+    ]]]
   car: |
     [[[
       const chargingState = states[variables.charging_entity]?.state;
@@ -39,29 +47,55 @@ custom_fields:
           : 'ev6_side.png';
       return `<img src="/local/vehicles/${image}" alt="Kia EV6" loading="eager">`;
     ]]]
+  odometer: |
+    [[[
+      const entity = states[variables.odometer_entity];
+      const state = entity?.state && entity.state !== 'unknown' ? entity.state : '--';
+      const unit = entity?.attributes?.unit_of_measurement || 'km';
+      return `<ha-icon icon="mdi:speedometer"></ha-icon><span>Odometer</span><strong>${state} ${unit}</strong>`;
+    ]]]
+  charging: |
+    [[[
+      const state = states[variables.charging_entity]?.state || 'unknown';
+      const active = ['on', 'charging'].includes(String(state).toLowerCase());
+      const label = active ? 'Charging' : 'Not charging';
+      return `<ha-icon icon="mdi:ev-plug-type2"></ha-icon><span>Charging state</span><strong>${label}</strong>`;
+    ]]]
+  updated: |
+    [[[
+      const entity = states[variables.updated_entity];
+      const value = entity?.state && entity.state !== 'unknown' ? entity.state : '--';
+      return `<ha-icon icon="mdi:calendar-clock"></ha-icon><span>Last updated</span><strong>${value}</strong>`;
+    ]]]
+  climate: |
+    [[[
+      const state = states[variables.climate_entity]?.state || 'unknown';
+      const active = !['off', 'unavailable', 'unknown', 'none', ''].includes(String(state).toLowerCase());
+      return `<ha-icon icon="mdi:thermometer"></ha-icon><span>Climate</span><strong>${active ? state : 'Off'}</strong>`;
+    ]]]
 styles:
   card:
-    - min-height: 290px
-    - border-radius: 22px
-    - padding: 24px
+    - min-height: 252px
+    - border-radius: 18px
+    - padding: 20px 22px
     - overflow: hidden
     - background: var(--kia-hero-gradient, linear-gradient(145deg, rgba(17, 21, 28, 0.98), rgba(32, 36, 45, 0.94)))
     - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.18))
     - box-shadow: var(--kia-shadow-raised, 0 22px 54px rgba(0, 0, 0, 0.36))
   grid:
-    - "grid-template-areas: 'i n locked online battery' 'i l locked online battery' 'copy copy car car car'"
-    - grid-template-columns: 56px minmax(0, 1fr) min-content min-content min-content
-    - grid-template-rows: min-content min-content 1fr
+    - "grid-template-areas: 'i n locked online battery' 'i l locked online battery' 'car car car odometer charging' 'car car car updated climate'"
+    - grid-template-columns: 54px minmax(0, 1.1fr) minmax(0, 1fr) minmax(170px, 0.75fr) minmax(170px, 0.75fr)
+    - grid-template-rows: min-content min-content 1fr 1fr
     - column-gap: 14px
     - row-gap: 10px
   icon:
-    - width: 44px
+    - width: 42px
     - color: var(--kia-text-primary, #f4f6f8)
   name:
     - justify-self: start
     - align-self: end
     - width: 100%
-    - font-size: clamp(30px, 2.6vw, 42px)
+    - font-size: clamp(28px, 2.2vw, 38px)
     - font-weight: 800
     - line-height: 1.05
     - white-space: normal
@@ -71,7 +105,7 @@ styles:
   label:
     - justify-self: start
     - width: 100%
-    - font-size: 17px
+    - font-size: 16px
     - line-height: 1.25
     - white-space: normal
     - overflow: visible
@@ -80,7 +114,8 @@ styles:
   custom_fields:
     locked:
       - align-self: start
-      - padding: 10px 14px
+      - justify-self: end
+      - padding: 9px 14px
       - border-radius: 14px
       - background: rgba(92, 200, 255, 0.1)
       - color: var(--kia-brand-primary, #5cc8ff)
@@ -88,7 +123,8 @@ styles:
       - white-space: nowrap
     online:
       - align-self: start
-      - padding: 10px 14px
+      - justify-self: end
+      - padding: 9px 14px
       - border-radius: 14px
       - background: rgba(126, 231, 135, 0.1)
       - color: var(--kia-status-charging, #7ee787)
@@ -96,30 +132,42 @@ styles:
       - white-space: nowrap
     battery:
       - align-self: start
-      - padding: 10px 14px
+      - justify-self: end
+      - padding: 9px 14px
       - border-radius: 14px
       - background: rgba(92, 200, 255, 0.1)
       - color: var(--kia-text-primary, #f4f6f8)
       - font-weight: 700
       - white-space: nowrap
-    copy:
-      - align-self: end
-      - justify-self: start
-      - color: var(--kia-text-secondary, #b7c0cc)
-      - font-size: 15px
-      - font-weight: 700
-      - line-height: 1.35
-      - max-width: 360px
-      - padding-bottom: 8px
-      - text-align: left
     car:
       - align-self: end
-      - justify-self: end
-      - width: min(860px, 72vw)
-      - max-width: 70%
-      - height: 200px
+      - justify-self: start
+      - width: min(690px, 48vw)
+      - max-width: 100%
+      - height: 172px
       - pointer-events: none
-      - margin-bottom: -10px
+      - margin-left: 42px
+      - margin-bottom: -4px
+    odometer:
+      - border-left: 1px solid rgba(183, 192, 204, 0.14)
+      - padding-left: 18px
+      - align-self: center
+      - justify-self: stretch
+      - text-align: left
+    charging:
+      - align-self: center
+      - justify-self: stretch
+      - text-align: left
+    updated:
+      - border-left: 1px solid rgba(183, 192, 204, 0.14)
+      - padding-left: 18px
+      - align-self: center
+      - justify-self: stretch
+      - text-align: left
+    climate:
+      - align-self: center
+      - justify-self: stretch
+      - text-align: left
 card_mod:
   style: |
     ha-card #locked ha-icon,
@@ -129,11 +177,12 @@ card_mod:
       margin-right: 8px;
       vertical-align: -4px;
     }
-    ha-card #copy small {
+    ha-card #battery small {
       display: block;
-      margin-top: 4px;
-      color: var(--kia-text-muted, #8a94a3);
-      font-size: 13px;
+      margin-left: 26px;
+      margin-top: -2px;
+      color: var(--kia-text-secondary, #b7c0cc);
+      font-size: 11px;
       font-weight: 600;
     }
     ha-card #car img {
@@ -141,16 +190,50 @@ card_mod:
       width: 100%;
       height: 100%;
       object-fit: contain;
-      object-position: right bottom;
+      object-position: left bottom;
       filter: drop-shadow(0 20px 28px rgba(0, 0, 0, 0.42));
+    }
+    ha-card #odometer ha-icon,
+    ha-card #charging ha-icon,
+    ha-card #updated ha-icon,
+    ha-card #climate ha-icon {
+      color: var(--kia-text-secondary, #b7c0cc);
+      width: 24px;
+      margin-right: 12px;
+      vertical-align: -7px;
+    }
+    ha-card #odometer span,
+    ha-card #charging span,
+    ha-card #updated span,
+    ha-card #climate span {
+      color: var(--kia-text-secondary, #b7c0cc);
+      display: inline-block;
+      font-size: 14px;
+      min-width: 116px;
+    }
+    ha-card #odometer strong,
+    ha-card #charging strong,
+    ha-card #updated strong,
+    ha-card #climate strong {
+      color: var(--kia-text-primary, #f4f6f8);
+      display: block;
+      font-size: 16px;
+      font-weight: 700;
+      margin-left: 40px;
+      margin-top: 2px;
     }
     @media (max-width: 760px) {
       ha-card {
-        min-height: 360px !important;
+        min-height: 420px !important;
       }
       ha-card #car {
         width: 100% !important;
-        max-width: 100% !important;
-        height: 150px !important;
+        height: 140px !important;
+        margin-left: 0 !important;
+      }
+      ha-card #odometer,
+      ha-card #updated {
+        border-left: 0 !important;
+        padding-left: 0 !important;
       }
     }
