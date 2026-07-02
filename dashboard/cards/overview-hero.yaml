@@ -5,10 +5,10 @@ type: custom:button-card
 entity: battery.charging_state
 triggers_update:
   - battery.charging_state
-  - climate.hvac
+  - climate/hvac
 variables:
   charging_entity: battery.charging_state
-  climate_entity: climate.hvac
+  climate_entity: climate/hvac
 name: Kia EV6
 label: GT-Line RWD
 icon: mdi:car-electric
