@@ -14,8 +14,8 @@ bindings have their own safety pass.
 Confirm these items in Home Assistant:
 
 - The Kia integration is already installed and exposing vehicle entities.
-- HACS or another install path provides `decluttering-card`, `button-card`, and
-  `card-mod`.
+- HACS or another install path provides `decluttering-card`, `button-card`,
+  `card-mod`, and `layout-card`.
 - YAML mode or a dashboard include workflow is available for Lovelace.
 - You know the dashboard URL path that will host the Kia pages.
 - You can edit the existing Home dashboard button for the Kia EV6 entry point.
@@ -42,14 +42,14 @@ After updating the entity map, run the runtime health check. Without Home
 Assistant state data it reports which mappings can be checked later:
 
 ```bash
-python scripts/check_runtime_mapping_health.py
+python3 scripts/check_runtime_mapping_health.py
 ```
 
 With a Home Assistant state export, it reports `ok`, `missing`, `unknown`, and
 `unavailable` rows:
 
 ```bash
-python scripts/check_runtime_mapping_health.py --states-json ha-states.json
+python3 scripts/check_runtime_mapping_health.py --states-json ha-states.json
 ```
 
 Use `docs/runtime-mapping-health.md` for export details and strict-mode usage.
@@ -61,14 +61,14 @@ Run the render step from the repository root. The default dashboard path is
 `/lovelace`:
 
 ```bash
-python scripts/render_dashboard.py
+python3 scripts/render_dashboard.py
 ```
 
 If your Kia dashboard is mounted under another URL path, render with the same
 base path. For example:
 
 ```bash
-python scripts/render_dashboard.py --dashboard-path /kia-ev6
+python3 scripts/render_dashboard.py --dashboard-path /kia-ev6
 ```
 
 The rendered Home Assistant-ready files are written to:
@@ -102,6 +102,8 @@ Make sure these Lovelace resources are available before opening the dashboard:
   type: module
 - url: /hacsfiles/lovelace-card-mod/card-mod.js
   type: module
+- url: /hacsfiles/lovelace-layout-card/layout-card.js
+  type: module
 ```
 
 Adjust the URLs if your Home Assistant instance exposes HACS resources under a
@@ -130,7 +132,7 @@ If you rendered with `--dashboard-path /kia-ev6`, the button should navigate to
 Check these items first:
 
 - The Home dashboard button opens the Kia Overview page.
-- The Overview page shows the dark visual card layer.
+- The Overview page shows the responsive dark visual card layer.
 - Battery, Vehicle, Climate, Energy, Location, and Settings pages open from the
   Overview page.
 - Back to Overview works from every detail page.
