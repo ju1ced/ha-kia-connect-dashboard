@@ -17,11 +17,13 @@ custom_fields:
     [[[ return '<ha-icon icon="mdi:wifi"></ha-icon><span>Online</span>'; ]]]
   battery: |
     [[[ return '<ha-icon icon="mdi:battery-high"></ha-icon><span>EV6</span>'; ]]]
+  copy: |
+    [[[ return '<span>Live vehicle overview</span><small>Battery, charging, vehicle state and location at a glance.</small>'; ]]]
   car: |
-    [[[ return '<ha-icon icon="mdi:car-side"></ha-icon>'; ]]]
+    [[[ return '<img src="/local/vehicles/ev6_side.png" alt="Kia EV6" loading="eager">'; ]]]
 styles:
   card:
-    - min-height: 286px
+    - min-height: 290px
     - border-radius: 22px
     - padding: 24px
     - overflow: hidden
@@ -29,11 +31,11 @@ styles:
     - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.18))
     - box-shadow: var(--kia-shadow-raised, 0 22px 54px rgba(0, 0, 0, 0.36))
   grid:
-    - "grid-template-areas: 'i n locked online battery' 'i l locked online battery' 'car car car car car'"
+    - "grid-template-areas: 'i n locked online battery' 'i l locked online battery' 'copy copy car car car'"
     - grid-template-columns: 56px minmax(0, 1fr) min-content min-content min-content
     - grid-template-rows: min-content min-content 1fr
     - column-gap: 14px
-    - row-gap: 8px
+    - row-gap: 10px
   icon:
     - width: 44px
     - color: var(--kia-text-primary, #f4f6f8)
@@ -41,9 +43,9 @@ styles:
     - justify-self: start
     - align-self: end
     - width: 100%
-    - font-size: clamp(26px, 2.4vw, 34px)
+    - font-size: clamp(30px, 2.6vw, 42px)
     - font-weight: 800
-    - line-height: 1.1
+    - line-height: 1.05
     - white-space: normal
     - overflow: visible
     - text-overflow: unset
@@ -51,7 +53,7 @@ styles:
   label:
     - justify-self: start
     - width: 100%
-    - font-size: 16px
+    - font-size: 17px
     - line-height: 1.25
     - white-space: normal
     - overflow: visible
@@ -82,14 +84,24 @@ styles:
       - color: var(--kia-text-primary, #f4f6f8)
       - font-weight: 700
       - white-space: nowrap
+    copy:
+      - align-self: end
+      - justify-self: start
+      - color: var(--kia-text-secondary, #b7c0cc)
+      - font-size: 15px
+      - font-weight: 700
+      - line-height: 1.35
+      - max-width: 360px
+      - padding-bottom: 8px
+      - text-align: left
     car:
       - align-self: end
       - justify-self: end
-      - padding-right: 34px
-      - padding-bottom: 18px
-      - color: var(--kia-hero-vehicle-color, rgba(244, 246, 248, 0.78))
-      - transform: scale(4.2)
-      - opacity: 0.62
+      - width: min(860px, 72vw)
+      - max-width: 70%
+      - height: 200px
+      - pointer-events: none
+      - margin-bottom: -10px
 card_mod:
   style: |
     ha-card #locked ha-icon,
@@ -98,4 +110,29 @@ card_mod:
       width: 18px;
       margin-right: 8px;
       vertical-align: -4px;
+    }
+    ha-card #copy small {
+      display: block;
+      margin-top: 4px;
+      color: var(--kia-text-muted, #8a94a3);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    ha-card #car img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: right bottom;
+      filter: drop-shadow(0 20px 28px rgba(0, 0, 0, 0.42));
+    }
+    @media (max-width: 760px) {
+      ha-card {
+        min-height: 360px !important;
+      }
+      ha-card #car {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 150px !important;
+      }
     }
