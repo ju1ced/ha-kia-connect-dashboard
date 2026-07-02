@@ -2,6 +2,13 @@
 view_layout:
   grid-area: hero
 type: custom:button-card
+entity: battery.charging_state
+triggers_update:
+  - battery.charging_state
+  - climate.hvac
+variables:
+  charging_entity: battery.charging_state
+  climate_entity: climate.hvac
 name: Kia EV6
 label: GT-Line RWD
 icon: mdi:car-electric
@@ -20,7 +27,18 @@ custom_fields:
   copy: |
     [[[ return '<span>Live vehicle overview</span><small>Battery, charging, vehicle state and location at a glance.</small>'; ]]]
   car: |
-    [[[ return '<img src="/local/vehicles/ev6_side.png" alt="Kia EV6" loading="eager">'; ]]]
+    [[[
+      const chargingState = states[variables.charging_entity]?.state;
+      const climateState = states[variables.climate_entity]?.state;
+      const charging = ['on', 'charging'].includes(String(chargingState).toLowerCase());
+      const climateActive = !['off', 'unavailable', 'unknown', 'none', ''].includes(String(climateState).toLowerCase());
+      const image = charging
+        ? 'ev6_charging.png'
+        : climateActive
+          ? 'ev6_climate.png'
+          : 'ev6_side.png';
+      return `<img src="/local/vehicles/${image}" alt="Kia EV6" loading="eager">`;
+    ]]]
 styles:
   card:
     - min-height: 290px
