@@ -1,30 +1,154 @@
 ---
 view_layout:
   grid-area: battery
-type: vertical-stack
-cards:
-  - type: custom:decluttering-card
-    template: kia_visual_stat_tile
-    variables:
-      - entity: battery.level
-      - name: Battery level
-      - icon: mdi:battery-high
-      - label: State of charge
-  - type: grid
-    columns: 2
-    square: false
-    cards:
-      - type: custom:decluttering-card
-        template: kia_visual_stat_tile
-        variables:
-          - entity: battery.estimated_range
-          - name: Range
-          - icon: mdi:map-marker-distance
-          - label: Estimated range
-      - type: custom:decluttering-card
-        template: kia_visual_stat_tile
-        variables:
-          - entity: battery.charging_state
-          - name: Charging
-          - icon: mdi:battery-charging
-          - label: Current state
+type: custom:button-card
+entity: battery.level
+triggers_update:
+  - battery.level
+  - battery.estimated_range
+  - battery.charging_state
+  - battery.plug_connected
+  - battery.target_charge_limit
+variables:
+  level_entity: battery.level
+  range_entity: battery.estimated_range
+  charging_entity: battery.charging_state
+  plug_entity: battery.plug_connected
+  limit_entity: battery.target_charge_limit
+show_icon: false
+show_name: false
+show_state: false
+tap_action:
+  action: more-info
+  entity: battery.level
+custom_fields:
+  title: |
+    [[[ return '<ha-icon icon="mdi:battery-charging-high"></ha-icon><span>Battery</span><ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>'; ]]]
+  ring: |
+    [[[
+      var e = states[variables.level_entity] || null;
+      var raw = e && e.state ? parseFloat(e.state) : NaN;
+      var level = isNaN(raw) ? 0 : Math.max(0, Math.min(100, raw));
+      var text = isNaN(raw) ? '--' : Math.round(level) + '%';
+      return '<div class="battery-ring" style="--level:' + level + '"><div><strong>' + text + '</strong><span>Battery level</span></div></div>';
+    ]]]
+  details: |
+    [[[
+      function value(id, fallback) {
+        var e = states[id] || null;
+        if (!e || !e.state || e.state === 'unknown' || e.state === 'unavailable') return fallback;
+        var unit = e.attributes && e.attributes.unit_of_measurement ? ' ' + e.attributes.unit_of_measurement : '';
+        return e.state + unit;
+      }
+      var charge = states[variables.charging_entity] || null;
+      var chargeState = charge && charge.state ? String(charge.state).toLowerCase() : '';
+      var charging = chargeState === 'on' || chargeState === 'charging';
+      var plug = states[variables.plug_entity] || null;
+      var plugState = plug && plug.state ? String(plug.state).toLowerCase() : 'unknown';
+      return '<div class="battery-details">'
+        + '<div><span>Range</span><strong>' + value(variables.range_entity, '--') + '</strong></div>'
+        + '<div><span>AC charging limit</span><strong>' + value(variables.limit_entity, '--') + '</strong></div>'
+        + '<div><span>Charging</span><strong class="' + (charging ? 'ok' : 'muted') + '">' + (charging ? 'Charging' : 'Not charging') + '</strong></div>'
+        + '<div><span>Plugged in</span><strong>' + (plugState === 'on' || plugState === 'connected' ? 'Yes' : 'No') + '</strong></div>'
+        + '</div>';
+    ]]]
+styles:
+  card:
+    - min-height: 220px
+    - border-radius: 14px
+    - padding: 16px 18px
+    - background: var(--kia-card-background, rgba(21, 27, 36, 0.94))
+    - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.16))
+    - box-shadow: var(--kia-shadow-card, 0 16px 34px rgba(0, 0, 0, 0.24))
+  grid:
+    - "grid-template-areas: 'title title' 'ring details'"
+    - grid-template-columns: 168px minmax(0, 1fr)
+    - grid-template-rows: min-content 1fr
+    - column-gap: 18px
+    - row-gap: 14px
+  custom_fields:
+    title:
+      - align-self: start
+      - justify-self: stretch
+      - text-align: left
+    ring:
+      - align-self: center
+      - justify-self: center
+    details:
+      - align-self: center
+      - justify-self: stretch
+      - min-width: 0
+card_mod:
+  style: |
+    ha-card #title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--kia-text-primary, #f4f6f8);
+      font-size: 17px;
+      font-weight: 800;
+    }
+    ha-card #title ha-icon { color: var(--kia-brand-primary, #5cc8ff); width: 20px; }
+    ha-card #title .chevron { margin-left: auto; color: var(--kia-text-secondary, #b7c0cc); }
+    ha-card .battery-ring {
+      width: 136px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(var(--kia-brand-primary, #5cc8ff) calc(var(--level) * 1%), rgba(92, 200, 255, 0.14) 0);
+      box-shadow: inset 0 0 18px rgba(92, 200, 255, 0.16), 0 0 28px rgba(92, 200, 255, 0.16);
+    }
+    ha-card .battery-ring::before {
+      content: '';
+      position: absolute;
+      width: 100px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--kia-card-background, #151b24);
+    }
+    ha-card .battery-ring div {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    ha-card .battery-ring strong {
+      color: var(--kia-text-primary, #f4f6f8);
+      display: block;
+      font-size: 34px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    ha-card .battery-ring span {
+      color: var(--kia-text-secondary, #b7c0cc);
+      display: block;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+    ha-card .battery-details {
+      display: grid;
+      gap: 10px;
+    }
+    ha-card .battery-details div {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2px;
+    }
+    ha-card .battery-details span {
+      color: var(--kia-text-secondary, #b7c0cc);
+      font-size: 13px;
+    }
+    ha-card .battery-details strong {
+      color: var(--kia-text-primary, #f4f6f8);
+      font-size: 17px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    ha-card .battery-details strong.ok,
+    ha-card .battery-details strong.muted { color: var(--kia-status-charging, #7ee787); }
+    @media (max-width: 760px) {
+      ha-card #root { grid-template-columns: 1fr !important; }
+      ha-card #ring { justify-self: start !important; }
+    }

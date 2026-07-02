@@ -1,11 +1,70 @@
 ---
 view_layout:
   grid-area: status
-type: custom:decluttering-card
-template: kia_visual_text_panel
-variables:
-  - title: Status
-  - content: >-
-      All systems normal. Review live warnings on Vehicle and Settings during
-      the first Home Assistant test. Medium-risk commands remain disabled until
-      confirmation behavior is validated.
+type: custom:button-card
+show_icon: false
+show_name: false
+show_state: false
+tap_action:
+  action: navigate
+  navigation_path: /kia-ev6/dashboard-admin
+custom_fields:
+  shield: |
+    [[[ return '<ha-icon icon="mdi:shield-check-outline"></ha-icon>'; ]]]
+  text: |
+    [[[ return '<strong>All systems normal</strong><span>No active dashboard warnings. Review Vehicle and Settings after each Home Assistant update.</span>'; ]]]
+  watermark: |
+    [[[ return '<ha-icon icon="mdi:shield-check-outline"></ha-icon>'; ]]]
+styles:
+  card:
+    - min-height: 176px
+    - border-radius: 14px
+    - padding: 18px 20px
+    - background: var(--kia-card-background, rgba(21, 27, 36, 0.94))
+    - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.16))
+    - box-shadow: var(--kia-shadow-card, 0 16px 34px rgba(0, 0, 0, 0.24))
+    - overflow: hidden
+  grid:
+    - "grid-template-areas: 'shield text watermark'"
+    - grid-template-columns: 48px minmax(0, 1fr) 66px
+    - align-items: center
+    - column-gap: 16px
+  custom_fields:
+    shield:
+      - align-self: center
+      - justify-self: center
+    text:
+      - align-self: center
+      - justify-self: stretch
+      - text-align: left
+      - min-width: 0
+    watermark:
+      - align-self: center
+      - justify-self: end
+      - opacity: 0.18
+card_mod:
+  style: |
+    ha-card #shield ha-icon {
+      color: var(--kia-status-charging, #7ee787);
+      width: 40px;
+      height: 40px;
+    }
+    ha-card #text strong {
+      color: var(--kia-text-primary, #f4f6f8);
+      display: block;
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.15;
+    }
+    ha-card #text span {
+      color: var(--kia-text-secondary, #b7c0cc);
+      display: block;
+      font-size: 14px;
+      line-height: 1.35;
+      margin-top: 4px;
+    }
+    ha-card #watermark ha-icon {
+      color: var(--kia-text-secondary, #b7c0cc);
+      width: 58px;
+      height: 58px;
+    }

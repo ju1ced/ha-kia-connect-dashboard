@@ -1,44 +1,107 @@
 ---
 view_layout:
   grid-area: vehicle
-type: vertical-stack
-cards:
-  - type: custom:decluttering-card
-    template: kia_visual_stat_tile
-    variables:
-      - entity: locks.door_lock
-      - name: Door lock
-      - icon: mdi:car-door-lock
-      - label: Security
-  - type: grid
-    columns: 2
-    square: false
-    cards:
-      - type: custom:decluttering-card
-        template: kia_visual_stat_tile
-        variables:
-          - entity: openings.trunk
-          - name: Trunk
-          - icon: mdi:car-back
-          - label: Opening
-      - type: custom:decluttering-card
-        template: kia_visual_stat_tile
-        variables:
-          - entity: openings.hood
-          - name: Hood
-          - icon: mdi:car-cog
-          - label: Opening
-      - type: custom:decluttering-card
-        template: kia_visual_stat_tile
-        variables:
-          - entity: lights.headlights
-          - name: Lights
-          - icon: mdi:car-light-high
-          - label: Headlights
-      - type: custom:decluttering-card
-        template: kia_visual_stat_tile
-        variables:
-          - entity: locks.charging_port
-          - name: Charge port
-          - icon: mdi:ev-plug-type2
-          - label: Port state
+type: custom:button-card
+entity: locks.door_lock
+triggers_update:
+  - locks.door_lock
+  - openings.trunk
+  - openings.hood
+  - lights.headlights
+  - locks.charging_port
+variables:
+  door_lock_entity: locks.door_lock
+  trunk_entity: openings.trunk
+  hood_entity: openings.hood
+  lights_entity: lights.headlights
+  charge_port_entity: locks.charging_port
+show_icon: false
+show_name: false
+show_state: false
+tap_action:
+  action: more-info
+  entity: locks.door_lock
+custom_fields:
+  title: |
+    [[[ return '<ha-icon icon="mdi:car-estate"></ha-icon><span>Vehicle Status</span><ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>'; ]]]
+  rows: |
+    [[[
+      function stateText(id, fallback) {
+        var e = states[id] || null;
+        if (!e || !e.state || e.state === 'unknown' || e.state === 'unavailable') return fallback;
+        return e.state;
+      }
+      function row(icon, label, id, fallback) {
+        var value = stateText(id, fallback);
+        return '<div class="status-row"><ha-icon icon="' + icon + '"></ha-icon><span>' + label + '</span><strong>' + value + '</strong><ha-icon class="ok" icon="mdi:check-circle-outline"></ha-icon></div>';
+      }
+      return '<div class="status-list">'
+        + row('mdi:car-door-lock', 'Doors', variables.door_lock_entity, '--')
+        + row('mdi:car-back', 'Trunk', variables.trunk_entity, '--')
+        + row('mdi:car-cog', 'Hood', variables.hood_entity, '--')
+        + row('mdi:car-light-high', 'Lights', variables.lights_entity, '--')
+        + row('mdi:ev-plug-type2', 'Charge port', variables.charge_port_entity, '--')
+        + '</div>';
+    ]]]
+styles:
+  card:
+    - min-height: 220px
+    - border-radius: 14px
+    - padding: 16px 18px
+    - background: var(--kia-card-background, rgba(21, 27, 36, 0.94))
+    - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.16))
+    - box-shadow: var(--kia-shadow-card, 0 16px 34px rgba(0, 0, 0, 0.24))
+  grid:
+    - "grid-template-areas: 'title' 'rows'"
+    - grid-template-rows: min-content 1fr
+    - row-gap: 12px
+  custom_fields:
+    title:
+      - align-self: start
+      - justify-self: stretch
+      - text-align: left
+    rows:
+      - align-self: stretch
+      - justify-self: stretch
+      - min-width: 0
+card_mod:
+  style: |
+    ha-card #title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--kia-text-primary, #f4f6f8);
+      font-size: 17px;
+      font-weight: 800;
+    }
+    ha-card #title ha-icon { color: var(--kia-text-secondary, #b7c0cc); width: 20px; }
+    ha-card #title .chevron { margin-left: auto; }
+    ha-card .status-list {
+      display: grid;
+      gap: 9px;
+    }
+    ha-card .status-row {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) auto 24px;
+      align-items: center;
+      gap: 10px;
+      min-height: 25px;
+      color: var(--kia-text-secondary, #b7c0cc);
+    }
+    ha-card .status-row > ha-icon:first-child { width: 20px; color: var(--kia-text-secondary, #b7c0cc); }
+    ha-card .status-row span {
+      font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    ha-card .status-row strong {
+      color: var(--kia-text-primary, #f4f6f8);
+      font-size: 14px;
+      font-weight: 700;
+      max-width: 130px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    ha-card .status-row .ok { width: 18px; color: var(--kia-status-charging, #7ee787); }

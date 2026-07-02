@@ -1,39 +1,86 @@
 ---
 view_layout:
   grid-area: actions
-type: grid
-columns: 2
-square: false
-cards:
-  - type: custom:decluttering-card
-    template: kia_visual_action_tile
-    variables:
-      - entity: controls.refresh
-      - name: Refresh Data
-      - icon: mdi:refresh
-      - color: var(--kia-brand-primary)
-      - action: none
-  - type: custom:decluttering-card
-    template: kia_visual_action_tile
-    variables:
-      - entity: controls.start_climate
-      - name: Start Climate
-      - icon: mdi:fan
-      - color: var(--kia-brand-primary)
-      - action: none
-  - type: custom:decluttering-card
-    template: kia_visual_action_tile
-    variables:
-      - entity: controls.stop_climate
-      - name: Stop Climate
-      - icon: mdi:fan-off
-      - color: var(--kia-status-warning)
-      - action: none
-  - type: custom:decluttering-card
-    template: kia_visual_action_tile
-    variables:
-      - entity: controls.start_charging
-      - name: Start Charging
-      - icon: mdi:ev-plug-type2
-      - color: var(--kia-status-charging)
-      - action: none
+type: custom:button-card
+show_icon: false
+show_name: false
+show_state: false
+tap_action:
+  action: none
+custom_fields:
+  title: |
+    [[[ return '<ha-icon icon="mdi:lightning-bolt"></ha-icon><span>Quick Actions</span><ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>'; ]]]
+  actions:
+    card:
+      type: grid
+      columns: 2
+      square: false
+      cards:
+        - type: custom:decluttering-card
+          template: kia_visual_action_tile
+          variables:
+            - entity: controls.refresh
+            - name: Refresh Data
+            - icon: mdi:refresh
+            - color: var(--kia-brand-primary)
+            - action: none
+        - type: custom:decluttering-card
+          template: kia_visual_action_tile
+          variables:
+            - entity: controls.start_climate
+            - name: Start Climate
+            - icon: mdi:fan
+            - color: var(--kia-brand-primary)
+            - action: none
+        - type: custom:decluttering-card
+          template: kia_visual_action_tile
+          variables:
+            - entity: controls.stop_climate
+            - name: Stop Climate
+            - icon: mdi:fan-off
+            - color: var(--kia-status-warning)
+            - action: none
+        - type: custom:decluttering-card
+          template: kia_visual_action_tile
+          variables:
+            - entity: controls.start_charging
+            - name: Start Charging
+            - icon: mdi:ev-plug-type2
+            - color: var(--kia-status-charging)
+            - action: none
+styles:
+  card:
+    - min-height: 220px
+    - border-radius: 14px
+    - padding: 16px 18px
+    - background: var(--kia-card-background, rgba(21, 27, 36, 0.94))
+    - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.16))
+    - box-shadow: var(--kia-shadow-card, 0 16px 34px rgba(0, 0, 0, 0.24))
+  grid:
+    - "grid-template-areas: 'title' 'actions'"
+    - grid-template-rows: min-content 1fr
+    - row-gap: 12px
+  custom_fields:
+    title:
+      - align-self: start
+      - justify-self: stretch
+      - text-align: left
+    actions:
+      - align-self: stretch
+      - justify-self: stretch
+card_mod:
+  style: |
+    ha-card #title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--kia-text-primary, #f4f6f8);
+      font-size: 17px;
+      font-weight: 800;
+    }
+    ha-card #title ha-icon { color: var(--kia-brand-primary, #5cc8ff); width: 20px; }
+    ha-card #title .chevron { margin-left: auto; color: var(--kia-text-secondary, #b7c0cc); }
+    ha-card #actions hui-grid-card,
+    ha-card #actions #root {
+      height: 100%;
+    }
