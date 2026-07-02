@@ -18,7 +18,7 @@ cards:
         "hero hero hero hero actions actions actions actions location location location location"
         "hero hero hero hero vehicle vehicle vehicle vehicle location location location location"
         "nav nav nav nav vehicle vehicle vehicle vehicle tires tires tires tires"
-        "battery battery battery battery battery actions2 actions2 actions2 tires tires tires tires"
+        "battery battery battery battery battery tires tires tires tires tires tires tires"
         "battery battery battery battery battery status status status status status status status"
       mediaquery:
         "(max-width: 1180px)":
