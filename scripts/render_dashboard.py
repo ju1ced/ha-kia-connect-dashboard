@@ -21,11 +21,11 @@ ENTITY_LINE = re.compile(
 )
 LOGICAL_VALUE_LINE = re.compile(
     r"^(?P<prefix>\s*(?:-\s*)?[a-z][a-z0-9_]*:\s*)(?P<quote>[\"']?)"
-    r"(?P<value>[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*)(?P=quote)(?P<suffix>\s*)$"
+    r"(?P<value>[a-z][a-z0-9_]*(?:\.|/)[a-z][a-z0-9_]*)(?P=quote)(?P<suffix>\s*)$"
 )
 LOGICAL_LIST_ITEM_LINE = re.compile(
     r"^(?P<prefix>\s*-\s*)(?P<quote>[\"']?)"
-    r"(?P<value>[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*)(?P=quote)(?P<suffix>\s*)$"
+    r"(?P<value>[a-z][a-z0-9_]*(?:\.|/)[a-z][a-z0-9_]*)(?P=quote)(?P<suffix>\s*)$"
 )
 NAVIGATION_LINE = re.compile(
     r"^(?P<prefix>\s*(?:-\s*)?(?:navigation_path|path):\s*)"
