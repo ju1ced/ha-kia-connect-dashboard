@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Reworked the Overview composition toward the visual reference with a calmer
+  left-weighted hero, single-row navigation, and more compact visual cards.
 - Added real EV6 Overview hero imagery with status-aware switching for charging
   and active climate states.
 - Rebuilt the Overview page around a responsive `layout-card` grid so the first

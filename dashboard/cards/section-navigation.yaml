@@ -2,7 +2,7 @@
 view_layout:
   grid-area: nav
 type: grid
-columns: 3
+columns: 6
 square: false
 cards:
   - type: custom:decluttering-card
