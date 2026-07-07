@@ -11,39 +11,61 @@ cards:
     tap_action:
       action: navigate
       navigation_path: /lovelace/kia-battery
-    template: kia_visual_nav_tile
+    styles: &nav_tile_styles
+      card:
+        - min-height: 72px
+        - border-radius: 12px
+        - padding: 10px 12px
+        - background: var(--kia-card-gradient, linear-gradient(145deg, rgba(32, 36, 45, 0.98), rgba(17, 21, 28, 0.98)))
+        - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.14))
+        - box-shadow: var(--kia-card-shadow, 0 10px 24px rgba(0, 0, 0, 0.22))
+      grid:
+        - "grid-template-areas: 'i' 'n'"
+        - grid-template-columns: 1fr
+        - grid-template-rows: 1fr min-content
+        - row-gap: 6px
+      icon:
+        - width: 32px
+        - color: var(--kia-brand-primary, #5cc8ff)
+      name:
+        - font-size: 13px
+        - font-weight: 800
+        - line-height: 1.15
+        - color: var(--kia-text-primary, #f4f6f8)
+        - white-space: normal
+        - overflow: visible
   - type: custom:button-card
     name: Vehicle
     icon: mdi:car-info
     tap_action:
       action: navigate
       navigation_path: /lovelace/kia-vehicle
-    template: kia_visual_nav_tile
+    styles: *nav_tile_styles
   - type: custom:button-card
     name: Climate
     icon: mdi:air-conditioner
     tap_action:
       action: navigate
       navigation_path: /lovelace/kia-climate
-    template: kia_visual_nav_tile
+    styles: *nav_tile_styles
   - type: custom:button-card
     name: Energy
     icon: mdi:chart-line
     tap_action:
       action: navigate
       navigation_path: /lovelace/kia-energy
-    template: kia_visual_nav_tile
+    styles: *nav_tile_styles
   - type: custom:button-card
     name: Location
     icon: mdi:map-marker
     tap_action:
       action: navigate
       navigation_path: /lovelace/kia-location
-    template: kia_visual_nav_tile
+    styles: *nav_tile_styles
   - type: custom:button-card
     name: Settings
     icon: mdi:tune
     tap_action:
       action: navigate
       navigation_path: /lovelace/kia-settings
-    template: kia_visual_nav_tile
+    styles: *nav_tile_styles
