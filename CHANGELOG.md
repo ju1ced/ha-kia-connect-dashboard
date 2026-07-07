@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Polished Overview panel content fill so the hero vehicle, hero metrics,
+  battery summary, quick actions, vehicle status, location, and tire cards use
+  their available space more like the visual reference.
 - Split the Overview header from the hero, rebuilt the hero as a render-style
   vehicle-and-metrics panel, and aligned the first Overview card row to the
   visual reference while preserving status-aware EV6 imagery.
