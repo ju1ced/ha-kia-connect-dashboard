@@ -15,15 +15,17 @@ cards:
       grid-gap: 10px
       grid-template-columns: repeat(12, minmax(0, 1fr))
       grid-template-areas: |
+        "header header header header header header header header header header header header"
         "hero hero hero hero hero hero hero hero hero hero hero hero"
         "nav nav nav nav nav nav nav nav nav nav nav nav"
-        "battery battery battery actions actions actions vehicle vehicle vehicle vehicle vehicle vehicle"
+        "battery battery battery battery actions actions actions actions vehicle vehicle vehicle vehicle"
         "location location location location tires tires tires tires status status status status"
       mediaquery:
         "(max-width: 1180px)":
           padding: 12px
           grid-template-columns: repeat(6, minmax(0, 1fr))
           grid-template-areas: |
+            "header header header header header header"
             "hero hero hero hero hero hero"
             "nav nav nav nav nav nav"
             "battery battery battery actions actions actions"
@@ -35,6 +37,7 @@ cards:
           grid-gap: 10px
           grid-template-columns: minmax(0, 1fr)
           grid-template-areas: |
+            "header"
             "hero"
             "nav"
             "battery"
@@ -44,6 +47,7 @@ cards:
             "tires"
             "status"
     cards:
+      - !include ../cards/overview-header.yaml
       - !include ../cards/overview-hero.yaml
       - !include ../cards/section-navigation.yaml
       - !include ../cards/battery-summary.yaml
