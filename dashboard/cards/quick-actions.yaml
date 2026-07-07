@@ -8,79 +8,69 @@ show_state: false
 tap_action:
   action: none
 custom_fields:
-  title: |
-    [[[ return '<ha-icon icon="mdi:lightning-bolt"></ha-icon><span>Quick Actions</span><ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>'; ]]]
-  actions:
-    card:
-      type: grid
-      columns: 2
-      square: false
-      cards:
-        - type: custom:decluttering-card
-          template: kia_visual_action_tile
-          variables:
-            - entity: controls.refresh
-            - name: Refresh Data
-            - icon: mdi:refresh
-            - color: var(--kia-brand-primary)
-            - action: none
-        - type: custom:decluttering-card
-          template: kia_visual_action_tile
-          variables:
-            - entity: controls.start_climate
-            - name: Start Climate
-            - icon: mdi:fan
-            - color: var(--kia-brand-primary)
-            - action: none
-        - type: custom:decluttering-card
-          template: kia_visual_action_tile
-          variables:
-            - entity: controls.stop_climate
-            - name: Stop Climate
-            - icon: mdi:fan-off
-            - color: var(--kia-status-warning)
-            - action: none
-        - type: custom:decluttering-card
-          template: kia_visual_action_tile
-          variables:
-            - entity: controls.start_charging
-            - name: Start Charging
-            - icon: mdi:ev-plug-type2
-            - color: var(--kia-status-charging)
-            - action: none
+  content: |
+    [[[ return '<div class="panel-shell actions-panel"><div class="panel-title"><ha-icon icon="mdi:lightning-bolt"></ha-icon><span>Quick Actions</span><ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon></div><div class="actions-grid"><button><ha-icon icon="mdi:refresh"></ha-icon><span>Refresh Data</span></button><button><ha-icon icon="mdi:fan"></ha-icon><span>Start Climate</span></button><button class="warning"><ha-icon icon="mdi:fan-off"></ha-icon><span>Stop Climate</span></button><button class="ok"><ha-icon icon="mdi:ev-plug-type2"></ha-icon><span>Start Charging</span></button></div></div>'; ]]]
 styles:
   card:
-    - min-height: 220px
+    - min-height: 242px
     - border-radius: 14px
-    - padding: 16px 18px
+    - padding: 0
     - background: var(--kia-card-background, rgba(21, 27, 36, 0.94))
     - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.16))
     - box-shadow: var(--kia-shadow-card, 0 16px 34px rgba(0, 0, 0, 0.24))
   grid:
-    - "grid-template-areas: 'title' 'actions'"
-    - grid-template-rows: min-content 1fr
-    - row-gap: 12px
+    - "grid-template-areas: 'content'"
+    - grid-template-columns: 1fr
   custom_fields:
-    title:
-      - align-self: start
-      - justify-self: stretch
-      - text-align: left
-    actions:
+    content:
       - align-self: stretch
       - justify-self: stretch
+      - min-width: 0
 card_mod:
   style: |
-    ha-card #title {
+    ha-card .panel-shell {
+      min-height: 242px;
+      box-sizing: border-box;
+      padding: 16px 18px;
+    }
+    ha-card .panel-title {
       display: flex;
       align-items: center;
       gap: 10px;
       color: var(--kia-text-primary, #f4f6f8);
       font-size: 17px;
       font-weight: 800;
+      margin-bottom: 14px;
     }
-    ha-card #title ha-icon { color: var(--kia-brand-primary, #5cc8ff); width: 20px; }
-    ha-card #title .chevron { margin-left: auto; color: var(--kia-text-secondary, #b7c0cc); }
-    ha-card #actions hui-grid-card,
-    ha-card #actions #root {
-      height: 100%;
+    ha-card .panel-title ha-icon { color: var(--kia-brand-primary, #5cc8ff); width: 20px; }
+    ha-card .panel-title .chevron { margin-left: auto; color: var(--kia-text-secondary, #b7c0cc); }
+    ha-card .actions-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    ha-card .actions-grid button {
+      min-height: 76px;
+      border: 1px solid rgba(92, 200, 255, 0.14);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.025);
+      color: var(--kia-text-primary, #f4f6f8);
+      font: inherit;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      gap: 6px;
+      cursor: default;
+    }
+    ha-card .actions-grid ha-icon {
+      color: var(--kia-brand-primary, #5cc8ff);
+      width: 28px;
+      height: 28px;
+    }
+    ha-card .actions-grid .warning ha-icon { color: var(--kia-status-warning, #ffd166); }
+    ha-card .actions-grid .ok ha-icon { color: var(--kia-status-charging, #7ee787); }
+    ha-card .actions-grid span {
+      font-size: 13px;
+      line-height: 1.15;
+      text-align: center;
     }

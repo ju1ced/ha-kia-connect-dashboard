@@ -22,31 +22,7 @@ tap_action:
   action: more-info
   entity: location.tracker
 custom_fields:
-  identity: |
-    [[[ return '<div class="hero-identity"><ha-icon icon="mdi:car-electric"></ha-icon><div><strong>Kia EV6</strong><span>GT-Line RWD</span></div></div>'; ]]]
-  locked: |
-    [[[ return '<ha-icon icon="mdi:lock"></ha-icon><span>Locked</span>'; ]]]
-  online: |
-    [[[ return '<ha-icon icon="mdi:wifi"></ha-icon><span>Online</span>'; ]]]
-  battery: |
-    [[[
-      var entity = states[variables.battery_entity] || null;
-      var state = entity && entity.state && entity.state !== 'unknown' ? entity.state : '--';
-      var unit = entity && entity.attributes && entity.attributes.unit_of_measurement ? entity.attributes.unit_of_measurement : '%';
-      return '<ha-icon icon="mdi:battery-high"></ha-icon><span>' + state + unit + '</span><small>Battery</small>';
-    ]]]
-  car: |
-    [[[
-      var chargingEntity = states[variables.charging_entity] || null;
-      var climateEntity = states[variables.climate_entity] || null;
-      var chargingState = chargingEntity && chargingEntity.state ? String(chargingEntity.state).toLowerCase() : '';
-      var climateState = climateEntity && climateEntity.state ? String(climateEntity.state).toLowerCase() : '';
-      var charging = chargingState === 'on' || chargingState === 'charging';
-      var inactiveClimate = ['off', 'unavailable', 'unknown', 'none', ''].indexOf(climateState) !== -1;
-      var image = charging ? 'ev6_charging.png' : (!inactiveClimate ? 'ev6_climate.png' : 'ev6_side.png');
-      return '<img src="/local/vehicles/' + image + '" alt="Kia EV6" loading="eager">';
-    ]]]
-  metrics: |
+  content: |
     [[[
       function value(id, fallback) {
         var e = states[id] || null;
@@ -54,178 +30,203 @@ custom_fields:
         var unit = e.attributes && e.attributes.unit_of_measurement ? ' ' + e.attributes.unit_of_measurement : '';
         return e.state + unit;
       }
+      var battery = value(variables.battery_entity, '--');
       var chargingEntity = states[variables.charging_entity] || null;
       var chargingState = chargingEntity && chargingEntity.state ? String(chargingEntity.state).toLowerCase() : '';
       var charging = chargingState === 'on' || chargingState === 'charging';
       var climateEntity = states[variables.climate_entity] || null;
       var climateState = climateEntity && climateEntity.state ? String(climateEntity.state).toLowerCase() : 'unknown';
-      var climate = ['off', 'unknown', 'unavailable', 'none', ''].indexOf(climateState) !== -1 ? 'Off' : climateState;
-      return '<div class="metric-grid">'
+      var climateInactive = ['off', 'unknown', 'unavailable', 'none', ''].indexOf(climateState) !== -1;
+      var climate = climateInactive ? 'Off' : climateState;
+      var imageName = charging ? 'ev6_charging.png' : (!climateInactive ? 'ev6_climate.png' : 'ev6_side.png');
+      var image = '/local/vehicles/' + imageName;
+      return '<div class="hero-shell">'
+        + '<div class="hero-top">'
+        + '<div class="hero-title"><ha-icon icon="mdi:car-electric"></ha-icon><div><strong>Kia EV6</strong><span>GT-Line RWD</span></div></div>'
+        + '<div class="hero-chips">'
+        + '<span class="chip lock"><ha-icon icon="mdi:lock"></ha-icon>Locked</span>'
+        + '<span class="chip online"><ha-icon icon="mdi:wifi"></ha-icon>Online</span>'
+        + '<span class="chip battery"><ha-icon icon="mdi:battery-high"></ha-icon><b>' + battery + '</b><small>Battery</small></span>'
+        + '</div></div>'
+        + '<div class="hero-body">'
+        + '<div class="hero-car"><img src="' + image + '" alt="Kia EV6" loading="eager"></div>'
+        + '<div class="hero-metrics">'
         + '<div><ha-icon icon="mdi:speedometer"></ha-icon><span>Odometer</span><strong>' + value(variables.odometer_entity, '--') + '</strong></div>'
-        + '<div><ha-icon icon="mdi:ev-plug-type2"></ha-icon><span>Charging state</span><strong class="' + (charging ? 'ok' : 'muted') + '">' + (charging ? 'Charging' : 'Not charging') + '</strong></div>'
+        + '<div><ha-icon icon="mdi:ev-plug-type2"></ha-icon><span>Charging state</span><strong class="ok">' + (charging ? 'Charging' : 'Not charging') + '</strong></div>'
         + '<div><ha-icon icon="mdi:calendar-clock"></ha-icon><span>Last updated</span><strong>' + value(variables.updated_entity, '--') + '</strong></div>'
         + '<div><ha-icon icon="mdi:thermometer"></ha-icon><span>Climate</span><strong>' + climate + '</strong></div>'
-        + '</div>';
+        + '</div></div></div>';
     ]]]
 styles:
   card:
-    - min-height: 238px
+    - min-height: 286px
     - border-radius: 18px
-    - padding: 18px 20px
+    - padding: 0
     - overflow: hidden
     - background: var(--kia-hero-gradient, linear-gradient(145deg, rgba(17, 21, 28, 0.98), rgba(32, 36, 45, 0.94)))
     - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.18))
     - box-shadow: var(--kia-shadow-raised, 0 22px 54px rgba(0, 0, 0, 0.36))
   grid:
-    - "grid-template-areas: 'identity identity identity locked online battery' 'car car car car metrics metrics'"
-    - grid-template-columns: minmax(140px, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(118px, auto) minmax(118px, auto) minmax(118px, auto)
-    - grid-template-rows: min-content 1fr
-    - column-gap: 14px
-    - row-gap: 12px
+    - "grid-template-areas: 'content'"
+    - grid-template-columns: 1fr
+    - grid-template-rows: 1fr
   custom_fields:
-    identity:
-      - align-self: start
-      - justify-self: start
-      - min-width: 0
-    locked:
-      - align-self: start
-      - justify-self: end
-      - padding: 9px 14px
-      - border-radius: 14px
-      - background: rgba(92, 200, 255, 0.1)
-      - color: var(--kia-brand-primary, #5cc8ff)
-      - font-weight: 700
-      - white-space: nowrap
-    online:
-      - align-self: start
-      - justify-self: end
-      - padding: 9px 14px
-      - border-radius: 14px
-      - background: rgba(126, 231, 135, 0.1)
-      - color: var(--kia-status-charging, #7ee787)
-      - font-weight: 700
-      - white-space: nowrap
-    battery:
-      - align-self: start
-      - justify-self: end
-      - padding: 9px 14px
-      - border-radius: 14px
-      - background: rgba(92, 200, 255, 0.1)
-      - color: var(--kia-text-primary, #f4f6f8)
-      - font-weight: 700
-      - white-space: nowrap
-    car:
-      - align-self: end
-      - justify-self: stretch
-      - height: 166px
-      - min-width: 0
-      - pointer-events: none
-    metrics:
-      - align-self: center
+    content:
+      - align-self: stretch
       - justify-self: stretch
       - min-width: 0
+      - min-height: 0
 card_mod:
   style: |
-    ha-card .hero-identity {
+    ha-card #content,
+    ha-card .hero-shell {
+      width: 100%;
+      height: 100%;
+      min-height: 286px;
+    }
+    ha-card .hero-shell {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 18px 22px 16px;
+      box-sizing: border-box;
+    }
+    ha-card .hero-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      min-width: 0;
+    }
+    ha-card .hero-title {
       display: flex;
       align-items: center;
       gap: 14px;
       color: var(--kia-text-primary, #f4f6f8);
+      min-width: 220px;
     }
-    ha-card .hero-identity ha-icon {
+    ha-card .hero-title ha-icon {
+      color: var(--kia-text-primary, #f4f6f8);
       width: 46px;
       height: 46px;
-      color: var(--kia-text-primary, #f4f6f8);
+      flex: 0 0 auto;
     }
-    ha-card .hero-identity strong {
+    ha-card .hero-title strong {
       display: block;
-      font-size: clamp(28px, 2.2vw, 38px);
-      line-height: 1.05;
+      font-size: clamp(30px, 2.35vw, 42px);
       font-weight: 800;
+      line-height: 1.03;
     }
-    ha-card .hero-identity span {
+    ha-card .hero-title span {
       color: var(--kia-text-secondary, #b7c0cc);
       display: block;
       font-size: 16px;
       line-height: 1.2;
       margin-top: 3px;
     }
-    ha-card #locked ha-icon,
-    ha-card #online ha-icon,
-    ha-card #battery ha-icon {
-      width: 18px;
-      margin-right: 8px;
-      vertical-align: -4px;
+    ha-card .hero-chips {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
     }
-    ha-card #battery small {
+    ha-card .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 14px;
+      color: var(--kia-text-primary, #f4f6f8);
+      background: rgba(92, 200, 255, 0.1);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    ha-card .chip ha-icon { width: 18px; height: 18px; }
+    ha-card .chip.online { color: var(--kia-status-charging, #7ee787); background: rgba(126, 231, 135, 0.12); }
+    ha-card .chip.lock { color: var(--kia-brand-primary, #5cc8ff); }
+    ha-card .chip.battery { background: rgba(92, 200, 255, 0.12); }
+    ha-card .chip.battery small {
       display: block;
-      margin-left: 26px;
-      margin-top: -2px;
       color: var(--kia-text-secondary, #b7c0cc);
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
+      margin-left: -2px;
     }
-    ha-card #car img {
+    ha-card .hero-body {
+      display: grid;
+      grid-template-columns: minmax(520px, 1.35fr) minmax(360px, 0.72fr);
+      gap: 28px;
+      align-items: center;
+      flex: 1 1 auto;
+      min-height: 190px;
+    }
+    ha-card .hero-car {
+      height: 194px;
+      min-width: 0;
+      align-self: end;
+    }
+    ha-card .hero-car img {
       display: block;
       width: 100%;
       height: 100%;
       object-fit: contain;
       object-position: left bottom;
-      filter: drop-shadow(0 20px 28px rgba(0, 0, 0, 0.45));
+      filter: drop-shadow(0 20px 28px rgba(0, 0, 0, 0.48));
     }
-    ha-card .metric-grid {
+    ha-card .hero-metrics {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 22px 28px;
       border-left: 1px solid rgba(183, 192, 204, 0.16);
       padding-left: 30px;
     }
-    ha-card .metric-grid div {
+    ha-card .hero-metrics div {
       display: grid;
       grid-template-columns: 34px minmax(0, 1fr);
       grid-template-areas: 'icon label' 'icon value';
       align-items: center;
       min-width: 0;
     }
-    ha-card .metric-grid ha-icon {
+    ha-card .hero-metrics ha-icon {
       grid-area: icon;
       width: 24px;
       color: var(--kia-text-secondary, #b7c0cc);
     }
-    ha-card .metric-grid span {
+    ha-card .hero-metrics span {
       grid-area: label;
       color: var(--kia-text-secondary, #b7c0cc);
       font-size: 13px;
       line-height: 1.15;
     }
-    ha-card .metric-grid strong {
+    ha-card .hero-metrics strong {
       grid-area: value;
       color: var(--kia-text-primary, #f4f6f8);
       font-size: 16px;
-      font-weight: 700;
+      font-weight: 800;
       line-height: 1.15;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    ha-card .metric-grid strong.ok { color: var(--kia-status-charging, #7ee787); }
-    ha-card .metric-grid strong.muted { color: var(--kia-status-charging, #7ee787); }
+    ha-card .hero-metrics strong.ok { color: var(--kia-status-charging, #7ee787); }
+    @media (max-width: 1180px) {
+      ha-card .hero-body {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      ha-card .hero-car { height: 176px; }
+      ha-card .hero-metrics {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        border-left: 0;
+        padding-left: 0;
+      }
+    }
     @media (max-width: 760px) {
-      ha-card {
-        min-height: 420px !important;
-      }
-      ha-card #locked,
-      ha-card #online,
-      ha-card #battery {
-        justify-self: start !important;
-      }
-      ha-card #car {
-        height: 150px !important;
-      }
-      ha-card .metric-grid {
-        grid-template-columns: 1fr !important;
-        gap: 12px !important;
-        border-left: 0 !important;
-        padding-left: 0 !important;
-      }
+      ha-card #content,
+      ha-card .hero-shell { min-height: 470px; }
+      ha-card .hero-top { flex-direction: column; }
+      ha-card .hero-chips { justify-content: flex-start; }
+      ha-card .hero-car { height: 168px; }
+      ha-card .hero-metrics { grid-template-columns: 1fr 1fr; gap: 14px; }
     }

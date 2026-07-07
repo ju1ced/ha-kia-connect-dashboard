@@ -9,62 +9,59 @@ tap_action:
   action: navigate
   navigation_path: /kia-ev6/dashboard-admin
 custom_fields:
-  shield: |
-    [[[ return '<ha-icon icon="mdi:shield-check-outline"></ha-icon>'; ]]]
-  text: |
-    [[[ return '<strong>All systems normal</strong><span>No active dashboard warnings. Review Vehicle and Settings after each Home Assistant update.</span>'; ]]]
-  watermark: |
-    [[[ return '<ha-icon icon="mdi:shield-check-outline"></ha-icon>'; ]]]
+  content: |
+    [[[ return '<div class="status-panel"><ha-icon class="shield" icon="mdi:shield-check-outline"></ha-icon><div><strong>All systems normal</strong><span>No active dashboard warnings. Review Vehicle and Settings after each Home Assistant update.</span></div><ha-icon class="watermark" icon="mdi:shield-check-outline"></ha-icon></div>'; ]]]
 styles:
   card:
-    - min-height: 176px
+    - min-height: 182px
     - border-radius: 14px
-    - padding: 18px 20px
+    - padding: 0
     - background: var(--kia-card-background, rgba(21, 27, 36, 0.94))
     - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.16))
     - box-shadow: var(--kia-shadow-card, 0 16px 34px rgba(0, 0, 0, 0.24))
     - overflow: hidden
   grid:
-    - "grid-template-areas: 'shield text watermark'"
-    - grid-template-columns: 48px minmax(0, 1fr) 66px
-    - align-items: center
-    - column-gap: 16px
+    - "grid-template-areas: 'content'"
+    - grid-template-columns: 1fr
   custom_fields:
-    shield:
-      - align-self: center
-      - justify-self: center
-    text:
-      - align-self: center
+    content:
+      - align-self: stretch
       - justify-self: stretch
-      - text-align: left
       - min-width: 0
-    watermark:
-      - align-self: center
-      - justify-self: end
-      - opacity: 0.18
 card_mod:
   style: |
-    ha-card #shield ha-icon {
+    ha-card .status-panel {
+      min-height: 182px;
+      box-sizing: border-box;
+      padding: 18px 20px;
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr) 66px;
+      align-items: center;
+      gap: 16px;
+    }
+    ha-card .shield {
       color: var(--kia-status-charging, #7ee787);
       width: 40px;
       height: 40px;
     }
-    ha-card #text strong {
+    ha-card .status-panel strong {
       color: var(--kia-text-primary, #f4f6f8);
       display: block;
       font-size: 18px;
       font-weight: 800;
       line-height: 1.15;
     }
-    ha-card #text span {
+    ha-card .status-panel span {
       color: var(--kia-text-secondary, #b7c0cc);
       display: block;
       font-size: 14px;
       line-height: 1.35;
       margin-top: 4px;
     }
-    ha-card #watermark ha-icon {
+    ha-card .watermark {
       color: var(--kia-text-secondary, #b7c0cc);
       width: 58px;
       height: 58px;
+      opacity: 0.18;
+      justify-self: end;
     }

@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Stabilized the Overview hero and panel internals so the EV6 image renders
+  larger and dashboard cards keep their intended alignment in Home Assistant.
 - Rebuilt the Overview content cards as render-like dashboard panels with a
   battery ring, quick-action panel, compact vehicle status list, map-style
   location summary, tire diagram, and systems status panel.
