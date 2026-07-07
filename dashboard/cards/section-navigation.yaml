@@ -13,9 +13,9 @@ cards:
       navigation_path: /lovelace/kia-battery
     styles: &nav_tile_styles
       card:
-        - min-height: 72px
+        - min-height: 92px
         - border-radius: 12px
-        - padding: 10px 12px
+        - padding: 14px 12px 13px
         - background: var(--kia-card-gradient, linear-gradient(145deg, rgba(32, 36, 45, 0.98), rgba(17, 21, 28, 0.98)))
         - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.14))
         - box-shadow: var(--kia-card-shadow, 0 10px 24px rgba(0, 0, 0, 0.22))
@@ -23,12 +23,13 @@ cards:
         - "grid-template-areas: 'i' 'n'"
         - grid-template-columns: 1fr
         - grid-template-rows: 1fr min-content
-        - row-gap: 6px
+        - row-gap: 8px
       icon:
-        - width: 32px
+        - width: clamp(30px, 2.2vw, 40px)
+        - height: clamp(30px, 2.2vw, 40px)
         - color: var(--kia-brand-primary, #5cc8ff)
       name:
-        - font-size: 13px
+        - font-size: clamp(13px, 0.9vw, 16px)
         - font-weight: 800
         - line-height: 1.15
         - color: var(--kia-text-primary, #f4f6f8)
@@ -64,7 +65,7 @@ cards:
     styles: *nav_tile_styles
   - type: custom:button-card
     name: Settings
-    icon: mdi:tune
+    icon: mdi:cog
     tap_action:
       action: navigate
       navigation_path: /lovelace/kia-settings
