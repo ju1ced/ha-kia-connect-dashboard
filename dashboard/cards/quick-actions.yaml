@@ -9,7 +9,22 @@ tap_action:
   action: none
 custom_fields:
   content: |
-    [[[ return '<div class="panel-shell actions-panel"><div class="panel-title"><ha-icon icon="mdi:lightning-bolt"></ha-icon><span>Quick Actions</span><ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon></div><div class="actions-grid"><button><ha-icon icon="mdi:refresh"></ha-icon><span>Refresh Data</span></button><button><ha-icon icon="mdi:fan"></ha-icon><span>Start Climate</span></button><button class="warning"><ha-icon icon="mdi:fan-off"></ha-icon><span>Stop Climate</span></button><button class="ok"><ha-icon icon="mdi:ev-plug-type2"></ha-icon><span>Start Charging</span></button></div></div>'; ]]]
+    [[[
+      var shell = 'height:100%;min-height:242px;box-sizing:border-box;padding:16px 18px;display:grid;grid-template-rows:32px 1fr;gap:14px;';
+      var title = 'display:flex;align-items:center;gap:10px;color:var(--kia-text-primary,#f4f6f8);font-size:17px;font-weight:800;';
+      var grid = 'display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:12px;width:100%;height:100%;min-width:0;';
+      var btn = 'border:1px solid rgba(92,200,255,.14);border-radius:10px;background:rgba(255,255,255,.025);color:var(--kia-text-primary,#f4f6f8);font:inherit;font-weight:800;display:grid;grid-template-rows:1fr min-content;place-items:center;gap:6px;padding:12px;box-sizing:border-box;min-width:0;min-height:0;';
+      var icon = 'width:34px;height:34px;color:var(--kia-brand-primary,#5cc8ff);';
+      var text = 'font-size:13px;line-height:1.15;text-align:center;white-space:normal;';
+      return '<div style="' + shell + '">'
+        + '<div style="' + title + '"><ha-icon icon="mdi:lightning-bolt" style="width:20px;color:var(--kia-brand-primary,#5cc8ff)"></ha-icon><span>Quick Actions</span><ha-icon icon="mdi:chevron-right" style="margin-left:auto;width:20px;color:var(--kia-text-secondary,#b7c0cc)"></ha-icon></div>'
+        + '<div style="' + grid + '">'
+        + '<button style="' + btn + '"><ha-icon icon="mdi:refresh" style="' + icon + '"></ha-icon><span style="' + text + '">Refresh Data</span></button>'
+        + '<button style="' + btn + '"><ha-icon icon="mdi:fan" style="' + icon + '"></ha-icon><span style="' + text + '">Start Climate</span></button>'
+        + '<button style="' + btn + '"><ha-icon icon="mdi:fan-off" style="' + icon + 'color:var(--kia-status-warning,#ffd166);"></ha-icon><span style="' + text + '">Stop Climate</span></button>'
+        + '<button style="' + btn + '"><ha-icon icon="mdi:ev-plug-type2" style="' + icon + 'color:var(--kia-status-charging,#7ee787);"></ha-icon><span style="' + text + '">Start Charging</span></button>'
+        + '</div></div>';
+    ]]]
 styles:
   card:
     - min-height: 242px
@@ -44,45 +59,3 @@ card_mod:
       justify-items: stretch !important;
     }
     ha-card #content { display: block !important; }
-    ha-card .panel-shell {
-      width: 100%;
-      height: 100%;
-      min-height: 242px;
-      box-sizing: border-box;
-      padding: 16px 18px;
-      display: flex;
-      flex-direction: column;
-    }
-    ha-card .panel-title { display: flex; align-items: center; gap: 10px; color: var(--kia-text-primary, #f4f6f8); font-size: 17px; font-weight: 800; margin-bottom: 14px; }
-    ha-card .panel-title ha-icon { color: var(--kia-brand-primary, #5cc8ff); width: 20px; }
-    ha-card .panel-title .chevron { margin-left: auto; color: var(--kia-text-secondary, #b7c0cc); }
-    ha-card .actions-grid {
-      flex: 1 1 auto;
-      width: 100%;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      grid-auto-rows: 1fr;
-      gap: 12px;
-      min-width: 0;
-    }
-    ha-card .actions-grid button {
-      min-height: 0;
-      border: 1px solid rgba(92, 200, 255, 0.14);
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.025);
-      color: var(--kia-text-primary, #f4f6f8);
-      font: inherit;
-      font-weight: 800;
-      display: grid;
-      grid-template-rows: 1fr min-content;
-      place-items: center;
-      gap: 6px;
-      cursor: default;
-      padding: 12px;
-      box-sizing: border-box;
-    }
-    ha-card .actions-grid ha-icon { color: var(--kia-brand-primary, #5cc8ff); width: clamp(28px, 2vw, 34px); height: clamp(28px, 2vw, 34px); }
-    ha-card .actions-grid .warning ha-icon { color: var(--kia-status-warning, #ffd166); }
-    ha-card .actions-grid .ok ha-icon { color: var(--kia-status-charging, #7ee787); }
-    ha-card .actions-grid span { font-size: clamp(12px, 0.9vw, 14px); line-height: 1.15; text-align: center; white-space: normal; }
-    @media (max-width: 760px) { ha-card .actions-grid { grid-template-columns: 1fr 1fr; } }
