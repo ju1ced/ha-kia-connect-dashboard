@@ -21,21 +21,29 @@ styles:
   grid:
     - "grid-template-areas: 'content'"
     - grid-template-columns: 1fr
+    - grid-template-rows: 1fr
   custom_fields:
     content:
+      - display: block
       - align-self: stretch
       - justify-self: stretch
+      - width: 100%
+      - height: 100%
       - min-width: 0
+      - text-align: left
 card_mod:
   style: |
-    ha-card #content { display: block !important; width: 100%; height: 100%; text-align: left !important; }
+    ha-card #container,
+    ha-card #root,
+    ha-card #content { width: 100% !important; height: 100% !important; min-width: 0 !important; text-align: left !important; }
+    ha-card #content { display: block !important; }
     ha-card .panel-shell { width: 100%; min-height: 242px; box-sizing: border-box; padding: 16px 18px; }
     ha-card .panel-title { display: flex; align-items: center; gap: 10px; color: var(--kia-text-primary, #f4f6f8); font-size: 17px; font-weight: 800; margin-bottom: 14px; }
     ha-card .panel-title ha-icon { color: var(--kia-brand-primary, #5cc8ff); width: 20px; }
     ha-card .panel-title .chevron { margin-left: auto; color: var(--kia-text-secondary, #b7c0cc); }
     ha-card .actions-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    ha-card .actions-grid button { min-height: 76px; border: 1px solid rgba(92, 200, 255, 0.14); border-radius: 10px; background: rgba(255, 255, 255, 0.025); color: var(--kia-text-primary, #f4f6f8); font: inherit; font-weight: 800; display: grid; place-items: center; gap: 6px; cursor: default; }
-    ha-card .actions-grid ha-icon { color: var(--kia-brand-primary, #5cc8ff); width: 28px; height: 28px; }
+    ha-card .actions-grid button { min-height: 80px; border: 1px solid rgba(92, 200, 255, 0.14); border-radius: 10px; background: rgba(255, 255, 255, 0.025); color: var(--kia-text-primary, #f4f6f8); font: inherit; font-weight: 800; display: grid; place-items: center; gap: 6px; cursor: default; }
+    ha-card .actions-grid ha-icon { color: var(--kia-brand-primary, #5cc8ff); width: 30px; height: 30px; }
     ha-card .actions-grid .warning ha-icon { color: var(--kia-status-warning, #ffd166); }
     ha-card .actions-grid .ok ha-icon { color: var(--kia-status-charging, #7ee787); }
     ha-card .actions-grid span { font-size: 13px; line-height: 1.15; text-align: center; }
