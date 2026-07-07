@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Made Overview panel content explicitly full-width and responsive, and switched
+  the default hero vehicle image to the front-right EV6 view used by the visual
+  reference.
 - Stabilized the Overview hero and panel internals so the EV6 image renders
   larger and dashboard cards keep their intended alignment in Home Assistant.
 - Rebuilt the Overview content cards as render-like dashboard panels with a
