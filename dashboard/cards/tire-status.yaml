@@ -29,15 +29,7 @@ custom_fields:
         return e.state + unit;
       }
       var image = '/local/vehicles/' + 'ev6_top.png';
-      return '<div class="panel-shell tire-panel">'
-        + '<div class="panel-title"><ha-icon icon="mdi:tire"></ha-icon><span>Tire Status</span><ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon></div>'
-        + '<div class="tire-diagram">'
-        + '<div class="tire fl"><strong>' + value(variables.front_left_entity) + '</strong><span>Front left</span></div>'
-        + '<div class="tire fr"><strong>' + value(variables.front_right_entity) + '</strong><span>Front right</span></div>'
-        + '<img src="' + image + '" alt="EV6 top view">'
-        + '<div class="tire rl"><strong>' + value(variables.rear_left_entity) + '</strong><span>Rear left</span></div>'
-        + '<div class="tire rr"><strong>' + value(variables.rear_right_entity) + '</strong><span>Rear right</span></div>'
-        + '</div></div>';
+      return '<div class="panel-shell tire-panel"><div class="panel-title"><ha-icon icon="mdi:tire"></ha-icon><span>Tire Status</span><ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon></div><div class="tire-diagram"><div class="tire fl"><strong>' + value(variables.front_left_entity) + '</strong><span>Front left</span></div><div class="tire fr"><strong>' + value(variables.front_right_entity) + '</strong><span>Front right</span></div><img src="' + image + '" alt="EV6 top view"><div class="tire rl"><strong>' + value(variables.rear_left_entity) + '</strong><span>Rear left</span></div><div class="tire rr"><strong>' + value(variables.rear_right_entity) + '</strong><span>Rear right</span></div></div></div>';
     ]]]
 styles:
   card:
@@ -57,67 +49,16 @@ styles:
       - min-width: 0
 card_mod:
   style: |
-    ha-card .panel-shell { min-height: 182px; box-sizing: border-box; padding: 16px 18px; }
-    ha-card .panel-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--kia-text-primary, #f4f6f8);
-      font-size: 17px;
-      font-weight: 800;
-      margin-bottom: 8px;
-    }
+    ha-card #content { display: block !important; width: 100%; height: 100%; text-align: left !important; }
+    ha-card .panel-shell { width: 100%; min-height: 182px; box-sizing: border-box; padding: 16px 18px; }
+    ha-card .panel-title { display: flex; align-items: center; gap: 10px; color: var(--kia-text-primary, #f4f6f8); font-size: 17px; font-weight: 800; margin-bottom: 8px; }
     ha-card .panel-title ha-icon { color: var(--kia-text-secondary, #b7c0cc); width: 20px; }
     ha-card .panel-title .chevron { margin-left: auto; }
-    ha-card .tire-diagram {
-      display: grid;
-      grid-template-columns: minmax(84px, 1fr) 88px minmax(84px, 1fr);
-      grid-template-rows: 1fr 1fr;
-      gap: 8px 12px;
-      align-items: center;
-      min-height: 118px;
-    }
-    ha-card .tire-diagram img {
-      grid-column: 2;
-      grid-row: 1 / span 2;
-      width: 76px;
-      height: 116px;
-      object-fit: contain;
-      justify-self: center;
-      filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.44));
-    }
+    ha-card .tire-diagram { display: grid; grid-template-columns: minmax(84px, 1fr) 88px minmax(84px, 1fr); grid-template-rows: 1fr 1fr; gap: 8px 12px; align-items: center; min-height: 118px; }
+    ha-card .tire-diagram img { grid-column: 2; grid-row: 1 / span 2; width: 76px; height: 116px; object-fit: contain; justify-self: center; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.44)); }
     ha-card .tire { color: var(--kia-text-primary, #f4f6f8); min-width: 0; }
-    ha-card .tire strong {
-      display: block;
-      font-size: 16px;
-      font-weight: 800;
-      line-height: 1.05;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    ha-card .tire span {
-      display: block;
-      color: var(--kia-text-secondary, #b7c0cc);
-      font-size: 12px;
-      margin-top: 3px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+    ha-card .tire strong { display: block; font-size: 16px; font-weight: 800; line-height: 1.05; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    ha-card .tire span { display: block; color: var(--kia-text-secondary, #b7c0cc); font-size: 12px; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     ha-card .fl, ha-card .rl { text-align: right; }
     ha-card .fr, ha-card .rr { text-align: left; }
-    ha-card .fl::after,
-    ha-card .rl::after,
-    ha-card .fr::before,
-    ha-card .rr::before {
-      content: '';
-      display: inline-block;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--kia-status-charging, #7ee787);
-      box-shadow: 0 0 0 3px rgba(126, 231, 135, 0.14);
-      margin: 0 7px;
-      vertical-align: 1px;
-    }
+    ha-card .fl::after, ha-card .rl::after, ha-card .fr::before, ha-card .rr::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--kia-status-charging, #7ee787); box-shadow: 0 0 0 3px rgba(126, 231, 135, 0.14); margin: 0 7px; vertical-align: 1px; }
