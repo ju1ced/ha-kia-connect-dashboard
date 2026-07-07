@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Tightened Overview spacing, enlarged the status-aware hero vehicle imagery,
+  and forced custom panel contents to fill their cards responsively.
 - Made Overview panel content explicitly full-width and responsive, and switched
   the default hero vehicle image to the front-right EV6 view used by the visual
   reference.
