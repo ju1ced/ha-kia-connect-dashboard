@@ -1,0 +1,170 @@
+---
+view_layout:
+  grid-area: header
+type: custom:button-card
+entity: battery.level
+triggers_update:
+  - battery.level
+  - locks.door_lock
+variables:
+  battery_entity: battery.level
+  lock_entity: locks.door_lock
+show_icon: false
+show_name: false
+show_state: false
+tap_action:
+  action: none
+custom_fields:
+  content: |
+    [[[
+      function value(id, fallback) {
+        var e = states[id] || null;
+        if (!e || !e.state || e.state === 'unknown' || e.state === 'unavailable') return fallback;
+        var unit = e.attributes && e.attributes.unit_of_measurement ? ' ' + e.attributes.unit_of_measurement : '';
+        return e.state + unit;
+      }
+      var battery = value(variables.battery_entity, '--');
+      return '<div class="overview-header">'
+        + '<div class="breadcrumb"><span>Home</span><span>/</span><strong>Kia EV6</strong></div>'
+        + '<div class="identity"><ha-icon icon="mdi:car-electric"></ha-icon><div><strong>Kia EV6</strong><span>GT-Line RWD</span></div></div>'
+        + '<div class="header-chips">'
+        + '<span class="chip lock"><ha-icon icon="mdi:lock"></ha-icon>Locked</span>'
+        + '<span class="chip online"><ha-icon icon="mdi:wifi"></ha-icon>Online</span>'
+        + '<span class="chip battery"><ha-icon icon="mdi:battery-high"></ha-icon><b>' + battery + '</b><small>Battery</small></span>'
+        + '</div></div>';
+    ]]]
+styles:
+  card:
+    - background: transparent
+    - border: 0
+    - box-shadow: none
+    - padding: 0
+    - min-height: 78px
+  grid:
+    - "grid-template-areas: 'content'"
+    - grid-template-columns: 1fr
+    - grid-template-rows: 1fr
+  custom_fields:
+    content:
+      - display: block
+      - width: 100%
+      - min-width: 0
+      - text-align: left
+card_mod:
+  style: |
+    ha-card #container,
+    ha-card #root,
+    ha-card #content {
+      width: 100% !important;
+      min-width: 0 !important;
+      text-align: left !important;
+    }
+    ha-card .overview-header {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      grid-template-areas:
+        'breadcrumb chips'
+        'identity chips';
+      align-items: center;
+      gap: 6px 18px;
+      min-height: 78px;
+      box-sizing: border-box;
+    }
+    ha-card .breadcrumb {
+      grid-area: breadcrumb;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--kia-text-secondary, #b7c0cc);
+      font-size: 13px;
+      line-height: 1.2;
+      min-width: 0;
+    }
+    ha-card .breadcrumb span:first-child {
+      color: var(--kia-brand-primary, #5cc8ff);
+    }
+    ha-card .breadcrumb strong {
+      color: var(--kia-text-primary, #f4f6f8);
+      font-weight: 700;
+    }
+    ha-card .identity {
+      grid-area: identity;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: var(--kia-text-primary, #f4f6f8);
+      min-width: 0;
+    }
+    ha-card .identity ha-icon {
+      width: 48px;
+      height: 48px;
+      color: var(--kia-text-primary, #f4f6f8);
+      flex: 0 0 auto;
+    }
+    ha-card .identity strong {
+      display: block;
+      font-size: clamp(30px, 2.4vw, 44px);
+      font-weight: 800;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    ha-card .identity span {
+      display: block;
+      color: var(--kia-text-secondary, #b7c0cc);
+      font-size: clamp(15px, 1.1vw, 18px);
+      line-height: 1.15;
+      margin-top: 4px;
+    }
+    ha-card .header-chips {
+      grid-area: chips;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
+    ha-card .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 0 15px;
+      border-radius: 14px;
+      color: var(--kia-text-primary, #f4f6f8);
+      background: rgba(92, 200, 255, 0.1);
+      border: 1px solid rgba(92, 200, 255, 0.08);
+      font-weight: 800;
+      white-space: nowrap;
+      box-sizing: border-box;
+    }
+    ha-card .chip ha-icon { width: 18px; height: 18px; }
+    ha-card .chip.online {
+      color: var(--kia-status-charging, #7ee787);
+      background: rgba(126, 231, 135, 0.12);
+    }
+    ha-card .chip.lock {
+      color: var(--kia-brand-primary, #5cc8ff);
+    }
+    ha-card .chip.battery {
+      background: rgba(92, 200, 255, 0.12);
+    }
+    ha-card .chip.battery small {
+      color: var(--kia-text-secondary, #b7c0cc);
+      font-size: 11px;
+      font-weight: 700;
+      margin-left: -2px;
+    }
+    @media (max-width: 760px) {
+      ha-card .overview-header {
+        grid-template-columns: 1fr;
+        grid-template-areas: 'breadcrumb' 'identity' 'chips';
+        gap: 10px;
+      }
+      ha-card .header-chips {
+        justify-content: flex-start;
+      }
+      ha-card .identity strong {
+        white-space: normal;
+      }
+    }
