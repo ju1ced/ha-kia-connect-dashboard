@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Reworked the Overview summary panels to use inline, card-local layout rules so
+  Home Assistant renders the battery, action, vehicle, location, and tire content
+  as explicit full-panel compositions instead of compact centered blocks.
 - Polished Overview panel content fill so the hero vehicle, hero metrics,
   battery summary, quick actions, vehicle status, location, and tire cards use
   their available space more like the visual reference.
