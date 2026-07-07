@@ -59,7 +59,7 @@ custom_fields:
     ]]]
 styles:
   card:
-    - min-height: 286px
+    - min-height: 314px
     - border-radius: 18px
     - padding: 0
     - overflow: hidden
@@ -72,27 +72,36 @@ styles:
     - grid-template-rows: 1fr
   custom_fields:
     content:
+      - display: block
       - align-self: stretch
       - justify-self: stretch
+      - width: 100%
+      - height: 100%
       - min-width: 0
       - min-height: 0
+      - text-align: left
 card_mod:
   style: |
+    ha-card #container,
+    ha-card #root,
+    ha-card #content {
+      width: 100% !important;
+      height: 100% !important;
+      min-width: 0 !important;
+      text-align: left !important;
+    }
     ha-card #content {
       display: block !important;
-      width: 100%;
-      height: 100%;
-      min-height: 286px;
-      text-align: left !important;
+      min-height: 314px;
     }
     ha-card .hero-shell {
       width: 100%;
       height: 100%;
-      min-height: 286px;
+      min-height: 314px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      padding: 18px 22px 16px;
+      gap: 8px;
+      padding: 20px 24px 18px;
       box-sizing: border-box;
     }
     ha-card .hero-top {
@@ -111,13 +120,13 @@ card_mod:
     }
     ha-card .hero-title ha-icon {
       color: var(--kia-text-primary, #f4f6f8);
-      width: 46px;
-      height: 46px;
+      width: 48px;
+      height: 48px;
       flex: 0 0 auto;
     }
     ha-card .hero-title strong {
       display: block;
-      font-size: clamp(30px, 2.35vw, 42px);
+      font-size: clamp(32px, 2.5vw, 44px);
       font-weight: 800;
       line-height: 1.03;
     }
@@ -159,16 +168,17 @@ card_mod:
     }
     ha-card .hero-body {
       display: grid;
-      grid-template-columns: minmax(560px, 1.45fr) minmax(360px, 0.72fr);
+      grid-template-columns: minmax(640px, 1.55fr) minmax(360px, 0.68fr);
       gap: 30px;
       align-items: center;
       flex: 1 1 auto;
-      min-height: 198px;
+      min-height: 226px;
     }
     ha-card .hero-car {
-      height: 218px;
+      height: 250px;
       min-width: 0;
       align-self: end;
+      overflow: visible;
     }
     ha-card .hero-car img {
       display: block;
@@ -176,7 +186,9 @@ card_mod:
       height: 100%;
       object-fit: contain;
       object-position: left bottom;
-      filter: drop-shadow(0 20px 28px rgba(0, 0, 0, 0.48));
+      transform: scale(1.14);
+      transform-origin: left bottom;
+      filter: drop-shadow(0 22px 30px rgba(0, 0, 0, 0.5));
     }
     ha-card .hero-metrics {
       display: grid;
@@ -217,9 +229,9 @@ card_mod:
     @media (max-width: 1180px) {
       ha-card .hero-body {
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 8px;
       }
-      ha-card .hero-car { height: 190px; }
+      ha-card .hero-car { height: 220px; }
       ha-card .hero-metrics {
         grid-template-columns: repeat(4, minmax(0, 1fr));
         border-left: 0;
@@ -228,9 +240,9 @@ card_mod:
     }
     @media (max-width: 760px) {
       ha-card #content,
-      ha-card .hero-shell { min-height: 470px; }
+      ha-card .hero-shell { min-height: 500px; }
       ha-card .hero-top { flex-direction: column; }
       ha-card .hero-chips { justify-content: flex-start; }
-      ha-card .hero-car { height: 168px; }
+      ha-card .hero-car { height: 190px; }
       ha-card .hero-metrics { grid-template-columns: 1fr 1fr; gap: 14px; }
     }

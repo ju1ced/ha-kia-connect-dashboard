@@ -62,72 +62,35 @@ styles:
   grid:
     - "grid-template-areas: 'content'"
     - grid-template-columns: 1fr
+    - grid-template-rows: 1fr
   custom_fields:
     content:
+      - display: block
       - align-self: stretch
       - justify-self: stretch
+      - width: 100%
+      - height: 100%
       - min-width: 0
+      - text-align: left
 card_mod:
   style: |
-    ha-card #content {
-      display: block !important;
-      width: 100%;
-      height: 100%;
-      text-align: left !important;
-    }
-    ha-card .panel-shell {
-      width: 100%;
-      min-height: 242px;
-      box-sizing: border-box;
-      padding: 16px 18px;
-    }
-    ha-card .panel-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--kia-text-primary, #f4f6f8);
-      font-size: 17px;
-      font-weight: 800;
-      margin-bottom: 14px;
-    }
+    ha-card #container,
+    ha-card #root,
+    ha-card #content { width: 100% !important; height: 100% !important; min-width: 0 !important; text-align: left !important; }
+    ha-card #content { display: block !important; }
+    ha-card .panel-shell { width: 100%; min-height: 242px; box-sizing: border-box; padding: 16px 18px; }
+    ha-card .panel-title { display: flex; align-items: center; gap: 10px; color: var(--kia-text-primary, #f4f6f8); font-size: 17px; font-weight: 800; margin-bottom: 14px; }
     ha-card .panel-title ha-icon { color: var(--kia-brand-primary, #5cc8ff); width: 20px; }
     ha-card .panel-title .chevron { margin-left: auto; color: var(--kia-text-secondary, #b7c0cc); }
-    ha-card .battery-body {
-      display: grid;
-      grid-template-columns: minmax(128px, 0.9fr) minmax(132px, 1fr);
-      gap: 18px;
-      align-items: center;
-    }
-    ha-card .battery-ring {
-      width: min(148px, 100%);
-      max-width: 148px;
-      aspect-ratio: 1;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      position: relative;
-      background: conic-gradient(var(--kia-brand-primary, #5cc8ff) calc(var(--level) * 1%), rgba(92, 200, 255, 0.14) 0);
-      box-shadow: inset 0 0 18px rgba(92, 200, 255, 0.16), 0 0 28px rgba(92, 200, 255, 0.16);
-    }
-    ha-card .battery-ring::before {
-      content: '';
-      position: absolute;
-      width: 73%;
-      aspect-ratio: 1;
-      border-radius: 50%;
-      background: var(--kia-card-background, #151b24);
-    }
+    ha-card .battery-body { display: grid; grid-template-columns: minmax(128px, 0.9fr) minmax(132px, 1fr); gap: 18px; align-items: center; }
+    ha-card .battery-ring { width: min(158px, 100%); max-width: 158px; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; position: relative; background: conic-gradient(var(--kia-brand-primary, #5cc8ff) calc(var(--level) * 1%), rgba(92, 200, 255, 0.14) 0); box-shadow: inset 0 0 18px rgba(92, 200, 255, 0.16), 0 0 28px rgba(92, 200, 255, 0.16); }
+    ha-card .battery-ring::before { content: ''; position: absolute; width: 73%; aspect-ratio: 1; border-radius: 50%; background: var(--kia-card-background, #151b24); }
     ha-card .battery-ring div { position: relative; z-index: 1; text-align: center; }
-    ha-card .battery-ring strong { color: var(--kia-text-primary, #f4f6f8); display: block; font-size: clamp(28px, 2vw, 35px); font-weight: 800; line-height: 1; }
+    ha-card .battery-ring strong { color: var(--kia-text-primary, #f4f6f8); display: block; font-size: clamp(30px, 2vw, 36px); font-weight: 800; line-height: 1; }
     ha-card .battery-ring span { color: var(--kia-text-secondary, #b7c0cc); display: block; font-size: 12px; margin-top: 5px; }
     ha-card .battery-details { display: grid; grid-template-columns: 1fr; gap: 8px; min-width: 0; }
     ha-card .battery-details span { color: var(--kia-text-secondary, #b7c0cc); display: block; font-size: 12px; line-height: 1.1; }
     ha-card .battery-details strong { color: var(--kia-text-primary, #f4f6f8); display: block; font-size: 16px; font-weight: 800; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     ha-card .battery-details strong.ok { color: var(--kia-status-charging, #7ee787); }
-    @media (max-width: 1180px) {
-      ha-card .battery-body { grid-template-columns: 140px minmax(0, 1fr); }
-    }
-    @media (max-width: 760px) {
-      ha-card .battery-body { grid-template-columns: 1fr; }
-      ha-card .battery-ring { justify-self: center; }
-    }
+    @media (max-width: 1180px) { ha-card .battery-body { grid-template-columns: 150px minmax(0, 1fr); } }
+    @media (max-width: 760px) { ha-card .battery-body { grid-template-columns: 1fr; } ha-card .battery-ring { justify-self: center; } }
