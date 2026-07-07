@@ -16,11 +16,7 @@ tap_action:
   action: more-info
   entity: location.tracker
 custom_fields:
-  title: |
-    [[[ return '<ha-icon icon="mdi:map-marker"></ha-icon><span>Location</span><ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>'; ]]]
-  map: |
-    [[[ return '<div class="map-preview"><div class="marker"></div></div>'; ]]]
-  details: |
+  content: |
     [[[
       function value(id, fallback) {
         var e = states[id] || null;
@@ -28,53 +24,49 @@ custom_fields:
         var unit = e.attributes && e.attributes.unit_of_measurement ? ' ' + e.attributes.unit_of_measurement : '';
         return e.state + unit;
       }
-      return '<div class="location-details">'
-        + '<div><span>Last parked</span><strong>' + value(variables.tracker_entity, '--') + '</strong></div>'
-        + '<div><span>Odometer</span><strong>' + value(variables.odometer_entity, '--') + '</strong></div>'
-        + '</div>';
+      return '<div class="panel-shell location-panel">'
+        + '<div class="panel-title"><ha-icon icon="mdi:map-marker"></ha-icon><span>Location</span><ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon></div>'
+        + '<div class="location-body"><div class="map-preview"><div class="marker"></div></div>'
+        + '<div class="location-details"><div><span>Last parked</span><strong>' + value(variables.tracker_entity, '--') + '</strong></div><div><span>Odometer</span><strong>' + value(variables.odometer_entity, '--') + '</strong></div></div></div></div>';
     ]]]
 styles:
   card:
-    - min-height: 176px
+    - min-height: 182px
     - border-radius: 14px
-    - padding: 16px 18px
+    - padding: 0
     - background: var(--kia-card-background, rgba(21, 27, 36, 0.94))
     - border: var(--kia-card-border, 1px solid rgba(92, 200, 255, 0.16))
     - box-shadow: var(--kia-shadow-card, 0 16px 34px rgba(0, 0, 0, 0.24))
   grid:
-    - "grid-template-areas: 'title title' 'map details'"
-    - grid-template-columns: minmax(150px, 1.35fr) minmax(110px, 0.9fr)
-    - grid-template-rows: min-content 1fr
-    - column-gap: 16px
-    - row-gap: 12px
+    - "grid-template-areas: 'content'"
+    - grid-template-columns: 1fr
   custom_fields:
-    title:
-      - align-self: start
-      - justify-self: stretch
-      - text-align: left
-    map:
+    content:
       - align-self: stretch
-      - justify-self: stretch
-      - min-width: 0
-    details:
-      - align-self: center
       - justify-self: stretch
       - min-width: 0
 card_mod:
   style: |
-    ha-card #title {
+    ha-card .panel-shell { min-height: 182px; box-sizing: border-box; padding: 16px 18px; }
+    ha-card .panel-title {
       display: flex;
       align-items: center;
       gap: 10px;
       color: var(--kia-text-primary, #f4f6f8);
       font-size: 17px;
       font-weight: 800;
+      margin-bottom: 12px;
     }
-    ha-card #title ha-icon { color: var(--kia-text-secondary, #b7c0cc); width: 20px; }
-    ha-card #title .chevron { margin-left: auto; }
+    ha-card .panel-title ha-icon { color: var(--kia-text-secondary, #b7c0cc); width: 20px; }
+    ha-card .panel-title .chevron { margin-left: auto; }
+    ha-card .location-body {
+      display: grid;
+      grid-template-columns: minmax(160px, 1.35fr) minmax(110px, 0.9fr);
+      gap: 16px;
+      align-items: stretch;
+    }
     ha-card .map-preview {
-      min-height: 92px;
-      height: 100%;
+      min-height: 104px;
       border-radius: 10px;
       position: relative;
       overflow: hidden;
@@ -84,8 +76,7 @@ card_mod:
         linear-gradient(145deg, rgba(33, 48, 55, 0.95), rgba(22, 30, 38, 0.95));
       border: 1px solid rgba(92, 200, 255, 0.12);
     }
-    ha-card .map-preview::before,
-    ha-card .map-preview::after {
+    ha-card .map-preview::before {
       content: '';
       position: absolute;
       inset: 0;
@@ -105,26 +96,15 @@ card_mod:
       box-shadow: 0 0 0 8px rgba(92, 200, 255, 0.18), 0 0 22px rgba(92, 200, 255, 0.42);
       z-index: 1;
     }
-    ha-card .location-details {
-      display: grid;
-      gap: 12px;
-    }
-    ha-card .location-details span {
-      color: var(--kia-text-secondary, #b7c0cc);
-      display: block;
-      font-size: 13px;
-      line-height: 1.15;
-    }
+    ha-card .location-details { display: grid; align-content: center; gap: 14px; min-width: 0; }
+    ha-card .location-details span { color: var(--kia-text-secondary, #b7c0cc); display: block; font-size: 13px; }
     ha-card .location-details strong {
       color: var(--kia-text-primary, #f4f6f8);
       display: block;
       font-size: 18px;
       font-weight: 800;
-      line-height: 1.12;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    @media (max-width: 760px) {
-      ha-card #root { grid-template-columns: 1fr !important; }
-    }
+    @media (max-width: 760px) { ha-card .location-body { grid-template-columns: 1fr; } }
