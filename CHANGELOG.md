@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Split the Overview header from the hero, rebuilt the hero as a render-style
+  vehicle-and-metrics panel, and aligned the first Overview card row to the
+  visual reference while preserving status-aware EV6 imagery.
 - Tightened Overview spacing, enlarged the status-aware hero vehicle imagery,
   and forced custom panel contents to fill their cards responsively.
 - Made Overview panel content explicitly full-width and responsive, and switched
