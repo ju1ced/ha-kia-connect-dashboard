@@ -15,6 +15,7 @@ cards:
       grid-gap: 10px
       grid-template-columns: repeat(12, minmax(0, 1fr))
       grid-template-areas: |
+        "source_marker source_marker source_marker source_marker source_marker source_marker source_marker source_marker source_marker source_marker source_marker source_marker"
         "header header header header header header header header header header header header"
         "hero hero hero hero hero hero hero hero hero hero hero hero"
         "nav nav nav nav nav nav nav nav nav nav nav nav"
@@ -25,6 +26,7 @@ cards:
           padding: 12px
           grid-template-columns: repeat(6, minmax(0, 1fr))
           grid-template-areas: |
+            "source_marker source_marker source_marker source_marker source_marker source_marker"
             "header header header header header header"
             "hero hero hero hero hero hero"
             "nav nav nav nav nav nav"
@@ -37,6 +39,7 @@ cards:
           grid-gap: 10px
           grid-template-columns: minmax(0, 1fr)
           grid-template-areas: |
+            "source_marker"
             "header"
             "hero"
             "nav"
@@ -47,6 +50,7 @@ cards:
             "tires"
             "status"
     cards:
+      - !include ../cards/source-test-marker.yaml
       - !include ../cards/overview-header.yaml
       - !include ../cards/overview-hero.yaml
       - !include ../cards/section-navigation.yaml
