@@ -2,10 +2,11 @@
 
 ## Overview
 
-The dashboard is organized as a Home Assistant Lovelace YAML project.
+The dashboard is organized as a Home Assistant Lovelace project.
 `dashboard/dashboard.yaml` acts as the composition root and includes view files
-from `dashboard/views/`. Cards, popups, templates, and themes are isolated into
-purpose-specific folders.
+from `dashboard/views/`. The Overview view is rendered by a dedicated custom
+Lovelace card so the main responsive dashboard can be controlled as one visual
+surface. Detail views remain YAML-based while the custom-card pattern matures.
 
 The project is intended to integrate into an existing Home Assistant dashboard.
 A user's Home dashboard can link to this package through a Kia EV6 button, which
@@ -26,8 +27,6 @@ dashboard/
     position-context.yaml
     dashboard-admin.yaml
   cards/
-    overview-hero.yaml
-    section-navigation.yaml
     battery-summary.yaml
     battery-hero.yaml
     battery-charge-controls.yaml
@@ -60,16 +59,12 @@ dashboard/
     location-odometer.yaml
     location-parking.yaml
     location-trip-context.yaml
-    location-back-navigation.yaml
     settings-hero.yaml
     settings-entity-mapping.yaml
     settings-theme.yaml
     settings-actions.yaml
     settings-maintenance.yaml
     settings-back-navigation.yaml
-    quick-actions.yaml
-    tire-status.yaml
-    overview-footer.yaml
   popups/
   templates/
     colors.yaml
@@ -78,6 +73,8 @@ dashboard/
     icons.yaml
   themes/
     kia-horizon.yaml
+dist/
+  ha-kia-connect-dashboard.js
 assets/
   images/
   icons/
@@ -127,14 +124,19 @@ Folder ownership is documented in `docs/include-conventions.md`.
 
 ## Overview Strategy
 
-The first Overview shell uses native Lovelace cards only. It establishes the
-screen layout and card ownership for vehicle identity, section navigation,
-battery state, quick actions, vehicle status, location context, tire state, and
-footer notes.
+The Overview page is the primary product surface and uses
+`custom:kia-dashboard-card` from `dist/ha-kia-connect-dashboard.js`. This keeps
+the render-target layout, responsive behavior, status-aware vehicle image, and
+content scaling inside one controlled component instead of spreading the visual
+rules across nested Lovelace YAML cards.
 
 Overview owns the internal menu structure for the Kia dashboard package. Detail
 sections should remain reachable from Overview even when the package is opened
 from a button inside a larger Home Assistant home dashboard.
+
+The Overview card receives rendered Home Assistant entity IDs through
+`dashboard/views/overview.yaml`, while the source file still uses logical mapping
+keys such as `battery.level` and `location.odometer`.
 
 See `docs/overview-shell.md` for the shell contract.
 
@@ -207,6 +209,7 @@ New dashboard behavior should land through explicit extension points:
 - reusable card fragments in `dashboard/cards/`
 - detail surfaces in `dashboard/popups/`
 - top-level views in `dashboard/views/`
+- frontend card code in `dist/`
 - semantic theme tokens in `dashboard/themes/`
 - maintainer and user documentation in `docs/`
 
@@ -218,26 +221,3 @@ See `docs/extension-points.md` for review rules.
 - `colors.yaml` centralizes semantic color tokens.
 - `icons.yaml` centralizes icon choices.
 - `entities.yaml` is the only vehicle-specific configuration surface.
-
-## Theme Strategy
-
-Kia Horizon is the first dashboard theme. It defines Home Assistant theme
-variables and semantic Kia dashboard tokens for surfaces, text, brand colors,
-status colors, battery states, spacing, radius, and elevation.
-
-Dashboard cards should use semantic tokens such as `var(--kia-status-warning)`
-rather than raw color literals. Contrast expectations are documented in
-`docs/contrast-validation.md`.
-
-## UI Strategy
-
-The visual language combines Kia Connect, Apple HIG, Material Design 3, and
-Tesla-style vehicle dashboards: generous spacing, rounded corners, soft shadows,
-muted surfaces, and clear status hierarchy.
-
-## QA Strategy
-
-The QA Agent runs automated checks for repository structure, YAML syntax,
-Markdown style, formatting, missing assets, duplicate entities, direct entity
-references, mapped entity keys, and required documentation before pull requests
-are accepted.

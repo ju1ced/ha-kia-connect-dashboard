@@ -6,57 +6,27 @@ theme: Kia Horizon
 type: panel
 badges: []
 cards:
-  - type: custom:layout-card
-    layout_type: custom:grid-layout
-    layout:
-      margin: 0 auto
-      padding: 14px 20px 20px
-      max_width: 1560px
-      grid-gap: 10px
-      grid-template-columns: repeat(12, minmax(0, 1fr))
-      grid-template-areas: |
-        "source_marker source_marker source_marker source_marker source_marker source_marker source_marker source_marker source_marker source_marker source_marker source_marker"
-        "header header header header header header header header header header header header"
-        "hero hero hero hero hero hero hero hero hero hero hero hero"
-        "nav nav nav nav nav nav nav nav nav nav nav nav"
-        "battery battery battery battery actions actions actions actions vehicle vehicle vehicle vehicle"
-        "location location location location tires tires tires tires status status status status"
-      mediaquery:
-        "(max-width: 1180px)":
-          padding: 12px
-          grid-template-columns: repeat(6, minmax(0, 1fr))
-          grid-template-areas: |
-            "source_marker source_marker source_marker source_marker source_marker source_marker"
-            "header header header header header header"
-            "hero hero hero hero hero hero"
-            "nav nav nav nav nav nav"
-            "battery battery battery actions actions actions"
-            "vehicle vehicle vehicle vehicle vehicle vehicle"
-            "location location location tires tires tires"
-            "status status status status status status"
-        "(max-width: 760px)":
-          padding: 10px
-          grid-gap: 10px
-          grid-template-columns: minmax(0, 1fr)
-          grid-template-areas: |
-            "source_marker"
-            "header"
-            "hero"
-            "nav"
-            "battery"
-            "actions"
-            "vehicle"
-            "location"
-            "tires"
-            "status"
-    cards:
-      - !include ../cards/source-test-marker.yaml
-      - !include ../cards/overview-header.yaml
-      - !include ../cards/overview-hero.yaml
-      - !include ../cards/section-navigation.yaml
-      - !include ../cards/battery-summary.yaml
-      - !include ../cards/quick-actions.yaml
-      - !include ../cards/vehicle-status.yaml
-      - !include ../cards/location-summary.yaml
-      - !include ../cards/tire-status.yaml
-      - !include ../cards/overview-footer.yaml
+  - type: custom:kia-dashboard-card
+    title: Kia EV6
+    subtitle: GT-Line RWD
+    entities:
+      battery_level: battery.level
+      battery_range: battery.estimated_range
+      charging_state: battery.charging_state
+      plug_connected: battery.plug_connected
+      charging_limit: battery.target_charge_limit
+      odometer: location.odometer
+      location: location.tracker
+      last_updated: controls.last_refresh_result
+      climate: climate/hvac
+      door_lock: locks.door_lock
+      trunk: openings.trunk
+      hood: openings.hood
+      lights: lights.headlights
+      charge_port: locks.charging_port
+      tire_front_left: tires.front_left_pressure
+      tire_front_right: tires.front_right_pressure
+      tire_rear_left: tires.rear_left_pressure
+      tire_rear_right: tires.rear_right_pressure
+      refresh: controls.refresh
+      start_charging: controls.start_charging
