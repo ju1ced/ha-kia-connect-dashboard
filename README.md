@@ -1,6 +1,6 @@
 # HA Kia Connect Dashboard
 
-[![CI](https://github.com/OWNER/ha-kia-connect-dashboard/actions/workflows/ci.yaml/badge.svg)](https://github.com/OWNER/ha-kia-connect-dashboard/actions/workflows/ci.yaml)
+[![CI](https://github.com/ju1ced/ha-kia-connect-dashboard/actions/workflows/ci.yaml/badge.svg)](https://github.com/ju1ced/ha-kia-connect-dashboard/actions/workflows/ci.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 HA Kia Connect Dashboard is a Home Assistant Lovelace dashboard inspired by the
