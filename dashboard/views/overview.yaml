@@ -9,10 +9,6 @@ cards:
   - type: custom:kia-dashboard-card
     title: Kia EV6
     subtitle: GT-Line RWD
-    images:
-      normal: ev6_front_right.png
-      charging: ev6_charging.png
-      climate: ev6_climate.png
     entities:
       battery_level: battery.level
       battery_range: battery.estimated_range
