@@ -1,0 +1,4 @@
+node_modules/
+build/
+dist/
+ha-kia-connect-dashboard.js
