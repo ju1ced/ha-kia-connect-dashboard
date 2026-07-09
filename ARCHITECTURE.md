@@ -83,12 +83,30 @@ docs/
 .github/
 ```
 
+## Configuration Model
+
+The project supports two configuration paths:
+
+- HACS card usage: install the frontend module and configure Home Assistant
+  entities directly on `custom:kia-dashboard-card` in the dashboard editor or
+  Lovelace YAML.
+- Repository-side YAML rendering: use `scripts/render_dashboard.py` to render
+  the YAML package from logical mapping keys and the example file at
+  `dashboard/templates/entities.yaml`.
+
+`dashboard/templates/entities.yaml` must stay generic in the public repository.
+It is an example contract and render helper, not a shared place for a user's
+private Home Assistant entity IDs.
+
 ## Entity Mapping Contract
 
-All Home Assistant entities are declared in `dashboard/templates/entities.yaml`.
-Other YAML files must reference logical variables from the mapping layer rather
-than hardcoded entity IDs. CI will reject direct entity references outside that
-mapping file.
+The YAML render flow uses `dashboard/templates/entities.yaml` as its only file
+for Home Assistant entity IDs. Other repository YAML files must reference logical
+variables from the mapping layer rather than hardcoded entity IDs. CI rejects
+direct entity references outside that mapping file.
+
+The HACS card does not require this file. Users configure matching entity IDs in
+the card configuration instead.
 
 The initial mapping groups are:
 
@@ -103,13 +121,15 @@ The initial mapping groups are:
 - `controls` for refresh, charging, and climate actions.
 - `settings` for dashboard administration actions.
 
-See `docs/entity-mapping.md` for customization rules.
+See `docs/entity-mapping.md` and `docs/hacs-card-configuration.md` for the two
+configuration paths.
 
 ## Entity Diagnostics Strategy
 
-Settings owns the first read-only diagnostics surface for mapping problems.
-Missing, unknown, or unavailable entities should point users back to
-`dashboard/templates/entities.yaml` before suggesting card changes.
+Settings owns the first read-only diagnostics surface for mapping problems in
+the YAML package. Missing, unknown, or unavailable entities should point users
+back to the configuration path they are using: the card configuration for HACS,
+or `dashboard/templates/entities.yaml` for repository-side YAML rendering.
 
 Runtime health checks should start in Settings before inline alerts are added to
 every detail page.
@@ -134,9 +154,11 @@ Overview owns the internal menu structure for the Kia dashboard package. Detail
 sections should remain reachable from Overview even when the package is opened
 from a button inside a larger Home Assistant home dashboard.
 
-The Overview card receives rendered Home Assistant entity IDs through
-`dashboard/views/overview.yaml`, while the source file still uses logical mapping
-keys such as `battery.level` and `location.odometer`.
+For HACS usage, the Overview card receives Home Assistant entity IDs directly in
+the card configuration. For repository-side YAML rendering,
+`dashboard/views/overview.yaml` still uses logical mapping keys such as
+`battery.level` and `location.odometer`, which are rendered into entity IDs by
+`scripts/render_dashboard.py`.
 
 See `docs/overview-shell.md` for the shell contract.
 
@@ -192,9 +214,10 @@ See `docs/settings-view.md` for the Settings view contract.
 ## Mapped Template Strategy
 
 Mapped templates are the bridge between page card fragments and the entity
-mapping contract. The first shared patterns live in
-`dashboard/templates/decluttering_templates.yaml` and cover state rows, action
-buttons, section notes, entity diagnostics, and standard return navigation.
+mapping contract for the repository-side YAML render flow. The first shared
+patterns live in `dashboard/templates/decluttering_templates.yaml` and cover
+state rows, action buttons, section notes, entity diagnostics, and standard
+return navigation.
 
 Cards should consume these patterns before adding one-off entity rows or action
 buttons.
@@ -205,7 +228,8 @@ See `docs/mapped-template-patterns.md` for the mapped template contract.
 
 New dashboard behavior should land through explicit extension points:
 
-- mapped entities in `dashboard/templates/entities.yaml`
+- card configuration fields for `custom:kia-dashboard-card`
+- mapped entities in `dashboard/templates/entities.yaml` for the render flow
 - reusable card fragments in `dashboard/cards/`
 - detail surfaces in `dashboard/popups/`
 - top-level views in `dashboard/views/`
@@ -220,4 +244,5 @@ See `docs/extension-points.md` for review rules.
 - `decluttering_templates.yaml` defines reusable Lovelace card patterns.
 - `colors.yaml` centralizes semantic color tokens.
 - `icons.yaml` centralizes icon choices.
-- `entities.yaml` is the only vehicle-specific configuration surface.
+- `entities.yaml` is the generic example mapping file for repository-side YAML
+  rendering only.

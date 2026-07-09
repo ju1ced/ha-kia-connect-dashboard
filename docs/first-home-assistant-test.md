@@ -16,24 +16,60 @@ Confirm these items in Home Assistant:
 - The Kia integration is already installed and exposing vehicle entities.
 - HACS or another install path provides this repository's `kia-dashboard-card`.
 - HACS or another install path provides `decluttering-card`, `button-card`,
-  `card-mod`, and `layout-card` for the remaining detail pages.
-- YAML mode or a dashboard include workflow is available for Lovelace.
+  `card-mod`, and `layout-card` if you also test the YAML detail pages.
+- YAML mode or a dashboard include workflow is available if you test the
+  repository-side YAML package.
 - You know the dashboard URL path that will host the Kia pages.
 - You can edit the existing Home dashboard button for the Kia EV6 entry point.
 - EV6 hero images are available under `/config/www/vehicles/`, including
   `ev6_front_right.png`, `ev6_charging.png`, and `ev6_climate.png`.
 
-## Prepare The Entity Map
+## HACS Card Setup
 
-Update `dashboard/templates/entities.yaml` with the real entity IDs from your
-Home Assistant instance. Keep all other dashboard files unchanged unless a real
-entity shape differs from the dashboard assumption.
+For a direct HACS test, add `custom:kia-dashboard-card` to a dashboard and
+configure your real Home Assistant entities in the card YAML.
+
+```yaml
+type: custom:kia-dashboard-card
+title: Kia EV6
+subtitle: GT-Line RWD
+entities:
+  battery_level: sensor.your_vehicle_ev_battery_level
+  battery_range: sensor.your_vehicle_ev_range
+  charging_state: binary_sensor.your_vehicle_ev_battery_charge
+  plug_connected: binary_sensor.your_vehicle_ev_battery_plug
+  charging_limit: number.your_vehicle_ac_charging_limit
+  odometer: sensor.your_vehicle_odometer
+  location: device_tracker.your_vehicle_location
+  last_updated: sensor.your_vehicle_last_refresh
+  climate: climate.your_vehicle_climate_control
+  door_lock: lock.your_vehicle_door_lock
+  trunk: binary_sensor.your_vehicle_trunk
+  hood: binary_sensor.your_vehicle_hood
+  lights: binary_sensor.your_vehicle_headlamp_status
+  charge_port: binary_sensor.your_vehicle_ev_charge_port
+  tire_front_left: binary_sensor.your_vehicle_tire_pressure_front_left
+  tire_front_right: binary_sensor.your_vehicle_tire_pressure_front_right
+  tire_rear_left: binary_sensor.your_vehicle_tire_pressure_rear_left
+  tire_rear_right: binary_sensor.your_vehicle_tire_pressure_rear_right
+  refresh: button.your_vehicle_force_refresh
+  start_charging: switch.your_vehicle_ev_charging
+```
+
+See `docs/hacs-card-configuration.md` for the complete card configuration.
+
+## Optional YAML Package Entity Map
+
+The repository still contains a YAML dashboard package and render script for
+local development. That path uses `dashboard/templates/entities.yaml`, but the
+public repository keeps that file generic. If you use the render flow, replace
+those example entity IDs locally before rendering.
 
 Example:
 
 ```yaml
 battery:
-  level: sensor.oprit_nebula_ev_battery_level
+  level: sensor.your_vehicle_ev_battery_level
 ```
 
 The source dashboard uses logical keys such as `battery.level`. The render step
@@ -41,8 +77,9 @@ turns those logical keys into Home Assistant entity IDs for the test package.
 
 ## Check Runtime Mapping Health
 
-After updating the entity map, run the runtime health check. Without Home
-Assistant state data it reports which mappings can be checked later:
+After updating the entity map for the optional YAML render flow, run the runtime
+health check. Without Home Assistant state data it reports which mappings can be
+checked later:
 
 ```bash
 python3 scripts/check_runtime_mapping_health.py
@@ -149,15 +186,17 @@ Check these items first:
 - The Overview hero switches to the charging image while charging and the
   climate image while climate is active.
 - Battery, Vehicle, Climate, Energy, Location, and Settings pages open from the
-  Overview page.
-- Back to Overview works from every detail page.
+  Overview page if you are testing the full YAML package.
+- Back to Overview works from every detail page if you are testing the full YAML
+  package.
 - The Kia Horizon theme loads correctly.
 - Read-only data rows show values or understandable unavailable states.
 - Settings shows latest scan, climate state, charging state, and vehicle data
-  details.
-- Settings Refresh Vehicle calls the mapped refresh button only.
+  details if you are testing the full YAML package.
+- Settings Refresh Vehicle calls the mapped refresh button only if you are
+  testing the full YAML package.
 - Settings Vehicle Data Details opens the mapped vehicle data more-info panel
-  only.
+  only if you are testing the full YAML package.
 
 ## Do Not Test Yet
 
