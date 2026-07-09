@@ -29,11 +29,21 @@ custom_fields:
         if (!e || !e.state || e.state === 'unknown' || e.state === 'unavailable') return fallback;
         return e.state;
       }
+      var shell = 'height:100%;min-height:242px;box-sizing:border-box;padding:16px 18px;display:grid;grid-template-rows:32px 1fr;gap:14px;';
+      var title = 'display:flex;align-items:center;gap:10px;color:var(--kia-text-primary,#f4f6f8);font-size:17px;font-weight:800;';
+      var list = 'display:grid;grid-template-columns:1fr;gap:8px;align-content:center;width:100%;height:100%;min-width:0;';
       function row(icon, label, id, fallback) {
         var value = stateText(id, fallback);
-        return '<div class="status-row"><ha-icon icon="' + icon + '"></ha-icon><span>' + label + '</span><strong>' + value + '</strong><ha-icon class="ok" icon="mdi:check-circle-outline"></ha-icon></div>';
+        return '<div style="display:grid;grid-template-columns:30px minmax(110px,1fr) minmax(74px,auto) 24px;align-items:center;gap:10px;width:100%;min-width:0;color:var(--kia-text-secondary,#b7c0cc);">'
+          + '<ha-icon icon="' + icon + '" style="width:20px;color:var(--kia-text-secondary,#b7c0cc)"></ha-icon>'
+          + '<span style="font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + label + '</span>'
+          + '<strong style="color:var(--kia-text-primary,#f4f6f8);font-size:14px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;">' + value + '</strong>'
+          + '<ha-icon icon="mdi:check-circle-outline" style="width:18px;color:var(--kia-status-charging,#7ee787);justify-self:end;"></ha-icon>'
+          + '</div>';
       }
-      return '<div class="panel-shell vehicle-panel"><div class="panel-title"><ha-icon icon="mdi:car-estate"></ha-icon><span>Vehicle Status</span><ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon></div><div class="status-list">'
+      return '<div style="' + shell + '">'
+        + '<div style="' + title + '"><ha-icon icon="mdi:car-estate" style="width:20px;color:var(--kia-text-secondary,#b7c0cc)"></ha-icon><span>Vehicle Status</span><ha-icon icon="mdi:chevron-right" style="margin-left:auto;width:20px;color:var(--kia-text-secondary,#b7c0cc)"></ha-icon></div>'
+        + '<div style="' + list + '">'
         + row('mdi:car-door-lock', 'Doors', variables.door_lock_entity, '--')
         + row('mdi:car-window-closed', 'Windows', variables.door_lock_entity, '--')
         + row('mdi:car-back', 'Trunk', variables.trunk_entity, '--')
@@ -76,38 +86,3 @@ card_mod:
       justify-items: stretch !important;
     }
     ha-card #content { display: block !important; }
-    ha-card .panel-shell {
-      width: 100%;
-      height: 100%;
-      min-height: 242px;
-      box-sizing: border-box;
-      padding: 16px 18px;
-      display: flex;
-      flex-direction: column;
-    }
-    ha-card .panel-title { display: flex; align-items: center; gap: 10px; color: var(--kia-text-primary, #f4f6f8); font-size: 17px; font-weight: 800; margin-bottom: 14px; }
-    ha-card .panel-title ha-icon { color: var(--kia-text-secondary, #b7c0cc); width: 20px; }
-    ha-card .panel-title .chevron { margin-left: auto; }
-    ha-card .status-list {
-      flex: 1 1 auto;
-      width: 100%;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
-      align-content: center;
-      min-width: 0;
-    }
-    ha-card .status-row {
-      display: grid;
-      grid-template-columns: 30px minmax(110px, 1fr) minmax(74px, auto) 24px;
-      align-items: center;
-      gap: 10px;
-      min-height: 25px;
-      color: var(--kia-text-secondary, #b7c0cc);
-      width: 100%;
-      min-width: 0;
-    }
-    ha-card .status-row > ha-icon:first-child { width: 20px; color: var(--kia-text-secondary, #b7c0cc); }
-    ha-card .status-row span { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    ha-card .status-row strong { color: var(--kia-text-primary, #f4f6f8); font-size: 14px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
-    ha-card .status-row .ok { width: 18px; color: var(--kia-status-charging, #7ee787); justify-self: end; }
