@@ -14,13 +14,14 @@ bindings have their own safety pass.
 Confirm these items in Home Assistant:
 
 - The Kia integration is already installed and exposing vehicle entities.
+- HACS or another install path provides this repository's `kia-dashboard-card`.
 - HACS or another install path provides `decluttering-card`, `button-card`,
-  `card-mod`, and `layout-card`.
+  `card-mod`, and `layout-card` for the remaining detail pages.
 - YAML mode or a dashboard include workflow is available for Lovelace.
 - You know the dashboard URL path that will host the Kia pages.
 - You can edit the existing Home dashboard button for the Kia EV6 entry point.
 - EV6 hero images are available under `/config/www/vehicles/`, including
-  `ev6_side.png`, `ev6_charging.png`, and `ev6_climate.png`.
+  `ev6_front_right.png`, `ev6_charging.png`, and `ev6_climate.png`.
 
 ## Prepare The Entity Map
 
@@ -95,7 +96,16 @@ Select the theme before doing the visual pass.
 
 ## Register Required Resources
 
-Make sure these Lovelace resources are available before opening the dashboard:
+Install this repository as a HACS frontend custom repository or copy the built
+resource manually. Make sure this Lovelace resource is registered before opening
+the Overview page:
+
+```yaml
+- url: /hacsfiles/ha-kia-connect-dashboard/ha-kia-connect-dashboard.js
+  type: module
+```
+
+The remaining detail pages still need these resources:
 
 ```yaml
 - url: /hacsfiles/lovelace-decluttering-card/decluttering-card.js
@@ -134,6 +144,7 @@ If you rendered with `--dashboard-path /kia-ev6`, the button should navigate to
 Check these items first:
 
 - The Home dashboard button opens the Kia Overview page.
+- The Overview page is rendered by `custom:kia-dashboard-card`.
 - The Overview page shows the responsive dark visual card layer.
 - The Overview hero switches to the charging image while charging and the
   climate image while climate is active.
