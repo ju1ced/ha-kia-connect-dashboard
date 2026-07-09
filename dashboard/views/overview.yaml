@@ -22,7 +22,7 @@ cards:
       odometer: location.odometer
       location: location.tracker
       last_updated: controls.last_refresh_result
-      climate: climate.hvac
+      climate: climate/hvac
       door_lock: locks.door_lock
       trunk: openings.trunk
       hood: openings.hood
