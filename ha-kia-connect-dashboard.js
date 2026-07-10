@@ -67,6 +67,27 @@ class KiaDashboardCard extends HTMLElement {
     return value && !["off", "uit", "idle", "unknown", "unavailable", "--"].includes(value);
   }
 
+  _formatDate(value) {
+    if (!value || value === "--") return "--";
+    const normalized = String(value).replace(/(\d{4}-\d{2}-\d{2})T/, "$1T");
+    const date = new Date(normalized);
+    if (Number.isNaN(date.getTime())) return value;
+    return new Intl.DateTimeFormat(this._hass?.locale?.language || navigator.language || "nl-BE", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+  }
+
+  _tireStatus(key) {
+    const value = String(this._state(key, "OK")).toLowerCase();
+    if (["off", "ok", "normal", "closed", "false", "0"].includes(value)) return "OK";
+    if (["on", "problem", "warning", "low", "true", "1"].includes(value)) return "Check";
+    return this._safe(this._state(key, "OK"));
+  }
+
   _asset(name) {
     if (!name) return "";
     if (name.startsWith("/")) return name;
@@ -90,7 +111,7 @@ class KiaDashboardCard extends HTMLElement {
   _tileUrl() {
     const coords = this._trackerCoords();
     if (!coords) return "";
-    const zoom = 15;
+    const zoom = 16;
     const x = Math.floor(((coords.lon + 180) / 360) * 2 ** zoom);
     const y = Math.floor(
       ((1 - Math.log(Math.tan((coords.lat * Math.PI) / 180) + 1 / Math.cos((coords.lat * Math.PI) / 180)) / Math.PI) / 2) *
@@ -239,7 +260,7 @@ class KiaDashboardCard extends HTMLElement {
     const range = `${this._number("battery_range")} ${this._unit("battery_range", "km")}`;
     const odometer = `${this._number("odometer")} ${this._unit("odometer", "km")}`;
     const location = this._state("location", "Home");
-    const lastUpdated = this._state("last_updated", "--");
+    const lastUpdated = this._formatDate(this._state("last_updated", "--"));
     const chargingText = this._charging() ? "Charging" : "Not charging";
     const climateText = this._climateOn() ? "On" : "Off";
     const chargeLimitValue = this._number("charging_limit", 100);
@@ -251,7 +272,7 @@ class KiaDashboardCard extends HTMLElement {
       : "";
     const lockedText = this._locked() ? "Locked" : "Unlocked";
     const tileUrl = this._tileUrl();
-    const mapStyle = tileUrl ? ` style="background-image:linear-gradient(rgba(9,16,24,.38),rgba(9,16,24,.68)),url('${tileUrl}')"` : "";
+    const mapStyle = tileUrl ? ` style="background-image:url('${tileUrl}')"` : "";
 
     this.shadowRoot.innerHTML = `
       <style>${this._styles()}</style>
@@ -310,12 +331,12 @@ class KiaDashboardCard extends HTMLElement {
 
           <section class="panel location-panel">
             <div class="panel-title"><ha-icon icon="mdi:map-marker-outline"></ha-icon><h2>Location</h2><button data-nav="location"><ha-icon icon="mdi:chevron-right"></ha-icon></button></div>
-            <div class="location-layout"><div class="map"${mapStyle}><i></i></div><div><span>Last parked</span><b>${this._safe(location)}</b><span>Odometer</span><b>${odometer}</b></div></div>
+            <div class="location-layout"><div class="map"${mapStyle}><span class="map-marker"><ha-icon icon="mdi:car-sports"></ha-icon></span></div><div><span>Last parked</span><b>${this._safe(location)}</b><span>Odometer</span><b>${odometer}</b></div></div>
           </section>
 
           <section class="panel tire-panel">
             <div class="panel-title"><ha-icon icon="mdi:car-tire-alert"></ha-icon><h2>Tire Status</h2><button data-nav="vehicle"><ha-icon icon="mdi:chevron-right"></ha-icon></button></div>
-            <div class="tires"><div class="tire-side"><b>${this._state("tire_front_left", "OK")}</b><span>Front left</span><b>${this._state("tire_rear_left", "OK")}</b><span>Rear left</span></div><img src="/local/vehicles/ev6_top.png" alt="Top view"><div class="tire-side"><b>${this._state("tire_front_right", "OK")}</b><span>Front right</span><b>${this._state("tire_rear_right", "OK")}</b><span>Rear right</span></div></div>
+            <div class="tires"><div class="tire-side"><b>${this._tireStatus("tire_front_left")}</b><span>Front left</span><b>${this._tireStatus("tire_rear_left")}</b><span>Rear left</span></div><img src="/local/vehicles/ev6_top.png" alt="Top view"><div class="tire-side"><b>${this._tireStatus("tire_front_right")}</b><span>Front right</span><b>${this._tireStatus("tire_rear_right")}</b><span>Rear right</span></div></div>
           </section>
 
           <section class="panel health-panel"><ha-icon class="shield" icon="mdi:shield-check-outline"></ha-icon><div><h2>All systems normal</h2><p>No active dashboard warnings. Review Vehicle and Settings after each Home Assistant update.</p></div><ha-icon class="ghost" icon="mdi:shield-check-outline"></ha-icon></section>
@@ -363,7 +384,7 @@ class KiaDashboardCard extends HTMLElement {
       .battery-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 18px; } .battery-facts div { min-width:0; } .battery-facts .wide { grid-column:1 / -1; } .battery-facts b { display:block; font-size:clamp(15px,1.1vw,19px); line-height:1.1; overflow-wrap:anywhere; } .limit-control { display:grid; grid-template-columns:auto minmax(120px,1fr); gap:14px; align-items:center; } .limit-control small { display:block; color:var(--kia-muted); font-size:12px; margin-top:2px; } .limit-control input { width:100%; accent-color:var(--blue); }
       .actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } .actions ha-icon { color:var(--blue); --mdc-icon-size:34px; } .actions .warm { color:var(--amber); } .actions .good { color:var(--green); } .notice { margin-top:12px; color:var(--kia-muted); font-size:13px; line-height:1.35; }
       .vehicle-list { display:grid; gap:13px; padding-inline:8px; } .status-row { display:grid; grid-template-columns:30px 1fr auto 28px; align-items:center; gap:12px; color:var(--kia-muted); } .status-row strong { color:var(--kia-text); } .status-row ha-icon { color:var(--kia-muted); } .status-row .ok { color:var(--green); } .status-row .warn { color:var(--amber); }
-      .location-layout { display:grid; grid-template-columns:minmax(260px,1.15fr) minmax(135px,.7fr); gap:20px; align-items:center; } .map { min-height:168px; border-radius:8px; background-color:color-mix(in srgb,var(--kia-control) 78%,var(--blue) 8%); background-size:cover; background-position:center; display:grid; place-items:center; position:relative; overflow:hidden; } .map:before { content:""; position:absolute; inset:0; background:linear-gradient(45deg,rgba(38,95,67,.22),rgba(255,255,255,.08)); } .map i { width:30px; aspect-ratio:1; border-radius:50%; background:var(--blue); box-shadow:0 0 0 12px color-mix(in srgb,var(--blue) 26%,transparent),0 0 28px color-mix(in srgb,var(--blue) 45%,transparent); z-index:1; } .location-layout b { display:block; font-size:20px; margin:2px 0 12px; }
+      .location-layout { display:grid; grid-template-columns:minmax(260px,1.15fr) minmax(135px,.7fr); gap:20px; align-items:center; } .map { min-height:168px; border-radius:8px; background-color:color-mix(in srgb,var(--kia-control) 78%,var(--blue) 8%); background-size:cover; background-position:center; display:grid; place-items:center; position:relative; overflow:hidden; filter:saturate(1.18) contrast(1.08); } .map:before { content:""; position:absolute; inset:0; background:linear-gradient(0deg,color-mix(in srgb,var(--kia-card) 18%,transparent),color-mix(in srgb,var(--kia-card) 6%,transparent)); pointer-events:none; } .map-marker { width:42px; aspect-ratio:1; border-radius:50%; background:var(--blue); color:var(--kia-card); display:grid; place-items:center; box-shadow:0 0 0 10px color-mix(in srgb,var(--blue) 24%,transparent),0 10px 22px rgba(0,0,0,.25); z-index:1; } .map-marker ha-icon { --mdc-icon-size:24px; } .location-layout b { display:block; font-size:20px; margin:2px 0 12px; }
       .tires { display:grid; grid-template-columns:1fr 86px 1fr; align-items:center; gap:18px; } .tires img { width:86px; height:136px; object-fit:contain; justify-self:center; } .tire-side { display:grid; gap:3px; } .tire-side b { font-size:18px; } .tire-side b:before { content:""; display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--green); margin-right:8px; box-shadow:0 0 7px var(--green); } .tire-side:first-child { text-align:right; }
       .health-panel { display:flex; align-items:center; gap:26px; } .shield { color:var(--green); --mdc-icon-size:56px; } .health-panel h2 { font-size:22px; } .health-panel p { color:var(--kia-muted); margin-top:6px; } .ghost { position:absolute; right:28px; bottom:18px; opacity:.12; --mdc-icon-size:72px; }
       .footer { margin-top:12px; min-height:44px; padding:0 16px; display:flex; align-items:center; justify-content:space-between; color:var(--kia-muted); } .footer span { display:flex; align-items:center; gap:8px; }
