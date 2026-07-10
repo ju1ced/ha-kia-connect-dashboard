@@ -56,6 +56,13 @@ layout_options:
   grid_rows: auto
 ```
 
+## Theme Behavior
+
+The card follows Home Assistant theme variables for background, card surface,
+text, dividers, primary color, and status colors. That means it adapts to Home
+Assistant's automatic, light, and dark theme modes without requiring a separate
+card option.
+
 ## Actions
 
 The card can call Home Assistant services for quick actions:
