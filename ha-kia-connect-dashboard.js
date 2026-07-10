@@ -3,6 +3,7 @@ class KiaDashboardCard extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this._config = {};
+    this._notice = "";
   }
 
   setConfig(config) {
@@ -43,10 +44,13 @@ class KiaDashboardCard extends HTMLElement {
     return this._obj(key)?.attributes?.unit_of_measurement || fallback;
   }
 
+  _safe(value) {
+    return String(value ?? "").replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char]);
+  }
+
   _active(key) {
-    return ["on", "open", "unlocked", "charging", "connected", "heat", "cool", "heat_cool", "dry", "fan_only"].includes(
-      String(this._state(key, "off")).toLowerCase(),
-    );
+    const value = String(this._state(key, "off")).toLowerCase();
+    return ["on", "open", "unlocked", "charging", "connected", "heat", "cool", "heat_cool", "dry", "fan_only"].includes(value);
   }
 
   _locked() {
@@ -76,6 +80,25 @@ class KiaDashboardCard extends HTMLElement {
     return this._asset(images.normal || "ev6_front_right.png");
   }
 
+  _trackerCoords() {
+    const obj = this._obj("location");
+    const lat = Number.parseFloat(obj?.attributes?.latitude);
+    const lon = Number.parseFloat(obj?.attributes?.longitude);
+    return Number.isFinite(lat) && Number.isFinite(lon) ? { lat, lon } : null;
+  }
+
+  _tileUrl() {
+    const coords = this._trackerCoords();
+    if (!coords) return "";
+    const zoom = 15;
+    const x = Math.floor(((coords.lon + 180) / 360) * 2 ** zoom);
+    const y = Math.floor(
+      ((1 - Math.log(Math.tan((coords.lat * Math.PI) / 180) + 1 / Math.cos((coords.lat * Math.PI) / 180)) / Math.PI) / 2) *
+        2 ** zoom,
+    );
+    return `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`;
+  }
+
   _navigate(section) {
     const current = window.location.pathname.replace(/\/$/, "");
     const base = current.split("/").slice(0, -1).join("/") || current || "/";
@@ -94,43 +117,53 @@ class KiaDashboardCard extends HTMLElement {
     return window.confirm(message);
   }
 
-  _callEntity(entityKey, service, message) {
+  _noticeMessage(message) {
+    this._notice = message;
+    this._render();
+    window.setTimeout(() => {
+      if (this._notice === message) {
+        this._notice = "";
+        this._render();
+      }
+    }, 6500);
+  }
+
+  async _callEntity(entityKey, service, message) {
     const entityId = this._entity(entityKey);
     if (!entityId || !this._hass) {
+      this._noticeMessage(`Action entity missing: ${entityKey}`);
       this._moreInfo(entityKey);
       return;
     }
 
-    if (message && !this._confirm(message)) return;
+    if (message && !this._confirm(message)) {
+      this._noticeMessage("Action cancelled");
+      return;
+    }
 
     const domain = entityId.split(".")[0];
-    if (domain === "button") {
-      this._hass.callService("button", "press", { entity_id: entityId });
+    let targetDomain = domain;
+    let targetService = service;
+
+    if (domain === "button") targetService = "press";
+    if (domain === "lock") targetService = service === "turn_off" ? "unlock" : "lock";
+
+    if (!["button", "lock", "switch", "input_boolean", "climate"].includes(domain)) {
+      this._noticeMessage(`Unsupported action entity: ${entityId}`);
+      this._moreInfo(entityKey);
       return;
     }
 
-    if (domain === "lock") {
-      this._hass.callService("lock", service === "turn_off" ? "unlock" : "lock", { entity_id: entityId });
-      return;
+    try {
+      await this._hass.callService(targetDomain, targetService, { entity_id: entityId });
+      this._noticeMessage(`Sent ${targetDomain}.${targetService} to ${entityId}`);
+    } catch (error) {
+      this._noticeMessage(error?.message || `Action failed for ${entityId}`);
     }
-
-    if (["switch", "input_boolean", "climate"].includes(domain)) {
-      this._hass.callService(domain, service, { entity_id: entityId });
-      return;
-    }
-
-    this._moreInfo(entityKey);
-  }
-
-  _refresh() {
-    const entityId = this._entity("refresh");
-    if (!entityId || !this._hass) return;
-    if (entityId.startsWith("button.")) this._hass.callService("button", "press", { entity_id: entityId });
-    else this._moreInfo("refresh");
   }
 
   _handleAction(action) {
-    if (action === "refresh") this._refresh();
+    if (action === "refresh") this._callEntity("refresh", "press", "");
     if (action === "start_climate") this._callEntity(this._entity("start_climate") ? "start_climate" : "climate", "turn_on", "Start climate now?");
     if (action === "stop_climate") this._callEntity(this._entity("stop_climate") ? "stop_climate" : "climate", "turn_off", "Stop climate now?");
     if (action === "start_charging") this._callEntity("start_charging", "turn_on", "Start charging now?");
@@ -141,12 +174,16 @@ class KiaDashboardCard extends HTMLElement {
     return `<button class="nav-tile" data-nav="${section}"><ha-icon icon="${icon}"></ha-icon><span>${label}</span></button>`;
   }
 
+  _chip(icon, label, value, extra = "") {
+    return `<span class="chip ${extra}"><ha-icon icon="${icon}"></ha-icon><span>${label}</span><strong>${this._safe(value)}</strong></span>`;
+  }
+
   _metric(icon, label, value, good = false) {
-    return `<div class="metric"><ha-icon icon="${icon}"></ha-icon><div><span>${label}</span><strong class="${good ? "good-text" : ""}">${value}</strong></div></div>`;
+    return `<div class="metric"><ha-icon icon="${icon}"></ha-icon><div><span>${label}</span><strong class="${good ? "good-text" : ""}">${this._safe(value)}</strong></div></div>`;
   }
 
   _row(icon, label, value, ok = true) {
-    return `<div class="status-row"><ha-icon icon="${icon}"></ha-icon><span>${label}</span><strong>${value}</strong><ha-icon class="${ok ? "ok" : "warn"}" icon="${ok ? "mdi:check-circle-outline" : "mdi:alert-circle-outline"}"></ha-icon></div>`;
+    return `<div class="status-row"><ha-icon icon="${icon}"></ha-icon><span>${label}</span><strong>${this._safe(value)}</strong><ha-icon class="${ok ? "ok" : "warn"}" icon="${ok ? "mdi:check-circle-outline" : "mdi:alert-circle-outline"}"></ha-icon></div>`;
   }
 
   _openClosed(key) {
@@ -157,7 +194,6 @@ class KiaDashboardCard extends HTMLElement {
     if (!this.shadowRoot) return;
 
     const title = this._config.title || "Kia EV6";
-    const subtitle = this._config.subtitle || "GT-Line RWD";
     const battery = this._number("battery_level", 0);
     const range = `${this._number("battery_range")} ${this._unit("battery_range", "km")}`;
     const odometer = `${this._number("odometer")} ${this._unit("odometer", "km")}`;
@@ -168,22 +204,14 @@ class KiaDashboardCard extends HTMLElement {
     const plugText = this._active("plug_connected") ? "Yes" : "No";
     const chargeLimit = `${this._number("charging_limit", 100)} %`;
     const lockedText = this._locked() ? "Locked" : "Unlocked";
+    const tileUrl = this._tileUrl();
+    const mapStyle = tileUrl ? ` style="background-image:linear-gradient(rgba(9,16,24,.38),rgba(9,16,24,.68)),url('${tileUrl}')"` : "";
 
     this.shadowRoot.innerHTML = `
       <style>${this._styles()}</style>
       <ha-card class="kia-shell">
-        <header class="topbar">
-          <div class="crumb"><span>Home</span><span>/</span><strong>${title}</strong></div>
-          <div class="identity"><ha-icon icon="mdi:car-electric"></ha-icon><div><h1>${title}</h1><p>${subtitle}</p></div></div>
-          <div class="chips">
-            <button class="chip" data-info="door_lock"><ha-icon icon="mdi:lock"></ha-icon>${lockedText}</button>
-            <span class="chip online"><ha-icon icon="mdi:wifi"></ha-icon>Online</span>
-            <span class="chip"><ha-icon icon="mdi:battery"></ha-icon>${battery} % Battery</span>
-          </div>
-        </header>
-
         <section class="hero card">
-          <div class="car-stage"><img src="${this._carImage()}" alt="${title}" onerror="this.src='/local/vehicles/ev6_side.png'"></div>
+          <div class="car-stage"><img src="${this._carImage()}" alt="${this._safe(title)}" onerror="this.src='/local/vehicles/ev6_side.png'"></div>
           <div class="divider"></div>
           <div class="hero-data">
             ${this._metric("mdi:speedometer", "Odometer", odometer)}
@@ -194,23 +222,33 @@ class KiaDashboardCard extends HTMLElement {
         </section>
 
         <nav class="section-nav card">
-          ${this._nav("mdi:battery-charging", "Battery", "battery")}
-          ${this._nav("mdi:car", "Vehicle", "vehicle")}
-          ${this._nav("mdi:fan", "Climate", "climate")}
-          ${this._nav("mdi:chart-line", "Energy", "energy")}
-          ${this._nav("mdi:map-marker-outline", "Location", "location")}
-          ${this._nav("mdi:tune", "Settings", "settings")}
+          <div class="nav-items">
+            ${this._nav("mdi:battery-charging", "Battery", "battery")}
+            ${this._nav("mdi:car", "Vehicle", "vehicle")}
+            ${this._nav("mdi:fan", "Climate", "climate")}
+            ${this._nav("mdi:chart-line", "Energy", "energy")}
+            ${this._nav("mdi:map-marker-outline", "Location", "location")}
+            ${this._nav("mdi:tune", "Settings", "settings")}
+          </div>
+          <div class="status-stack">
+            <button class="chip" data-info="door_lock"><ha-icon icon="mdi:lock"></ha-icon><span>Lock</span><strong>${lockedText}</strong></button>
+            ${this._chip("mdi:wifi", "Connection", "Online", "online")}
+            ${this._chip("mdi:battery", "Battery", `${battery} %`)}
+          </div>
         </nav>
 
         <main class="grid">
           <section class="panel battery-panel">
             <div class="panel-title"><ha-icon icon="mdi:battery-charging"></ha-icon><h2>Battery</h2><button data-nav="battery"><ha-icon icon="mdi:chevron-right"></ha-icon></button></div>
-            <div class="battery-layout"><div class="ring" style="--pct:${battery};"><strong>${battery}<small>%</small></strong><span>Battery level</span></div><div class="facts"><span>Range</span><b>${range}</b><span>Est. range AC on</span><b>${range}</b><span>AC charging limit</span><b>${chargeLimit}</b><span>Charging</span><b class="${this._charging() ? "good-text" : ""}">${chargingText}</b><span>Plugged in</span><b>${plugText}</b></div></div>
+            <div class="battery-bar"><span style="width:${Math.max(0, Math.min(100, Number(battery) || 0))}%"></span></div>
+            <div class="battery-percent"><strong>${battery}<small>%</small></strong><span>Battery level</span></div>
+            <div class="battery-facts"><div><span>Range</span><b>${range}</b></div><div><span>Est. range AC on</span><b>${range}</b></div><div><span>AC charging limit</span><b>${chargeLimit}</b></div><div><span>Charging</span><b class="${this._charging() ? "good-text" : ""}">${chargingText}</b></div><div><span>Plugged in</span><b>${plugText}</b></div></div>
           </section>
 
           <section class="panel actions-panel">
             <div class="panel-title"><ha-icon icon="mdi:flash"></ha-icon><h2>Quick Actions</h2><button data-nav="settings"><ha-icon icon="mdi:chevron-right"></ha-icon></button></div>
             <div class="actions"><button data-action="refresh"><ha-icon icon="mdi:refresh"></ha-icon><span>Refresh Data</span></button><button data-action="start_climate"><ha-icon icon="mdi:fan"></ha-icon><span>Start Climate</span></button><button data-action="stop_climate"><ha-icon class="warm" icon="mdi:fan-off"></ha-icon><span>Stop Climate</span></button><button data-action="start_charging"><ha-icon class="good" icon="mdi:ev-plug-type2"></ha-icon><span>Start Charging</span></button></div>
+            ${this._notice ? `<p class="notice">${this._safe(this._notice)}</p>` : ""}
           </section>
 
           <section class="panel vehicle-panel">
@@ -227,7 +265,7 @@ class KiaDashboardCard extends HTMLElement {
 
           <section class="panel location-panel">
             <div class="panel-title"><ha-icon icon="mdi:map-marker-outline"></ha-icon><h2>Location</h2><button data-nav="location"><ha-icon icon="mdi:chevron-right"></ha-icon></button></div>
-            <div class="location-layout"><div class="map"><i></i></div><div><span>Last parked</span><b>${location}</b><span>Odometer</span><b>${odometer}</b></div></div>
+            <div class="location-layout"><div class="map"${mapStyle}><i></i></div><div><span>Last parked</span><b>${this._safe(location)}</b><span>Odometer</span><b>${odometer}</b></div></div>
           </section>
 
           <section class="panel tire-panel">
@@ -251,26 +289,24 @@ class KiaDashboardCard extends HTMLElement {
       :host { display:block; --bg:#080d13; --card:#141b24; --line:#21384b; --text:#f5f8fb; --muted:#aab7c5; --blue:#42c8ff; --green:#64f276; --amber:#ffd15a; font-family:var(--primary-font-family, Inter, system-ui, sans-serif); }
       ha-card.kia-shell { background:radial-gradient(circle at 44% 0%, rgba(55,85,108,.18), transparent 34%), var(--bg); color:var(--text); border:0; box-shadow:none; padding:clamp(10px,1.1vw,18px); }
       .card,.panel { background:linear-gradient(145deg, rgba(27,34,45,.96), rgba(13,20,28,.98)); border:1px solid var(--line); border-radius:8px; box-shadow:inset 0 1px 0 rgba(255,255,255,.035), 0 14px 34px rgba(0,0,0,.22); }
-      button { font:inherit; color:inherit; cursor:pointer; } h1,h2,p { margin:0; } .good-text { color:var(--green) !important; }
-      .topbar { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:16px; margin-bottom:14px; }
-      .crumb { align-self:start; display:flex; gap:9px; color:var(--muted); font-size:13px; } .crumb span:first-child { color:var(--blue); }
-      .identity { display:flex; gap:18px; align-items:center; justify-self:start; } .identity ha-icon { --mdc-icon-size:46px; } h1 { font-size:clamp(30px,2.5vw,46px); line-height:1; font-weight:800; letter-spacing:0; } .identity p { margin-top:6px; color:var(--muted); font-size:clamp(15px,1.1vw,19px); }
-      .chips { display:flex; justify-content:flex-end; gap:12px; flex-wrap:wrap; } .chip { min-height:42px; padding:0 16px; border-radius:8px; border:1px solid var(--line); background:#152638; display:inline-flex; align-items:center; gap:9px; font-weight:700; font-size:15px; } .chip ha-icon { color:var(--blue); --mdc-icon-size:18px; } .chip.online { background:#143022; color:var(--green); }
+      button { font:inherit; color:inherit; cursor:pointer; } h2,p { margin:0; } .good-text { color:var(--green) !important; }
       .hero { min-height:clamp(230px,23vw,330px); display:grid; grid-template-columns:minmax(420px,1.35fr) 1px minmax(360px,.95fr); align-items:center; gap:clamp(28px,4.4vw,76px); padding:22px clamp(28px,5vw,96px); overflow:hidden; }
       .car-stage { min-width:0; display:flex; justify-content:flex-start; align-items:center; } .car-stage img { width:min(830px,100%); height:clamp(190px,22vw,300px); object-fit:contain; object-position:left center; filter:drop-shadow(0 22px 18px rgba(0,0,0,.34)); }
-      .divider { height:70%; background:rgba(170,183,197,.18); } .hero-data { display:grid; grid-template-columns:1fr 1fr; gap:30px 48px; } .metric { display:grid; grid-template-columns:42px 1fr; gap:12px; align-items:center; min-width:0; } .metric ha-icon { color:#b9c6d6; --mdc-icon-size:34px; } .metric span,.facts span,.location-layout span,.tire-side span { color:var(--muted); font-size:14px; line-height:1.2; } .metric strong { display:block; font-size:clamp(16px,1.1vw,20px); line-height:1.16; overflow-wrap:anywhere; }
-      .section-nav { margin-top:10px; padding:10px 18px 16px; display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:14px; border-bottom:3px solid rgba(66,200,255,.7); } .nav-tile,.actions button { min-height:84px; border-radius:8px; border:1px solid #25384a; background:linear-gradient(145deg,#1b2430,#121922); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; font-weight:700; } .nav-tile ha-icon { color:var(--blue); --mdc-icon-size:32px; }
+      .divider { height:70%; background:rgba(170,183,197,.18); } .hero-data { display:grid; grid-template-columns:1fr 1fr; gap:30px 48px; } .metric { display:grid; grid-template-columns:42px 1fr; gap:12px; align-items:center; min-width:0; } .metric ha-icon { color:#b9c6d6; --mdc-icon-size:34px; } .metric span,.battery-facts span,.location-layout span,.tire-side span { color:var(--muted); font-size:14px; line-height:1.2; } .metric strong { display:block; font-size:clamp(16px,1.1vw,20px); line-height:1.16; overflow-wrap:anywhere; }
+      .section-nav { margin-top:10px; padding:10px 18px 16px; display:grid; grid-template-columns:minmax(0,1fr) minmax(150px,190px); gap:14px; border-bottom:3px solid rgba(66,200,255,.7); } .nav-items { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:14px; } .status-stack { display:grid; grid-template-columns:1fr; gap:8px; }
+      .nav-tile,.actions button { min-height:84px; border-radius:8px; border:1px solid #25384a; background:linear-gradient(145deg,#1b2430,#121922); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; font-weight:700; } .nav-tile ha-icon { color:var(--blue); --mdc-icon-size:32px; }
+      .chip { min-height:40px; padding:0 12px; border-radius:8px; border:1px solid var(--line); background:#152638; display:grid; grid-template-columns:22px 1fr auto; align-items:center; gap:8px; font-weight:700; font-size:13px; text-align:left; } .chip ha-icon { color:var(--blue); --mdc-icon-size:18px; } .chip span { color:var(--muted); } .chip.online { background:#143022; } .chip.online strong { color:var(--green); }
       .grid { margin-top:12px; display:grid; grid-template-columns:1fr 1fr 1.28fr; grid-template-areas:"battery actions vehicle" "location tires health"; gap:12px; } .panel { min-height:160px; padding:18px 22px; position:relative; overflow:hidden; } .battery-panel{grid-area:battery}.actions-panel{grid-area:actions}.vehicle-panel{grid-area:vehicle}.location-panel{grid-area:location}.tire-panel{grid-area:tires}.health-panel{grid-area:health}
       .panel-title { display:flex; align-items:center; gap:12px; margin-bottom:12px; } .panel-title h2 { flex:1; font-size:20px; } .panel-title ha-icon { color:var(--blue); } .panel-title button,.footer button { border:0; background:transparent; padding:0; color:var(--muted); }
-      .battery-layout { display:grid; grid-template-columns:minmax(135px,.85fr) minmax(150px,1fr); gap:22px; align-items:center; } .ring { width:clamp(135px,10.2vw,184px); aspect-ratio:1; border-radius:50%; background:conic-gradient(var(--blue) calc(var(--pct)*1%), rgba(66,200,255,.18) 0); display:grid; place-items:center; position:relative; justify-self:center; } .ring:before { content:""; position:absolute; inset:22%; border-radius:50%; background:#0b121b; } .ring strong,.ring span { position:relative; z-index:1; } .ring strong { font-size:clamp(30px,2.5vw,48px); } .ring small { font-size:.45em; } .ring span { align-self:start; margin-top:58%; color:var(--muted); font-size:13px; }
-      .facts { display:grid; gap:3px; } .facts b { font-size:clamp(15px,1.1vw,19px); line-height:1.1; } .actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } .actions ha-icon { color:var(--blue); --mdc-icon-size:34px; } .actions .warm { color:var(--amber); } .actions .good { color:var(--green); }
+      .battery-bar { height:34px; border-radius:8px; padding:5px; background:#0b121b; border:1px solid #25384a; overflow:hidden; } .battery-bar span { display:block; height:100%; border-radius:6px; background:linear-gradient(90deg,#28aee8,#5bd9ff); box-shadow:0 0 24px rgba(66,200,255,.35); } .battery-percent { display:flex; align-items:baseline; gap:12px; margin:16px 0 10px; } .battery-percent strong { font-size:clamp(34px,3vw,52px); line-height:1; } .battery-percent small { font-size:.48em; margin-left:4px; } .battery-percent span { color:var(--muted); }
+      .battery-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 18px; } .battery-facts div { min-width:0; } .battery-facts b { display:block; font-size:clamp(15px,1.1vw,19px); line-height:1.1; overflow-wrap:anywhere; } .actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } .actions ha-icon { color:var(--blue); --mdc-icon-size:34px; } .actions .warm { color:var(--amber); } .actions .good { color:var(--green); } .notice { margin-top:12px; color:var(--muted); font-size:13px; line-height:1.35; }
       .vehicle-list { display:grid; gap:13px; padding-inline:8px; } .status-row { display:grid; grid-template-columns:30px 1fr auto 28px; align-items:center; gap:12px; color:var(--muted); } .status-row strong { color:var(--text); } .status-row ha-icon { color:#b9c6d6; } .status-row .ok { color:var(--green); } .status-row .warn { color:var(--amber); }
-      .location-layout { display:grid; grid-template-columns:minmax(170px,.95fr) minmax(135px,.7fr); gap:20px; align-items:center; } .map { min-height:112px; border-radius:8px; background:linear-gradient(135deg,rgba(35,75,60,.7),rgba(20,31,43,.85)),repeating-linear-gradient(30deg,transparent 0 28px,rgba(255,255,255,.04) 29px 30px); display:grid; place-items:center; } .map i { width:32px; aspect-ratio:1; border-radius:50%; background:var(--blue); box-shadow:0 0 0 12px rgba(66,200,255,.22); } .location-layout b { display:block; font-size:20px; margin:2px 0 12px; }
+      .location-layout { display:grid; grid-template-columns:minmax(260px,1.15fr) minmax(135px,.7fr); gap:20px; align-items:center; } .map { min-height:168px; border-radius:8px; background-color:#142330; background-size:cover; background-position:center; display:grid; place-items:center; position:relative; overflow:hidden; } .map:before { content:""; position:absolute; inset:0; background:linear-gradient(45deg,rgba(38,95,67,.32),transparent 55%); } .map i { width:30px; aspect-ratio:1; border-radius:50%; background:var(--blue); box-shadow:0 0 0 12px rgba(66,200,255,.22),0 0 28px rgba(66,200,255,.5); z-index:1; } .location-layout b { display:block; font-size:20px; margin:2px 0 12px; }
       .tires { display:grid; grid-template-columns:1fr 86px 1fr; align-items:center; gap:18px; } .tires img { width:86px; height:136px; object-fit:contain; justify-self:center; } .tire-side { display:grid; gap:3px; } .tire-side b { font-size:18px; } .tire-side b:before { content:""; display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--green); margin-right:8px; box-shadow:0 0 7px var(--green); } .tire-side:first-child { text-align:right; }
       .health-panel { display:flex; align-items:center; gap:26px; } .shield { color:var(--green); --mdc-icon-size:56px; } .health-panel h2 { font-size:22px; } .health-panel p { color:var(--muted); margin-top:6px; } .ghost { position:absolute; right:28px; bottom:18px; opacity:.12; --mdc-icon-size:72px; }
       .footer { margin-top:12px; min-height:44px; padding:0 16px; display:flex; align-items:center; justify-content:space-between; color:var(--muted); } .footer span { display:flex; align-items:center; gap:8px; }
-      @media (max-width:1180px){.topbar{grid-template-columns:1fr}.identity,.chips,.crumb{justify-self:start}.hero{grid-template-columns:1fr;gap:16px}.divider{display:none}.hero-data{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr 1fr;grid-template-areas:"battery actions" "vehicle vehicle" "location tires" "health health"}.section-nav{grid-template-columns:repeat(3,1fr)}}
-      @media (max-width:760px){ha-card.kia-shell{padding:10px}.chip{min-height:36px;padding:0 10px;font-size:13px}.hero{padding:18px;min-height:0}.car-stage img{height:210px;object-position:center}.hero-data,.grid,.battery-layout,.location-layout{grid-template-columns:1fr}.grid{grid-template-areas:"battery" "actions" "vehicle" "location" "tires" "health"}.section-nav{grid-template-columns:repeat(2,1fr)}.footer{flex-direction:column;align-items:flex-start;padding:12px 16px;gap:8px}}
+      @media (max-width:1180px){.hero{grid-template-columns:1fr;gap:16px}.divider{display:none}.hero-data{grid-template-columns:repeat(2,minmax(0,1fr))}.section-nav{grid-template-columns:1fr}.status-stack{grid-template-columns:repeat(3,minmax(0,1fr))}.grid{grid-template-columns:1fr 1fr;grid-template-areas:"battery actions" "vehicle vehicle" "location tires" "health health"}.nav-items{grid-template-columns:repeat(3,1fr)}}
+      @media (max-width:760px){ha-card.kia-shell{padding:10px}.chip{min-height:36px;padding:0 10px;font-size:12px}.hero{padding:18px;min-height:0}.car-stage img{height:210px;object-position:center}.hero-data,.grid,.location-layout{grid-template-columns:1fr}.grid{grid-template-areas:"battery" "actions" "vehicle" "location" "tires" "health"}.nav-items{grid-template-columns:repeat(2,1fr)}.status-stack{grid-template-columns:1fr}.battery-facts{grid-template-columns:1fr}.footer{flex-direction:column;align-items:flex-start;padding:12px 16px;gap:8px}}
     `;
   }
 }
