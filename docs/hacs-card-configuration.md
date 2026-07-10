@@ -47,6 +47,14 @@ entities:
   stop_charging: switch.your_vehicle_ev_charging
 ```
 
+For Home Assistant sections dashboards, make the card span the full section:
+
+```yaml
+layout_options:
+  grid_columns: full
+  grid_rows: auto
+```
+
 ## Actions
 
 The card can call Home Assistant services for quick actions:
@@ -59,8 +67,14 @@ The card can call Home Assistant services for quick actions:
 - `start_charging` calls `turn_on` on a `switch.*` or `input_boolean.*` entity.
 - `stop_charging` calls `turn_off` on a `switch.*` or `input_boolean.*` entity.
 
-If an action entity is missing or unsupported, the card opens the Home Assistant
-more-info panel instead of calling a service.
+Configure `start_climate` and `stop_climate` explicitly when your integration
+exposes a climate command switch. If they are omitted, the card falls back to the
+`climate` entity, which may only open state details or may not support direct
+`turn_on` / `turn_off` service calls.
+
+After each action click, the card shows a short feedback message in Quick
+Actions. This confirms whether a service call was sent or whether the mapped
+entity is missing or unsupported.
 
 Remote actions ask for browser confirmation by default. You can disable that for
 testing only:
@@ -69,6 +83,13 @@ testing only:
 type: custom:kia-dashboard-card
 confirm_actions: false
 ```
+
+## Location Map
+
+The Location panel uses the configured `location` device tracker. If that tracker
+has `latitude` and `longitude` attributes, the card shows a simple map tile and
+marker. If those attributes are missing, the card falls back to a neutral map
+placeholder while still showing tracker state and odometer data.
 
 ## Vehicle Images
 
