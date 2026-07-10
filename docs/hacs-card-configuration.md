@@ -74,7 +74,9 @@ exposes a climate command switch. If they are omitted, the card falls back to th
 
 After each action click, the card shows a short feedback message in Quick
 Actions. This confirms whether a service call was sent or whether the mapped
-entity is missing or unsupported.
+entity is missing, unsupported, or rejected by the integration. A `PIN
+verification failed` message means Home Assistant received the command but the
+Kia/Bluelink integration rejected the remote action.
 
 Remote actions ask for browser confirmation by default. You can disable that for
 testing only:
@@ -83,6 +85,13 @@ testing only:
 type: custom:kia-dashboard-card
 confirm_actions: false
 ```
+
+## Charge Limit Slider
+
+When `charging_limit` points to a `number.*` entity, the Battery panel renders an
+AC charging limit slider. Changing the slider calls `number.set_value` with the
+selected percentage. If `charging_limit` points to any other domain, the card
+shows the value as read-only text.
 
 ## Location Map
 

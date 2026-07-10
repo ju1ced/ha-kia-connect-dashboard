@@ -99,6 +99,18 @@ class KiaDashboardCard extends HTMLElement {
     return `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`;
   }
 
+  _rangeAttrs(key, fallbackMin = 0, fallbackMax = 100, fallbackStep = 1) {
+    const attrs = this._obj(key)?.attributes || {};
+    const min = Number.parseFloat(attrs.min);
+    const max = Number.parseFloat(attrs.max);
+    const step = Number.parseFloat(attrs.step);
+    return {
+      min: Number.isFinite(min) ? min : fallbackMin,
+      max: Number.isFinite(max) ? max : fallbackMax,
+      step: Number.isFinite(step) && step > 0 ? step : fallbackStep,
+    };
+  }
+
   _navigate(section) {
     const current = window.location.pathname.replace(/\/$/, "");
     const base = current.split("/").slice(0, -1).join("/") || current || "/";
@@ -126,6 +138,12 @@ class KiaDashboardCard extends HTMLElement {
         this._render();
       }
     }, 6500);
+  }
+
+  _actionErrorMessage(error, entityId) {
+    const raw = error?.message || error?.body?.message || String(error || "");
+    if (raw.toLowerCase().includes("pin")) return `Action failed for ${entityId}: PIN verification failed in the Kia integration.`;
+    return raw || `Action failed for ${entityId}`;
   }
 
   async _callEntity(entityKey, service, message) {
@@ -158,7 +176,22 @@ class KiaDashboardCard extends HTMLElement {
       await this._hass.callService(targetDomain, targetService, { entity_id: entityId });
       this._noticeMessage(`Sent ${targetDomain}.${targetService} to ${entityId}`);
     } catch (error) {
-      this._noticeMessage(error?.message || `Action failed for ${entityId}`);
+      this._noticeMessage(this._actionErrorMessage(error, entityId));
+    }
+  }
+
+  async _setNumber(entityKey, value) {
+    const entityId = this._entity(entityKey);
+    if (!entityId || !this._hass) return;
+    if (!entityId.startsWith("number.")) {
+      this._noticeMessage(`Cannot adjust ${entityId}; expected number entity.`);
+      return;
+    }
+    try {
+      await this._hass.callService("number", "set_value", { entity_id: entityId, value: Number(value) });
+      this._noticeMessage(`Set ${entityId} to ${value} %`);
+    } catch (error) {
+      this._noticeMessage(this._actionErrorMessage(error, entityId));
     }
   }
 
@@ -190,11 +223,19 @@ class KiaDashboardCard extends HTMLElement {
     return this._active(key) ? "open" : "closed";
   }
 
+  _chargeLimitControl(value, unit) {
+    const entityId = this._entity("charging_limit") || "";
+    if (!entityId.startsWith("number.")) return `<b>${this._safe(value)} ${this._safe(unit)}</b>`;
+    const attrs = this._rangeAttrs("charging_limit", 50, 100, 1);
+    return `<div class="limit-control"><div><b>${this._safe(value)} ${this._safe(unit)}</b><small>Adjust target</small></div><input data-number="charging_limit" type="range" min="${attrs.min}" max="${attrs.max}" step="${attrs.step}" value="${value}"></div>`;
+  }
+
   _render() {
     if (!this.shadowRoot) return;
 
     const title = this._config.title || "Kia EV6";
     const battery = this._number("battery_level", 0);
+    const batteryPct = Math.max(0, Math.min(100, Number(battery) || 0));
     const range = `${this._number("battery_range")} ${this._unit("battery_range", "km")}`;
     const odometer = `${this._number("odometer")} ${this._unit("odometer", "km")}`;
     const location = this._state("location", "Home");
@@ -202,7 +243,8 @@ class KiaDashboardCard extends HTMLElement {
     const chargingText = this._charging() ? "Charging" : "Not charging";
     const climateText = this._climateOn() ? "On" : "Off";
     const plugText = this._active("plug_connected") ? "Yes" : "No";
-    const chargeLimit = `${this._number("charging_limit", 100)} %`;
+    const chargeLimitValue = this._number("charging_limit", 100);
+    const chargeLimitUnit = this._unit("charging_limit", "%") || "%";
     const lockedText = this._locked() ? "Locked" : "Unlocked";
     const tileUrl = this._tileUrl();
     const mapStyle = tileUrl ? ` style="background-image:linear-gradient(rgba(9,16,24,.38),rgba(9,16,24,.68)),url('${tileUrl}')"` : "";
@@ -240,9 +282,8 @@ class KiaDashboardCard extends HTMLElement {
         <main class="grid">
           <section class="panel battery-panel">
             <div class="panel-title"><ha-icon icon="mdi:battery-charging"></ha-icon><h2>Battery</h2><button data-nav="battery"><ha-icon icon="mdi:chevron-right"></ha-icon></button></div>
-            <div class="battery-bar"><span style="width:${Math.max(0, Math.min(100, Number(battery) || 0))}%"></span></div>
-            <div class="battery-percent"><strong>${battery}<small>%</small></strong><span>Battery level</span></div>
-            <div class="battery-facts"><div><span>Range</span><b>${range}</b></div><div><span>Est. range AC on</span><b>${range}</b></div><div><span>AC charging limit</span><b>${chargeLimit}</b></div><div><span>Charging</span><b class="${this._charging() ? "good-text" : ""}">${chargingText}</b></div><div><span>Plugged in</span><b>${plugText}</b></div></div>
+            <div class="battery-gauge"><div class="battery-bar"><span style="width:${batteryPct}%"></span></div><strong>${battery}<small>%</small></strong></div>
+            <div class="battery-facts"><div><span>Battery level</span><b>${battery} %</b></div><div><span>Range</span><b>${range}</b></div><div><span>Est. range AC on</span><b>${range}</b></div><div><span>Charging</span><b class="${this._charging() ? "good-text" : ""}">${chargingText}</b></div><div><span>Plugged in</span><b>${plugText}</b></div><div class="wide"><span>AC charging limit</span>${this._chargeLimitControl(chargeLimitValue, chargeLimitUnit)}</div></div>
           </section>
 
           <section class="panel actions-panel">
@@ -282,31 +323,33 @@ class KiaDashboardCard extends HTMLElement {
     this.shadowRoot.querySelectorAll("[data-nav]").forEach((el) => el.addEventListener("click", () => this._navigate(el.dataset.nav)));
     this.shadowRoot.querySelectorAll("[data-info]").forEach((el) => el.addEventListener("click", () => this._moreInfo(el.dataset.info)));
     this.shadowRoot.querySelectorAll("[data-action]").forEach((el) => el.addEventListener("click", () => this._handleAction(el.dataset.action)));
+    this.shadowRoot.querySelectorAll("[data-number]").forEach((el) => el.addEventListener("change", () => this._setNumber(el.dataset.number, el.value)));
   }
 
   _styles() {
     return `
-      :host { display:block; --bg:#080d13; --card:#141b24; --line:#21384b; --text:#f5f8fb; --muted:#aab7c5; --blue:#42c8ff; --green:#64f276; --amber:#ffd15a; font-family:var(--primary-font-family, Inter, system-ui, sans-serif); }
+      :host { display:block; --bg:#080d13; --card:#141b24; --line:#21384b; --text:#f5f8fb; --muted:#aab7c5; --blue:#42c8ff; --green:#64f276; --amber:#ffd15a; --red:#ff5252; font-family:var(--primary-font-family, Inter, system-ui, sans-serif); }
       ha-card.kia-shell { background:radial-gradient(circle at 44% 0%, rgba(55,85,108,.18), transparent 34%), var(--bg); color:var(--text); border:0; box-shadow:none; padding:clamp(10px,1.1vw,18px); }
       .card,.panel { background:linear-gradient(145deg, rgba(27,34,45,.96), rgba(13,20,28,.98)); border:1px solid var(--line); border-radius:8px; box-shadow:inset 0 1px 0 rgba(255,255,255,.035), 0 14px 34px rgba(0,0,0,.22); }
       button { font:inherit; color:inherit; cursor:pointer; } h2,p { margin:0; } .good-text { color:var(--green) !important; }
-      .hero { min-height:clamp(230px,23vw,330px); display:grid; grid-template-columns:minmax(420px,1.35fr) 1px minmax(360px,.95fr); align-items:center; gap:clamp(28px,4.4vw,76px); padding:22px clamp(28px,5vw,96px); overflow:hidden; }
-      .car-stage { min-width:0; display:flex; justify-content:flex-start; align-items:center; } .car-stage img { width:min(830px,100%); height:clamp(190px,22vw,300px); object-fit:contain; object-position:left center; filter:drop-shadow(0 22px 18px rgba(0,0,0,.34)); }
-      .divider { height:70%; background:rgba(170,183,197,.18); } .hero-data { display:grid; grid-template-columns:1fr 1fr; gap:30px 48px; } .metric { display:grid; grid-template-columns:42px 1fr; gap:12px; align-items:center; min-width:0; } .metric ha-icon { color:#b9c6d6; --mdc-icon-size:34px; } .metric span,.battery-facts span,.location-layout span,.tire-side span { color:var(--muted); font-size:14px; line-height:1.2; } .metric strong { display:block; font-size:clamp(16px,1.1vw,20px); line-height:1.16; overflow-wrap:anywhere; }
-      .section-nav { margin-top:10px; padding:10px 18px 16px; display:grid; grid-template-columns:minmax(0,1fr) minmax(150px,190px); gap:14px; border-bottom:3px solid rgba(66,200,255,.7); } .nav-items { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:14px; } .status-stack { display:grid; grid-template-columns:1fr; gap:8px; }
+      .hero { min-height:clamp(230px,23vw,330px); display:grid; grid-template-columns:minmax(420px,1.14fr) 1px minmax(460px,1fr); align-items:center; gap:clamp(18px,2.7vw,44px); padding:22px clamp(28px,5vw,96px); overflow:hidden; }
+      .car-stage { min-width:0; display:flex; justify-content:flex-start; align-items:center; } .car-stage img { width:min(760px,100%); height:clamp(190px,22vw,300px); object-fit:contain; object-position:left center; filter:drop-shadow(0 22px 18px rgba(0,0,0,.34)); }
+      .divider { height:70%; background:rgba(170,183,197,.18); } .hero-data { justify-self:start; width:min(640px,100%); display:grid; grid-template-columns:1fr 1fr; gap:30px 48px; } .metric { display:grid; grid-template-columns:42px 1fr; gap:12px; align-items:center; min-width:0; } .metric ha-icon { color:#b9c6d6; --mdc-icon-size:34px; } .metric span,.battery-facts span,.location-layout span,.tire-side span { color:var(--muted); font-size:14px; line-height:1.2; } .metric strong { display:block; font-size:clamp(16px,1.1vw,20px); line-height:1.16; overflow-wrap:anywhere; }
+      .section-nav { margin-top:10px; padding:10px 18px 16px; display:grid; grid-template-columns:minmax(0,1fr) minmax(172px,210px); gap:14px; border-bottom:3px solid rgba(66,200,255,.7); } .nav-items { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:14px; } .status-stack { display:grid; grid-template-columns:1fr; gap:8px; align-self:stretch; }
       .nav-tile,.actions button { min-height:84px; border-radius:8px; border:1px solid #25384a; background:linear-gradient(145deg,#1b2430,#121922); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; font-weight:700; } .nav-tile ha-icon { color:var(--blue); --mdc-icon-size:32px; }
       .chip { min-height:40px; padding:0 12px; border-radius:8px; border:1px solid var(--line); background:#152638; display:grid; grid-template-columns:22px 1fr auto; align-items:center; gap:8px; font-weight:700; font-size:13px; text-align:left; } .chip ha-icon { color:var(--blue); --mdc-icon-size:18px; } .chip span { color:var(--muted); } .chip.online { background:#143022; } .chip.online strong { color:var(--green); }
       .grid { margin-top:12px; display:grid; grid-template-columns:1fr 1fr 1.28fr; grid-template-areas:"battery actions vehicle" "location tires health"; gap:12px; } .panel { min-height:160px; padding:18px 22px; position:relative; overflow:hidden; } .battery-panel{grid-area:battery}.actions-panel{grid-area:actions}.vehicle-panel{grid-area:vehicle}.location-panel{grid-area:location}.tire-panel{grid-area:tires}.health-panel{grid-area:health}
       .panel-title { display:flex; align-items:center; gap:12px; margin-bottom:12px; } .panel-title h2 { flex:1; font-size:20px; } .panel-title ha-icon { color:var(--blue); } .panel-title button,.footer button { border:0; background:transparent; padding:0; color:var(--muted); }
-      .battery-bar { height:34px; border-radius:8px; padding:5px; background:#0b121b; border:1px solid #25384a; overflow:hidden; } .battery-bar span { display:block; height:100%; border-radius:6px; background:linear-gradient(90deg,#28aee8,#5bd9ff); box-shadow:0 0 24px rgba(66,200,255,.35); } .battery-percent { display:flex; align-items:baseline; gap:12px; margin:16px 0 10px; } .battery-percent strong { font-size:clamp(34px,3vw,52px); line-height:1; } .battery-percent small { font-size:.48em; margin-left:4px; } .battery-percent span { color:var(--muted); }
-      .battery-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 18px; } .battery-facts div { min-width:0; } .battery-facts b { display:block; font-size:clamp(15px,1.1vw,19px); line-height:1.1; overflow-wrap:anywhere; } .actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } .actions ha-icon { color:var(--blue); --mdc-icon-size:34px; } .actions .warm { color:var(--amber); } .actions .good { color:var(--green); } .notice { margin-top:12px; color:var(--muted); font-size:13px; line-height:1.35; }
+      .battery-gauge { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:18px; margin:4px 0 18px; } .battery-gauge strong { font-size:clamp(34px,3vw,52px); line-height:1; white-space:nowrap; } .battery-gauge small { font-size:.48em; margin-left:4px; } .battery-bar { height:34px; border-radius:8px; padding:5px; background:#0b121b; border:1px solid #25384a; overflow:hidden; } .battery-bar span { display:block; height:100%; border-radius:6px; background:linear-gradient(90deg,var(--red) 0 30%,var(--amber) 30% 55%,var(--green) 55% 100%); box-shadow:0 0 24px rgba(66,200,255,.25); }
+      .battery-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 18px; } .battery-facts div { min-width:0; } .battery-facts .wide { grid-column:1 / -1; } .battery-facts b { display:block; font-size:clamp(15px,1.1vw,19px); line-height:1.1; overflow-wrap:anywhere; } .limit-control { display:grid; grid-template-columns:auto minmax(120px,1fr); gap:14px; align-items:center; } .limit-control small { display:block; color:var(--muted); font-size:12px; margin-top:2px; } .limit-control input { width:100%; accent-color:var(--blue); }
+      .actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } .actions ha-icon { color:var(--blue); --mdc-icon-size:34px; } .actions .warm { color:var(--amber); } .actions .good { color:var(--green); } .notice { margin-top:12px; color:var(--muted); font-size:13px; line-height:1.35; }
       .vehicle-list { display:grid; gap:13px; padding-inline:8px; } .status-row { display:grid; grid-template-columns:30px 1fr auto 28px; align-items:center; gap:12px; color:var(--muted); } .status-row strong { color:var(--text); } .status-row ha-icon { color:#b9c6d6; } .status-row .ok { color:var(--green); } .status-row .warn { color:var(--amber); }
       .location-layout { display:grid; grid-template-columns:minmax(260px,1.15fr) minmax(135px,.7fr); gap:20px; align-items:center; } .map { min-height:168px; border-radius:8px; background-color:#142330; background-size:cover; background-position:center; display:grid; place-items:center; position:relative; overflow:hidden; } .map:before { content:""; position:absolute; inset:0; background:linear-gradient(45deg,rgba(38,95,67,.32),transparent 55%); } .map i { width:30px; aspect-ratio:1; border-radius:50%; background:var(--blue); box-shadow:0 0 0 12px rgba(66,200,255,.22),0 0 28px rgba(66,200,255,.5); z-index:1; } .location-layout b { display:block; font-size:20px; margin:2px 0 12px; }
       .tires { display:grid; grid-template-columns:1fr 86px 1fr; align-items:center; gap:18px; } .tires img { width:86px; height:136px; object-fit:contain; justify-self:center; } .tire-side { display:grid; gap:3px; } .tire-side b { font-size:18px; } .tire-side b:before { content:""; display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--green); margin-right:8px; box-shadow:0 0 7px var(--green); } .tire-side:first-child { text-align:right; }
       .health-panel { display:flex; align-items:center; gap:26px; } .shield { color:var(--green); --mdc-icon-size:56px; } .health-panel h2 { font-size:22px; } .health-panel p { color:var(--muted); margin-top:6px; } .ghost { position:absolute; right:28px; bottom:18px; opacity:.12; --mdc-icon-size:72px; }
       .footer { margin-top:12px; min-height:44px; padding:0 16px; display:flex; align-items:center; justify-content:space-between; color:var(--muted); } .footer span { display:flex; align-items:center; gap:8px; }
       @media (max-width:1180px){.hero{grid-template-columns:1fr;gap:16px}.divider{display:none}.hero-data{grid-template-columns:repeat(2,minmax(0,1fr))}.section-nav{grid-template-columns:1fr}.status-stack{grid-template-columns:repeat(3,minmax(0,1fr))}.grid{grid-template-columns:1fr 1fr;grid-template-areas:"battery actions" "vehicle vehicle" "location tires" "health health"}.nav-items{grid-template-columns:repeat(3,1fr)}}
-      @media (max-width:760px){ha-card.kia-shell{padding:10px}.chip{min-height:36px;padding:0 10px;font-size:12px}.hero{padding:18px;min-height:0}.car-stage img{height:210px;object-position:center}.hero-data,.grid,.location-layout{grid-template-columns:1fr}.grid{grid-template-areas:"battery" "actions" "vehicle" "location" "tires" "health"}.nav-items{grid-template-columns:repeat(2,1fr)}.status-stack{grid-template-columns:1fr}.battery-facts{grid-template-columns:1fr}.footer{flex-direction:column;align-items:flex-start;padding:12px 16px;gap:8px}}
+      @media (max-width:760px){ha-card.kia-shell{padding:10px}.chip{min-height:36px;padding:0 10px;font-size:12px}.hero{padding:18px;min-height:0}.car-stage img{height:210px;object-position:center}.hero-data,.grid,.location-layout{grid-template-columns:1fr}.grid{grid-template-areas:"battery" "actions" "vehicle" "location" "tires" "health"}.nav-items{grid-template-columns:repeat(2,1fr)}.status-stack{grid-template-columns:1fr}.battery-gauge,.battery-facts,.limit-control{grid-template-columns:1fr}.footer{flex-direction:column;align-items:flex-start;padding:12px 16px;gap:8px}}
     `;
   }
 }
