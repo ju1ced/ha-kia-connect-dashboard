@@ -105,9 +105,27 @@ the DC slider is hidden.
 ## Location Map
 
 The Location panel uses the configured `location` device tracker. If that tracker
-has `latitude` and `longitude` attributes, the card shows a simple map tile and
-marker. If those attributes are missing, the card falls back to a neutral map
-placeholder while still showing tracker state and odometer data.
+has `latitude` and `longitude` attributes, the card shows an OpenStreetMap tile
+preview centered on those coordinates. If those attributes are missing, the card
+falls back to a neutral map placeholder while still showing tracker state and
+odometer data.
+
+The default map zoom is `15`. You can tune it per dashboard if the preview feels
+too close or too far away:
+
+```yaml
+type: custom:kia-dashboard-card
+map_zoom: 14
+```
+
+The location marker uses `ev6_top.png` by default. You can override it through
+the normal image configuration:
+
+```yaml
+type: custom:kia-dashboard-card
+images:
+  map_marker: ev6_top.png
+```
 
 ## Vehicle Images
 
