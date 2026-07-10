@@ -111,19 +111,24 @@ class KiaDashboardCard extends HTMLElement {
   _mapTileGrid() {
     const coords = this._trackerCoords();
     if (!coords) return null;
-    const zoom = 16;
+    const configuredZoom = Number.parseInt(this._config.map_zoom ?? this._config.map?.zoom ?? 15, 10);
+    const zoom = Math.max(3, Math.min(18, Number.isFinite(configuredZoom) ? configuredZoom : 15));
+    const tileSize = 256;
+    const radius = 2;
+    const gridSize = radius * 2 + 1;
     const scale = 2 ** zoom;
     const latRad = (coords.lat * Math.PI) / 180;
     const xFloat = ((coords.lon + 180) / 360) * scale;
     const yFloat = ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * scale;
     const xTile = Math.floor(xFloat);
     const yTile = Math.floor(yFloat);
-    const xOffset = (xFloat - xTile) * 256;
-    const yOffset = (yFloat - yTile) * 256;
+    const xOffset = (xFloat - xTile) * tileSize;
+    const yOffset = (yFloat - yTile) * tileSize;
+    const centerOffset = radius * tileSize;
     const tiles = [];
 
-    for (let y = -1; y <= 1; y += 1) {
-      for (let x = -1; x <= 1; x += 1) {
+    for (let y = -radius; y <= radius; y += 1) {
+      for (let x = -radius; x <= radius; x += 1) {
         const tileX = ((xTile + x) % scale + scale) % scale;
         const tileY = yTile + y;
         if (tileY < 0 || tileY >= scale) {
@@ -135,7 +140,7 @@ class KiaDashboardCard extends HTMLElement {
     }
 
     return {
-      style: `transform:translate(calc(50% - ${Math.round(256 + xOffset)}px), calc(50% - ${Math.round(256 + yOffset)}px))`,
+      style: `--map-grid:${gridSize};--map-size:${gridSize * tileSize}px;transform:translate(calc(50% - ${Math.round(centerOffset + xOffset)}px), calc(50% - ${Math.round(centerOffset + yOffset)}px))`,
       tiles: tiles.join(""),
     };
   }
@@ -404,7 +409,7 @@ class KiaDashboardCard extends HTMLElement {
       .battery-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 18px; } .battery-facts div { min-width:0; } .battery-facts .wide { grid-column:1 / -1; } .battery-facts b { display:block; font-size:clamp(15px,1.1vw,19px); line-height:1.1; overflow-wrap:anywhere; } .limit-control { display:grid; grid-template-columns:auto minmax(120px,1fr); gap:14px; align-items:center; } .limit-control small { display:block; color:var(--kia-muted); font-size:12px; margin-top:2px; } .limit-control input { width:100%; accent-color:var(--blue); }
       .actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } .actions ha-icon { color:var(--blue); --mdc-icon-size:34px; } .actions .warm { color:var(--amber); } .actions .good { color:var(--green); } .notice { margin-top:12px; color:var(--kia-muted); font-size:13px; line-height:1.35; }
       .vehicle-list { display:grid; gap:13px; padding-inline:8px; } .status-row { display:grid; grid-template-columns:30px 1fr auto 28px; align-items:center; gap:12px; color:var(--kia-muted); } .status-row strong { color:var(--kia-text); } .status-row ha-icon { color:var(--kia-muted); } .status-row .ok { color:var(--green); } .status-row .warn { color:var(--amber); }
-      .location-layout { display:grid; grid-template-columns:minmax(260px,1.15fr) minmax(135px,.7fr); gap:20px; align-items:center; } .map { min-height:168px; border-radius:8px; background:color-mix(in srgb,var(--kia-control) 78%,var(--blue) 8%); display:grid; place-items:center; position:relative; overflow:hidden; isolation:isolate; } .map-tiles { position:absolute; left:0; top:0; width:768px; height:768px; display:grid; grid-template-columns:repeat(3,256px); grid-template-rows:repeat(3,256px); transform-origin:0 0; z-index:0; filter:saturate(1.12) contrast(1.05); } .map-tiles img,.map-tile-empty { width:256px; height:256px; display:block; } .map-tile-empty { background:var(--kia-control); } .map:before { content:""; position:absolute; inset:0; background:linear-gradient(0deg,color-mix(in srgb,var(--kia-card) 14%,transparent),color-mix(in srgb,var(--kia-card) 4%,transparent)); pointer-events:none; z-index:1; } .map-marker { width:56px; height:56px; border-radius:50%; background:color-mix(in srgb,var(--blue) 16%,var(--kia-card)); border:1px solid color-mix(in srgb,var(--blue) 54%,transparent); display:grid; place-items:center; box-shadow:0 0 0 10px color-mix(in srgb,var(--blue) 18%,transparent),0 10px 22px rgba(0,0,0,.25); z-index:2; } .map-marker img { width:42px; height:42px; object-fit:contain; filter:drop-shadow(0 4px 5px rgba(0,0,0,.28)); } .map-marker ha-icon { display:none; color:var(--blue); --mdc-icon-size:30px; } .location-layout b { display:block; font-size:20px; margin:2px 0 12px; }
+      .location-layout { display:grid; grid-template-columns:minmax(320px,1.4fr) minmax(135px,.62fr); gap:20px; align-items:center; } .map { min-height:196px; border-radius:8px; background:color-mix(in srgb,var(--kia-control) 62%,var(--blue) 8%); display:grid; place-items:center; position:relative; overflow:hidden; isolation:isolate; } .map-tiles { position:absolute; left:0; top:0; width:var(--map-size,1280px); height:var(--map-size,1280px); display:grid; grid-template-columns:repeat(var(--map-grid,5),256px); grid-template-rows:repeat(var(--map-grid,5),256px); transform-origin:0 0; z-index:0; filter:saturate(1.18) contrast(1.08); } .map-tiles img,.map-tile-empty { width:256px; height:256px; display:block; } .map-tile-empty { background:var(--kia-control); } .map:before { content:""; position:absolute; inset:0; background:linear-gradient(0deg,color-mix(in srgb,var(--kia-card) 8%,transparent),color-mix(in srgb,var(--kia-card) 2%,transparent)); pointer-events:none; z-index:1; } .map-marker { width:48px; height:48px; border-radius:50%; background:color-mix(in srgb,var(--kia-card) 92%,transparent); border:1px solid color-mix(in srgb,var(--blue) 48%,transparent); display:grid; place-items:center; box-shadow:0 0 0 5px color-mix(in srgb,var(--blue) 14%,transparent),0 8px 18px rgba(0,0,0,.22); z-index:2; } .map-marker img { width:36px; height:36px; object-fit:contain; filter:drop-shadow(0 3px 4px rgba(0,0,0,.26)); } .map-marker ha-icon { display:none; color:var(--blue); --mdc-icon-size:28px; } .location-layout b { display:block; font-size:20px; margin:2px 0 12px; }
       .tires { display:grid; grid-template-columns:1fr 86px 1fr; align-items:center; gap:18px; } .tires img { width:86px; height:136px; object-fit:contain; justify-self:center; } .tire-side { display:grid; gap:3px; } .tire-side b { font-size:18px; } .tire-side b:before { content:""; display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--green); margin-right:8px; box-shadow:0 0 7px var(--green); } .tire-side:first-child { text-align:right; }
       .health-panel { display:flex; align-items:center; gap:26px; } .shield { color:var(--green); --mdc-icon-size:56px; } .health-panel h2 { font-size:22px; } .health-panel p { color:var(--kia-muted); margin-top:6px; } .ghost { position:absolute; right:28px; bottom:18px; opacity:.12; --mdc-icon-size:72px; }
       .footer { margin-top:12px; min-height:44px; padding:0 16px; display:flex; align-items:center; justify-content:space-between; color:var(--kia-muted); } .footer span { display:flex; align-items:center; gap:8px; }
