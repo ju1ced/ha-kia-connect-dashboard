@@ -101,11 +101,26 @@ class KiaDashboardCard extends HTMLElement {
     return this._asset(images.normal || "ev6_front_right.png");
   }
 
+  _coord(value) {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
   _trackerCoords() {
+    const configuredLat = this._coord(this._config.location?.latitude ?? this._config.latitude);
+    const configuredLon = this._coord(this._config.location?.longitude ?? this._config.longitude);
+    if (configuredLat !== null && configuredLon !== null) return { lat: configuredLat, lon: configuredLon };
+
+    const entityLat = this._coord(this._state("latitude", ""));
+    const entityLon = this._coord(this._state("longitude", ""));
+    if (entityLat !== null && entityLon !== null) return { lat: entityLat, lon: entityLon };
+
     const obj = this._obj("location");
-    const lat = Number.parseFloat(obj?.attributes?.latitude);
-    const lon = Number.parseFloat(obj?.attributes?.longitude);
-    return Number.isFinite(lat) && Number.isFinite(lon) ? { lat, lon } : null;
+    const attrs = obj?.attributes || {};
+    const gps = Array.isArray(attrs.gps) ? attrs.gps : [];
+    const lat = this._coord(attrs.latitude ?? attrs.lat ?? gps[0]);
+    const lon = this._coord(attrs.longitude ?? attrs.lon ?? attrs.lng ?? gps[1]);
+    return lat !== null && lon !== null ? { lat, lon } : null;
   }
 
   _mapTileGrid() {
