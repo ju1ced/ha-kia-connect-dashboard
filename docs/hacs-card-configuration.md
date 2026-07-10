@@ -27,6 +27,7 @@ entities:
   charging_state: binary_sensor.your_vehicle_ev_battery_charge
   plug_connected: binary_sensor.your_vehicle_ev_battery_plug
   charging_limit: number.your_vehicle_ac_charging_limit
+  dc_charging_limit: number.your_vehicle_dc_charging_limit
   odometer: sensor.your_vehicle_odometer
   location: device_tracker.your_vehicle_location
   last_updated: sensor.your_vehicle_last_refresh
@@ -86,12 +87,13 @@ type: custom:kia-dashboard-card
 confirm_actions: false
 ```
 
-## Charge Limit Slider
+## Charge Limit Sliders
 
-When `charging_limit` points to a `number.*` entity, the Battery panel renders an
-AC charging limit slider. Changing the slider calls `number.set_value` with the
-selected percentage. If `charging_limit` points to any other domain, the card
-shows the value as read-only text.
+When `charging_limit` or `dc_charging_limit` points to a `number.*` entity, the
+Battery panel renders AC and DC charging limit sliders. Changing a slider calls
+`number.set_value` with the selected percentage. If either key points to another
+domain, that value is shown as read-only text. If `dc_charging_limit` is omitted,
+the DC slider is hidden.
 
 ## Location Map
 
