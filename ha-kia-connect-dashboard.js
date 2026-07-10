@@ -155,7 +155,7 @@ class KiaDashboardCard extends HTMLElement {
     }
 
     return {
-      style: `--map-grid:${gridSize};--map-size:${gridSize * tileSize}px;transform:translate(calc(50% - ${Math.round(centerOffset + xOffset)}px), calc(50% - ${Math.round(centerOffset + yOffset)}px))`,
+      style: `--map-grid:${gridSize};--map-size:${gridSize * tileSize}px;left:50%;top:50%;transform:translate(-${Math.round(centerOffset + xOffset)}px, -${Math.round(centerOffset + yOffset)}px)`,
       tiles: tiles.join(""),
     };
   }
