@@ -44,8 +44,9 @@ class KiaDashboardCard extends HTMLElement {
   }
 
   _active(key) {
-    return ["on", "open", "unlocked", "charging", "connected", "heat", "cool", "heat_cool", "dry", "fan_only"]
-      .includes(String(this._state(key, "off")).toLowerCase());
+    return ["on", "open", "unlocked", "charging", "connected", "heat", "cool", "heat_cool", "dry", "fan_only"].includes(
+      String(this._state(key, "off")).toLowerCase(),
+    );
   }
 
   _locked() {
@@ -88,11 +89,52 @@ class KiaDashboardCard extends HTMLElement {
     this.dispatchEvent(new CustomEvent("hass-more-info", { bubbles: true, composed: true, detail: { entityId } }));
   }
 
+  _confirm(message) {
+    if (this._config.confirm_actions === false) return true;
+    return window.confirm(message);
+  }
+
+  _callEntity(entityKey, service, message) {
+    const entityId = this._entity(entityKey);
+    if (!entityId || !this._hass) {
+      this._moreInfo(entityKey);
+      return;
+    }
+
+    if (message && !this._confirm(message)) return;
+
+    const domain = entityId.split(".")[0];
+    if (domain === "button") {
+      this._hass.callService("button", "press", { entity_id: entityId });
+      return;
+    }
+
+    if (domain === "lock") {
+      this._hass.callService("lock", service === "turn_off" ? "unlock" : "lock", { entity_id: entityId });
+      return;
+    }
+
+    if (["switch", "input_boolean", "climate"].includes(domain)) {
+      this._hass.callService(domain, service, { entity_id: entityId });
+      return;
+    }
+
+    this._moreInfo(entityKey);
+  }
+
   _refresh() {
     const entityId = this._entity("refresh");
     if (!entityId || !this._hass) return;
     if (entityId.startsWith("button.")) this._hass.callService("button", "press", { entity_id: entityId });
     else this._moreInfo("refresh");
+  }
+
+  _handleAction(action) {
+    if (action === "refresh") this._refresh();
+    if (action === "start_climate") this._callEntity(this._entity("start_climate") ? "start_climate" : "climate", "turn_on", "Start climate now?");
+    if (action === "stop_climate") this._callEntity(this._entity("stop_climate") ? "stop_climate" : "climate", "turn_off", "Stop climate now?");
+    if (action === "start_charging") this._callEntity("start_charging", "turn_on", "Start charging now?");
+    if (action === "stop_charging") this._callEntity("stop_charging", "turn_off", "Stop charging now?");
   }
 
   _nav(icon, label, section) {
@@ -168,7 +210,7 @@ class KiaDashboardCard extends HTMLElement {
 
           <section class="panel actions-panel">
             <div class="panel-title"><ha-icon icon="mdi:flash"></ha-icon><h2>Quick Actions</h2><button data-nav="settings"><ha-icon icon="mdi:chevron-right"></ha-icon></button></div>
-            <div class="actions"><button data-refresh="true"><ha-icon icon="mdi:refresh"></ha-icon><span>Refresh Data</span></button><button data-info="climate"><ha-icon icon="mdi:fan"></ha-icon><span>Start Climate</span></button><button data-info="climate"><ha-icon class="warm" icon="mdi:fan-off"></ha-icon><span>Stop Climate</span></button><button data-info="start_charging"><ha-icon class="good" icon="mdi:ev-plug-type2"></ha-icon><span>Start Charging</span></button></div>
+            <div class="actions"><button data-action="refresh"><ha-icon icon="mdi:refresh"></ha-icon><span>Refresh Data</span></button><button data-action="start_climate"><ha-icon icon="mdi:fan"></ha-icon><span>Start Climate</span></button><button data-action="stop_climate"><ha-icon class="warm" icon="mdi:fan-off"></ha-icon><span>Stop Climate</span></button><button data-action="start_charging"><ha-icon class="good" icon="mdi:ev-plug-type2"></ha-icon><span>Start Charging</span></button></div>
           </section>
 
           <section class="panel vehicle-panel">
@@ -196,12 +238,12 @@ class KiaDashboardCard extends HTMLElement {
           <section class="panel health-panel"><ha-icon class="shield" icon="mdi:shield-check-outline"></ha-icon><div><h2>All systems normal</h2><p>No active dashboard warnings. Review Vehicle and Settings after each Home Assistant update.</p></div><ha-icon class="ghost" icon="mdi:shield-check-outline"></ha-icon></section>
         </main>
 
-        <footer class="footer card"><span><ha-icon icon="mdi:information-outline"></ha-icon>Data provided by Kia Connect</span><span>Updated ${lastUpdated}</span><button data-refresh="true"><ha-icon icon="mdi:refresh"></ha-icon></button></footer>
+        <footer class="footer card"><span><ha-icon icon="mdi:information-outline"></ha-icon>Data provided by Kia Connect</span><span>Updated ${lastUpdated}</span><button data-action="refresh"><ha-icon icon="mdi:refresh"></ha-icon></button></footer>
       </ha-card>`;
 
     this.shadowRoot.querySelectorAll("[data-nav]").forEach((el) => el.addEventListener("click", () => this._navigate(el.dataset.nav)));
     this.shadowRoot.querySelectorAll("[data-info]").forEach((el) => el.addEventListener("click", () => this._moreInfo(el.dataset.info)));
-    this.shadowRoot.querySelectorAll("[data-refresh]").forEach((el) => el.addEventListener("click", () => this._refresh()));
+    this.shadowRoot.querySelectorAll("[data-action]").forEach((el) => el.addEventListener("click", () => this._handleAction(el.dataset.action)));
   }
 
   _styles() {

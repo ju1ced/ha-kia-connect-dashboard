@@ -41,7 +41,33 @@ entities:
   tire_rear_left: binary_sensor.your_vehicle_tire_pressure_rear_left
   tire_rear_right: binary_sensor.your_vehicle_tire_pressure_rear_right
   refresh: button.your_vehicle_force_refresh
+  start_climate: switch.your_vehicle_climate
+  stop_climate: switch.your_vehicle_climate
   start_charging: switch.your_vehicle_ev_charging
+  stop_charging: switch.your_vehicle_ev_charging
+```
+
+## Actions
+
+The card can call Home Assistant services for quick actions:
+
+- `refresh` presses a `button.*` entity.
+- `start_climate` calls `turn_on` on a `switch.*`, `input_boolean.*`, or
+  `climate.*` entity.
+- `stop_climate` calls `turn_off` on a `switch.*`, `input_boolean.*`, or
+  `climate.*` entity.
+- `start_charging` calls `turn_on` on a `switch.*` or `input_boolean.*` entity.
+- `stop_charging` calls `turn_off` on a `switch.*` or `input_boolean.*` entity.
+
+If an action entity is missing or unsupported, the card opens the Home Assistant
+more-info panel instead of calling a service.
+
+Remote actions ask for browser confirmation by default. You can disable that for
+testing only:
+
+```yaml
+type: custom:kia-dashboard-card
+confirm_actions: false
 ```
 
 ## Vehicle Images
