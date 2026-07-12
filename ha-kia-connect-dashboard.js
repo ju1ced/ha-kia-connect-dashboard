@@ -4,6 +4,7 @@ class KiaDashboardCard extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this._config = {};
     this._notice = "";
+    this._activeTab = "overview";
   }
 
   setConfig(config) {
@@ -173,10 +174,10 @@ class KiaDashboardCard extends HTMLElement {
   }
 
   _navigate(section) {
-    const current = window.location.pathname.replace(/\/$/, "");
-    const base = current.split("/").slice(0, -1).join("/") || current || "/";
-    window.history.pushState(null, "", `${base}/${section}`.replace(/\/+/g, "/"));
-    window.dispatchEvent(new Event("location-changed"));
+    const tabs = ["overview", "battery", "vehicle", "climate", "energy", "location", "settings"];
+    if (!tabs.includes(section) || section === this._activeTab) return;
+    this._activeTab = section;
+    this._render();
   }
 
   _moreInfo(key) {
@@ -265,7 +266,18 @@ class KiaDashboardCard extends HTMLElement {
   }
 
   _nav(icon, label, section) {
-    return `<button class="nav-tile" data-nav="${section}"><ha-icon icon="${icon}"></ha-icon><span>${label}</span></button>`;
+    const active = this._activeTab === section;
+    return `<button class="nav-tile${active ? " active" : ""}" data-nav="${section}" aria-current="${active ? "page" : "false"}"><ha-icon icon="${icon}"></ha-icon><span>${label}</span></button>`;
+  }
+
+  _placeholder() {
+    const tabs = {
+      battery: ["mdi:battery-charging", "Battery"], vehicle: ["mdi:car", "Vehicle"],
+      climate: ["mdi:fan", "Climate"], energy: ["mdi:chart-line", "Energy"],
+      location: ["mdi:map-marker-outline", "Location"], settings: ["mdi:tune", "Settings"],
+    };
+    const [icon, label] = tabs[this._activeTab] || tabs.battery;
+    return `<main class="detail-placeholder card" aria-live="polite"><ha-icon icon="${icon}"></ha-icon><div><span>Coming in 2.0.0</span><h2>${label}</h2><p>The ${label} detail view will be added here. The vehicle hero and section navigation remain available above.</p></div></main>`;
   }
 
   _chip(icon, label, value, extra = "") {
@@ -335,6 +347,7 @@ class KiaDashboardCard extends HTMLElement {
 
         <nav class="section-nav card">
           <div class="nav-items">
+            ${this._nav("mdi:view-dashboard-outline", "Overview", "overview")}
             ${this._nav("mdi:battery-charging", "Battery", "battery")}
             ${this._nav("mdi:car", "Vehicle", "vehicle")}
             ${this._nav("mdi:fan", "Climate", "climate")}
@@ -344,7 +357,7 @@ class KiaDashboardCard extends HTMLElement {
           </div>
         </nav>
 
-        <main class="grid">
+        ${this._activeTab === "overview" ? `<main class="grid">
           <section class="panel battery-panel">
             <div class="panel-title"><ha-icon icon="mdi:battery-charging"></ha-icon><h2>Battery</h2><button data-nav="battery"><ha-icon icon="mdi:chevron-right"></ha-icon></button></div>
             <div class="battery-gauge"><div class="battery-bar"><span style="width:${batteryPct}%"></span></div><strong>${battery}<small>%</small></strong></div>
@@ -382,7 +395,7 @@ class KiaDashboardCard extends HTMLElement {
           <section class="panel health-panel"><ha-icon class="shield" icon="mdi:shield-check-outline"></ha-icon><div><h2>All systems normal</h2><p>No active dashboard warnings. Review Vehicle and Settings after each Home Assistant update.</p></div><ha-icon class="ghost" icon="mdi:shield-check-outline"></ha-icon></section>
         </main>
 
-        <footer class="footer card"><span><ha-icon icon="mdi:information-outline"></ha-icon>Data provided by Kia Connect</span><span>Updated ${lastUpdated}</span><button data-action="refresh"><ha-icon icon="mdi:refresh"></ha-icon></button></footer>
+        <footer class="footer card"><span><ha-icon icon="mdi:information-outline"></ha-icon>Data provided by Kia Connect</span><span>Updated ${lastUpdated}</span><button data-action="refresh"><ha-icon icon="mdi:refresh"></ha-icon></button></footer>` : this._placeholder()}
       </ha-card>`;
 
     this.shadowRoot.querySelectorAll("[data-nav]").forEach((el) => el.addEventListener("click", () => this._navigate(el.dataset.nav)));
@@ -415,8 +428,8 @@ class KiaDashboardCard extends HTMLElement {
       .hero { min-height:clamp(230px,23vw,330px); display:grid; grid-template-columns:minmax(420px,1.05fr) 1px minmax(460px,.88fr) minmax(172px,210px); align-items:center; gap:clamp(18px,2.4vw,40px); padding:22px clamp(28px,4.5vw,88px); overflow:hidden; }
       .car-stage { min-width:0; display:flex; justify-content:flex-start; align-items:center; } .car-stage img { width:min(760px,100%); height:clamp(190px,22vw,300px); object-fit:contain; object-position:left center; filter:drop-shadow(0 18px 16px rgba(0,0,0,.25)); }
       .divider { height:70%; background:var(--kia-line); opacity:.72; } .hero-data { justify-self:start; width:min(640px,100%); display:grid; grid-template-columns:1fr 1fr; gap:30px 48px; } .metric { display:grid; grid-template-columns:42px 1fr; gap:12px; align-items:center; min-width:0; } .metric ha-icon { color:var(--kia-muted); --mdc-icon-size:34px; } .metric span,.battery-facts span,.location-layout span,.tire-side span { color:var(--kia-muted); font-size:14px; line-height:1.2; } .metric strong { display:block; font-size:clamp(16px,1.1vw,20px); line-height:1.16; overflow-wrap:anywhere; }
-      .section-nav { margin-top:10px; padding:10px 18px 16px; border-bottom:3px solid var(--blue); } .nav-items { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:14px; } .status-stack { display:grid; grid-template-columns:1fr; gap:8px; align-self:center; justify-self:end; width:100%; }
-      .nav-tile,.actions button { min-height:84px; border-radius:8px; border:1px solid var(--kia-line); background:var(--kia-control); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; font-weight:700; } .nav-tile ha-icon { color:var(--blue); --mdc-icon-size:32px; }
+      .section-nav { margin-top:10px; padding:10px 18px 16px; border-bottom:3px solid var(--blue); } .nav-items { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:14px; } .status-stack { display:grid; grid-template-columns:1fr; gap:8px; align-self:center; justify-self:end; width:100%; }
+      .nav-tile,.actions button { min-height:84px; border-radius:8px; border:1px solid var(--kia-line); background:var(--kia-control); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; font-weight:700; } .nav-tile ha-icon { color:var(--blue); --mdc-icon-size:32px; } .nav-tile.active { border-color:var(--blue); background:color-mix(in srgb,var(--blue) 18%,var(--kia-card)); box-shadow:inset 0 -3px 0 var(--blue); } .nav-tile.active span { color:var(--blue); }
       .chip { min-height:40px; padding:0 12px; border-radius:8px; border:1px solid var(--kia-line); background:color-mix(in srgb,var(--blue) 14%,var(--kia-card)); display:grid; grid-template-columns:22px 1fr auto; align-items:center; gap:8px; font-weight:700; font-size:13px; text-align:left; } .chip ha-icon { color:var(--blue); --mdc-icon-size:18px; } .chip span { color:var(--kia-muted); } .chip.online { background:color-mix(in srgb,var(--green) 18%,var(--kia-card)); } .chip.online strong { color:var(--green); }
       .grid { margin-top:12px; display:grid; grid-template-columns:1fr 1fr 1.28fr; grid-template-areas:"battery actions vehicle" "location location tires" "location location health"; gap:12px; align-items:stretch; } .panel { min-height:160px; padding:18px 22px; position:relative; overflow:hidden; } .battery-panel{grid-area:battery}.actions-panel{grid-area:actions}.vehicle-panel{grid-area:vehicle}.location-panel{grid-area:location;min-height:340px}.tire-panel{grid-area:tires}.health-panel{grid-area:health}
       .panel-title { display:flex; align-items:center; gap:12px; margin-bottom:12px; } .panel-title h2 { flex:1; font-size:20px; } .panel-title ha-icon { color:var(--blue); } .panel-title button,.footer button { border:0; background:transparent; padding:0; color:var(--kia-muted); }
@@ -428,8 +441,9 @@ class KiaDashboardCard extends HTMLElement {
       .tires { display:grid; grid-template-columns:1fr 86px 1fr; align-items:center; gap:18px; } .tires img { width:86px; height:136px; object-fit:contain; justify-self:center; } .tire-side { display:grid; gap:3px; } .tire-side b { font-size:18px; } .tire-side b:before { content:""; display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--green); margin-right:8px; box-shadow:0 0 7px var(--green); } .tire-side:first-child { text-align:right; }
       .health-panel { display:flex; align-items:center; gap:26px; } .shield { color:var(--green); --mdc-icon-size:56px; } .health-panel h2 { font-size:22px; } .health-panel p { color:var(--kia-muted); margin-top:6px; } .ghost { position:absolute; right:28px; bottom:18px; opacity:.12; --mdc-icon-size:72px; }
       .footer { margin-top:12px; min-height:44px; padding:0 16px; display:flex; align-items:center; justify-content:space-between; color:var(--kia-muted); } .footer span { display:flex; align-items:center; gap:8px; }
+      .detail-placeholder { margin-top:12px; min-height:clamp(300px,38vw,560px); padding:clamp(28px,5vw,72px); display:flex; align-items:center; justify-content:center; gap:24px; text-align:left; } .detail-placeholder>ha-icon { color:var(--blue); --mdc-icon-size:64px; } .detail-placeholder span { color:var(--blue); font-size:13px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; } .detail-placeholder h2 { margin-top:6px; font-size:clamp(28px,3vw,44px); } .detail-placeholder p { max-width:620px; margin-top:10px; color:var(--kia-muted); line-height:1.5; }
       @media (max-width:1180px){.hero{grid-template-columns:1fr;gap:16px}.divider{display:none}.hero-data{grid-template-columns:repeat(2,minmax(0,1fr))}.status-stack{grid-template-columns:repeat(3,minmax(0,1fr));justify-self:stretch}.grid{grid-template-columns:1fr 1fr;grid-template-areas:"battery actions" "vehicle vehicle" "location location" "tires health"}.location-panel{min-height:auto}.location-layout{grid-template-rows:auto auto;height:auto}.map{min-height:clamp(260px,36vw,360px)}.nav-items{grid-template-columns:repeat(3,1fr)}}
-      @media (max-width:760px){ha-card.kia-shell{padding:10px}.chip{min-height:36px;padding:0 10px;font-size:12px}.hero{padding:18px;min-height:0}.car-stage img{height:210px;object-position:center}.hero-data,.grid{grid-template-columns:1fr}.grid{grid-template-areas:"battery" "actions" "vehicle" "location" "tires" "health"}.nav-items{grid-template-columns:repeat(2,1fr)}.status-stack{grid-template-columns:1fr}.battery-gauge,.battery-facts,.limit-control{grid-template-columns:1fr}.location-layout{height:auto}.footer{flex-direction:column;align-items:flex-start;padding:12px 16px;gap:8px}}
+      @media (max-width:760px){ha-card.kia-shell{padding:10px}.chip{min-height:36px;padding:0 10px;font-size:12px}.hero{padding:18px;min-height:0}.car-stage img{height:210px;object-position:center}.hero-data,.grid{grid-template-columns:1fr}.grid{grid-template-areas:"battery" "actions" "vehicle" "location" "tires" "health"}.nav-items{grid-template-columns:repeat(2,1fr)}.status-stack{grid-template-columns:1fr}.battery-gauge,.battery-facts,.limit-control{grid-template-columns:1fr}.location-layout{height:auto}.footer{flex-direction:column;align-items:flex-start;padding:12px 16px;gap:8px}.detail-placeholder{min-height:320px;flex-direction:column;text-align:center}}
     `;
   }
 }
