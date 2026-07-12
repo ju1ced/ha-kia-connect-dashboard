@@ -145,10 +145,19 @@ Folder ownership is documented in `docs/include-conventions.md`.
 ## Overview Strategy
 
 The Overview page is the primary product surface and uses
-`custom:kia-dashboard-card` from `dist/ha-kia-connect-dashboard.js`. This keeps
-the render-target layout, responsive behavior, status-aware vehicle image, and
-content scaling inside one controlled component instead of spreading the visual
-rules across nested Lovelace YAML cards.
+`custom:kia-dashboard-card` from the repository-root
+`ha-kia-connect-dashboard.js` HACS artifact. This keeps the render-target layout,
+responsive behavior, status-aware vehicle image, and content scaling inside one
+controlled component instead of spreading the visual rules across nested
+Lovelace YAML cards.
+
+The custom card keeps its hero and navigation in the shared shell. Content below
+the navigation is selected by `_renderActiveTab`, which delegates to one renderer
+per tab: `_renderOverviewTab`, `_renderBatteryTab`, `_renderVehicleTab`,
+`_renderClimateTab`, `_renderEnergyTab`, `_renderLocationTab`, and
+`_renderSettingsTab`. Each detail tab also owns a matching `*TabStyles` hook.
+Detail work should stay inside that tab's renderer and style hook so page PRs can
+be developed and reviewed independently without changing the shared dispatcher.
 
 Overview owns the internal menu structure for the Kia dashboard package. Detail
 sections should remain reachable from Overview even when the package is opened

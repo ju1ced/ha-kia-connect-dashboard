@@ -270,14 +270,67 @@ class KiaDashboardCard extends HTMLElement {
     return `<button class="nav-tile${active ? " active" : ""}" data-nav="${section}" aria-current="${active ? "page" : "false"}"><ha-icon icon="${icon}"></ha-icon><span>${label}</span></button>`;
   }
 
-  _placeholder() {
-    const tabs = {
-      battery: ["mdi:battery-charging", "Battery"], vehicle: ["mdi:car", "Vehicle"],
-      climate: ["mdi:fan", "Climate"], energy: ["mdi:chart-line", "Energy"],
-      location: ["mdi:map-marker-outline", "Location"], settings: ["mdi:tune", "Settings"],
-    };
-    const [icon, label] = tabs[this._activeTab] || tabs.battery;
+  _renderPlaceholder(icon, label) {
     return `<main class="detail-placeholder card" aria-live="polite"><ha-icon icon="${icon}"></ha-icon><div><span>Coming in 2.0.0</span><h2>${label}</h2><p>The ${label} detail view will be added here. The vehicle hero and section navigation remain available above.</p></div></main>`;
+  }
+
+  _renderBatteryTab() {
+    return this._renderPlaceholder("mdi:battery-charging", "Battery");
+  }
+
+  _renderVehicleTab() {
+    return this._renderPlaceholder("mdi:car", "Vehicle");
+  }
+
+  _renderClimateTab() {
+    return this._renderPlaceholder("mdi:fan", "Climate");
+  }
+
+  _renderEnergyTab() {
+    return this._renderPlaceholder("mdi:chart-line", "Energy");
+  }
+
+  _renderLocationTab() {
+    return this._renderPlaceholder("mdi:map-marker-outline", "Location");
+  }
+
+  _renderSettingsTab() {
+    return this._renderPlaceholder("mdi:tune", "Settings");
+  }
+
+  _batteryTabStyles() {
+    return "";
+  }
+
+  _vehicleTabStyles() {
+    return "";
+  }
+
+  _climateTabStyles() {
+    return "";
+  }
+
+  _energyTabStyles() {
+    return "";
+  }
+
+  _locationTabStyles() {
+    return "";
+  }
+
+  _settingsTabStyles() {
+    return "";
+  }
+
+  _tabStyles() {
+    return [
+      this._batteryTabStyles(),
+      this._vehicleTabStyles(),
+      this._climateTabStyles(),
+      this._energyTabStyles(),
+      this._locationTabStyles(),
+      this._settingsTabStyles(),
+    ].join("");
   }
 
   _chip(icon, label, value, extra = "") {
@@ -303,61 +356,10 @@ class KiaDashboardCard extends HTMLElement {
     return `<div class="limit-control"><div><b>${this._safe(value)} ${this._safe(unit)}</b><small>${label}</small></div><input data-number="${entityKey}" type="range" min="${attrs.min}" max="${attrs.max}" step="${attrs.step}" value="${value}"></div>`;
   }
 
-  _render() {
-    if (!this.shadowRoot) return;
 
-    const title = this._config.title || "Kia EV6";
-    const battery = this._number("battery_level", 0);
-    const batteryPct = Math.max(0, Math.min(100, Number(battery) || 0));
-    const range = `${this._number("battery_range")} ${this._unit("battery_range", "km")}`;
-    const odometer = `${this._number("odometer")} ${this._unit("odometer", "km")}`;
-    const location = this._state("location", "Home");
-    const lastUpdated = this._formatDate(this._state("last_updated", "--"));
-    const chargingText = this._charging() ? "Charging" : "Not charging";
-    const climateText = this._climateOn() ? "On" : "Off";
-    const chargeLimitValue = this._number("charging_limit", 100);
-    const chargeLimitUnit = this._unit("charging_limit", "%") || "%";
-    const dcChargeLimitValue = this._number("dc_charging_limit", 100);
-    const dcChargeLimitUnit = this._unit("dc_charging_limit", "%") || "%";
-    const dcLimitMarkup = this._entity("dc_charging_limit")
-      ? `<div class="wide"><span>DC charging limit</span>${this._numberControl("dc_charging_limit", dcChargeLimitValue, dcChargeLimitUnit)}</div>`
-      : "";
-    const lockedText = this._locked() ? "Locked" : "Unlocked";
-    const mapTiles = this._mapTileGrid();
-    const markerImage = this._asset(this._config.images?.map_marker || "ev6_top.png");
-
-    this.shadowRoot.innerHTML = `
-      <style>${this._styles()}</style>
-      <ha-card class="kia-shell">
-        <section class="hero card">
-          <div class="car-stage"><img src="${this._carImage()}" alt="${this._safe(title)}" onerror="this.src='/local/vehicles/ev6_side.png'"></div>
-          <div class="divider"></div>
-          <div class="hero-data">
-            ${this._metric("mdi:speedometer", "Odometer", odometer)}
-            ${this._metric("mdi:ev-plug-type2", "Charging state", chargingText, this._charging())}
-            ${this._metric("mdi:calendar-clock", "Last updated", lastUpdated)}
-            ${this._metric("mdi:thermometer", "Climate", climateText)}
-          </div>
-          <div class="status-stack">
-            <button class="chip" data-info="door_lock"><ha-icon icon="mdi:lock"></ha-icon><span>Lock</span><strong>${lockedText}</strong></button>
-            ${this._chip("mdi:wifi", "Connection", "Online", "online")}
-            ${this._chip("mdi:battery", "Battery", `${battery} %`)}
-          </div>
-        </section>
-
-        <nav class="section-nav card">
-          <div class="nav-items">
-            ${this._nav("mdi:view-dashboard-outline", "Overview", "overview")}
-            ${this._nav("mdi:battery-charging", "Battery", "battery")}
-            ${this._nav("mdi:car", "Vehicle", "vehicle")}
-            ${this._nav("mdi:fan", "Climate", "climate")}
-            ${this._nav("mdi:chart-line", "Energy", "energy")}
-            ${this._nav("mdi:map-marker-outline", "Location", "location")}
-            ${this._nav("mdi:tune", "Settings", "settings")}
-          </div>
-        </nav>
-
-        ${this._activeTab === "overview" ? `<main class="grid">
+  _renderOverviewTab(context) {
+    const { battery, batteryPct, range, location, lastUpdated, chargeLimitValue, chargeLimitUnit, dcLimitMarkup, mapTiles, markerImage } = context;
+    return `<main class="grid">
           <section class="panel battery-panel">
             <div class="panel-title"><ha-icon icon="mdi:battery-charging"></ha-icon><h2>Battery</h2><button data-nav="battery"><ha-icon icon="mdi:chevron-right"></ha-icon></button></div>
             <div class="battery-gauge"><div class="battery-bar"><span style="width:${batteryPct}%"></span></div><strong>${battery}<small>%</small></strong></div>
@@ -395,7 +397,77 @@ class KiaDashboardCard extends HTMLElement {
           <section class="panel health-panel"><ha-icon class="shield" icon="mdi:shield-check-outline"></ha-icon><div><h2>All systems normal</h2><p>No active dashboard warnings. Review Vehicle and Settings after each Home Assistant update.</p></div><ha-icon class="ghost" icon="mdi:shield-check-outline"></ha-icon></section>
         </main>
 
-        <footer class="footer card"><span><ha-icon icon="mdi:information-outline"></ha-icon>Data provided by Kia Connect</span><span>Updated ${lastUpdated}</span><button data-action="refresh"><ha-icon icon="mdi:refresh"></ha-icon></button></footer>` : this._placeholder()}
+        <footer class="footer card"><span><ha-icon icon="mdi:information-outline"></ha-icon>Data provided by Kia Connect</span><span>Updated ${lastUpdated}</span><button data-action="refresh"><ha-icon icon="mdi:refresh"></ha-icon></button></footer>`;
+  }
+
+  _renderActiveTab(context) {
+    const renderers = {
+      overview: this._renderOverviewTab,
+      battery: this._renderBatteryTab,
+      vehicle: this._renderVehicleTab,
+      climate: this._renderClimateTab,
+      energy: this._renderEnergyTab,
+      location: this._renderLocationTab,
+      settings: this._renderSettingsTab,
+    };
+    return (renderers[this._activeTab] || renderers.overview).call(this, context);
+  }
+
+  _render() {
+    if (!this.shadowRoot) return;
+
+    const title = this._config.title || "Kia EV6";
+    const battery = this._number("battery_level", 0);
+    const batteryPct = Math.max(0, Math.min(100, Number(battery) || 0));
+    const range = `${this._number("battery_range")} ${this._unit("battery_range", "km")}`;
+    const odometer = `${this._number("odometer")} ${this._unit("odometer", "km")}`;
+    const location = this._state("location", "Home");
+    const lastUpdated = this._formatDate(this._state("last_updated", "--"));
+    const chargingText = this._charging() ? "Charging" : "Not charging";
+    const climateText = this._climateOn() ? "On" : "Off";
+    const chargeLimitValue = this._number("charging_limit", 100);
+    const chargeLimitUnit = this._unit("charging_limit", "%") || "%";
+    const dcChargeLimitValue = this._number("dc_charging_limit", 100);
+    const dcChargeLimitUnit = this._unit("dc_charging_limit", "%") || "%";
+    const dcLimitMarkup = this._entity("dc_charging_limit")
+      ? `<div class="wide"><span>DC charging limit</span>${this._numberControl("dc_charging_limit", dcChargeLimitValue, dcChargeLimitUnit)}</div>`
+      : "";
+    const lockedText = this._locked() ? "Locked" : "Unlocked";
+    const mapTiles = this._mapTileGrid();
+    const markerImage = this._asset(this._config.images?.map_marker || "ev6_top.png");
+
+    this.shadowRoot.innerHTML = `
+      <style>${this._styles()}${this._tabStyles()}</style>
+      <ha-card class="kia-shell">
+        <section class="hero card">
+          <div class="car-stage"><img src="${this._carImage()}" alt="${this._safe(title)}" onerror="this.src='/local/vehicles/ev6_side.png'"></div>
+          <div class="divider"></div>
+          <div class="hero-data">
+            ${this._metric("mdi:speedometer", "Odometer", odometer)}
+            ${this._metric("mdi:ev-plug-type2", "Charging state", chargingText, this._charging())}
+            ${this._metric("mdi:calendar-clock", "Last updated", lastUpdated)}
+            ${this._metric("mdi:thermometer", "Climate", climateText)}
+          </div>
+          <div class="status-stack">
+            <button class="chip" data-info="door_lock"><ha-icon icon="mdi:lock"></ha-icon><span>Lock</span><strong>${lockedText}</strong></button>
+            ${this._chip("mdi:wifi", "Connection", "Online", "online")}
+            ${this._chip("mdi:battery", "Battery", `${battery} %`)}
+          </div>
+        </section>
+
+        <nav class="section-nav card">
+          <div class="nav-items">
+            ${this._nav("mdi:view-dashboard-outline", "Overview", "overview")}
+            ${this._nav("mdi:battery-charging", "Battery", "battery")}
+            ${this._nav("mdi:car", "Vehicle", "vehicle")}
+            ${this._nav("mdi:fan", "Climate", "climate")}
+            ${this._nav("mdi:chart-line", "Energy", "energy")}
+            ${this._nav("mdi:map-marker-outline", "Location", "location")}
+            ${this._nav("mdi:tune", "Settings", "settings")}
+          </div>
+        </nav>
+
+        ${this._renderActiveTab({ battery, batteryPct, range, location, lastUpdated, chargeLimitValue, chargeLimitUnit, dcLimitMarkup, mapTiles, markerImage })}
       </ha-card>`;
 
     this.shadowRoot.querySelectorAll("[data-nav]").forEach((el) => el.addEventListener("click", () => this._navigate(el.dataset.nav)));
