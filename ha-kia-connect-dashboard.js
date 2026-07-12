@@ -290,8 +290,45 @@ class KiaDashboardCard extends HTMLElement {
     return this._renderPlaceholder("mdi:chart-line", "Energy");
   }
 
-  _renderLocationTab() {
-    return this._renderPlaceholder("mdi:map-marker-outline", "Location");
+  _renderLocationTab(context) {
+    const { location, lastUpdated, mapTiles, markerImage } = context;
+    const odometer = `${this._number("odometer")} ${this._unit("odometer", "km")}`;
+    const coords = this._trackerCoords();
+    const coordinateLabel = coords ? `${coords.lat.toFixed(5)}, ${coords.lon.toFixed(5)}` : "Coordinates unavailable";
+    const trackerEntity = this._entity("location");
+
+    return `
+      <main class="location-detail" aria-label="Location details">
+        <section class="location-detail-map card">
+          <div class="location-detail-heading">
+            <div><span>Position context</span><h2>Last known location</h2></div>
+            <button class="location-info" data-info="location" ${trackerEntity ? "" : "disabled"} aria-label="${trackerEntity ? "Open tracker details" : "Tracker entity not configured"}"><ha-icon icon="mdi:information-outline"></ha-icon></button>
+          </div>
+          <div class="location-detail-map-canvas">
+            ${mapTiles ? `<div class="map-tiles" style="${mapTiles.style}">${mapTiles.tiles}</div>` : `<div class="location-map-empty"><ha-icon icon="mdi:map-marker-off-outline"></ha-icon><span>Map preview needs tracker coordinates</span></div>`}
+            ${coords ? `<span class="map-marker"><img src="${markerImage}" alt="Vehicle position" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><ha-icon icon="mdi:car-sports"></ha-icon></span>` : ""}
+          </div>
+          <div class="location-detail-caption"><ha-icon icon="mdi:crosshairs-gps"></ha-icon><span>${this._safe(coordinateLabel)}</span></div>
+        </section>
+
+        <section class="location-detail-summary card">
+          <div class="location-detail-heading"><div><span>Tracker</span><h2>${this._safe(location)}</h2></div><ha-icon icon="mdi:map-marker-outline"></ha-icon></div>
+          <div class="location-stat-grid">
+            <button class="location-stat" data-info="odometer"><ha-icon icon="mdi:counter"></ha-icon><span>Odometer</span><strong>${this._safe(odometer)}</strong></button>
+            <div class="location-stat"><ha-icon icon="mdi:clock-outline"></ha-icon><span>Last updated</span><strong>${this._safe(lastUpdated)}</strong></div>
+          </div>
+        </section>
+
+        <section class="location-context-card location-parking card">
+          <ha-icon icon="mdi:parking"></ha-icon>
+          <div><span>Parking context</span><h2>${this._safe(location)}</h2><p>The tracker state is the latest known parking area. Update freshness stays visible alongside it.</p></div>
+        </section>
+
+        <section class="location-context-card location-trip card muted">
+          <ha-icon icon="mdi:map-marker-path"></ha-icon>
+          <div><span>Trip context</span><h2>Ready for future trip data</h2><p>Route, destination, and movement details remain read-only placeholders until mapped entities are defined.</p></div>
+        </section>
+      </main>`;
   }
 
   _renderSettingsTab() {
@@ -315,7 +352,30 @@ class KiaDashboardCard extends HTMLElement {
   }
 
   _locationTabStyles() {
-    return "";
+    return `
+      .location-detail { margin-top:12px; display:grid; grid-template-columns:minmax(0,1.45fr) minmax(300px,.75fr); grid-template-areas:"map summary" "map parking" "map trip"; gap:12px; align-items:stretch; }
+      .location-detail-map { grid-area:map; min-height:560px; padding:22px; display:grid; grid-template-rows:auto minmax(360px,1fr) auto; gap:16px; min-width:0; }
+      .location-detail-summary { grid-area:summary; padding:22px; display:grid; gap:22px; }
+      .location-context-card { padding:22px; display:grid; grid-template-columns:42px 1fr; gap:16px; align-items:start; }
+      .location-parking { grid-area:parking; } .location-trip { grid-area:trip; }
+      .location-detail-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; min-width:0; }
+      .location-detail-heading span,.location-stat span,.location-context-card span,.location-detail-caption { color:var(--kia-muted); font-size:13px; }
+      .location-detail-heading h2,.location-context-card h2 { margin-top:5px; font-size:clamp(19px,1.55vw,26px); overflow-wrap:anywhere; }
+      .location-detail-heading>ha-icon,.location-context-card>ha-icon { color:var(--blue); --mdc-icon-size:34px; }
+      .location-info { width:40px; height:40px; border:1px solid var(--kia-line); border-radius:8px; background:var(--kia-control); color:var(--blue); display:grid; place-items:center; }
+      .location-info:disabled { cursor:default; color:var(--kia-muted); opacity:.55; }
+      .location-detail-map-canvas { min-height:360px; border-radius:8px; background:color-mix(in srgb,var(--kia-control) 62%,var(--blue) 8%); display:grid; place-items:center; position:relative; overflow:hidden; isolation:isolate; }
+      .location-detail-map-canvas:after { content:""; position:absolute; inset:0; border:1px solid color-mix(in srgb,var(--blue) 28%,transparent); border-radius:inherit; pointer-events:none; z-index:3; }
+      .location-map-empty { display:grid; justify-items:center; gap:12px; color:var(--kia-muted); text-align:center; padding:24px; } .location-map-empty ha-icon { --mdc-icon-size:48px; color:var(--blue); }
+      .location-detail-caption { display:flex; align-items:center; gap:8px; min-width:0; } .location-detail-caption ha-icon { --mdc-icon-size:18px; color:var(--blue); }
+      .location-stat-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+      .location-stat { min-width:0; min-height:116px; padding:16px; border:1px solid var(--kia-line); border-radius:8px; background:var(--kia-control); color:var(--kia-text); display:grid; grid-template-columns:28px 1fr; grid-template-rows:auto 1fr; gap:8px 10px; text-align:left; }
+      button.location-stat { cursor:pointer; } .location-stat ha-icon { grid-row:1 / 3; color:var(--blue); --mdc-icon-size:24px; }
+      .location-stat strong { align-self:end; font-size:clamp(15px,1vw,18px); line-height:1.25; overflow-wrap:anywhere; }
+      .location-context-card p { margin-top:8px; color:var(--kia-muted); font-size:14px; line-height:1.45; } .location-context-card.muted>ha-icon { color:var(--kia-muted); }
+      @media (max-width:980px) { .location-detail { grid-template-columns:1fr 1fr; grid-template-areas:"map map" "summary summary" "parking trip"; } .location-detail-map { min-height:500px; } }
+      @media (max-width:640px) { .location-detail { grid-template-columns:1fr; grid-template-areas:"map" "summary" "parking" "trip"; } .location-detail-map { min-height:0; padding:16px; grid-template-rows:auto minmax(300px,52vh) auto; } .location-detail-summary,.location-context-card { padding:18px; } .location-stat-grid { grid-template-columns:1fr; } }
+    `;
   }
 
   _settingsTabStyles() {
