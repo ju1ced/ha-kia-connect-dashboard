@@ -274,8 +274,38 @@ class KiaDashboardCard extends HTMLElement {
     return `<main class="detail-placeholder card" aria-live="polite"><ha-icon icon="${icon}"></ha-icon><div><span>Coming in 2.0.0</span><h2>${label}</h2><p>The ${label} detail view will be added here. The vehicle hero and section navigation remain available above.</p></div></main>`;
   }
 
-  _renderBatteryTab() {
-    return this._renderPlaceholder("mdi:battery-charging", "Battery");
+  _renderBatteryTab(context = {}) {
+    const battery = context.battery ?? this._number("battery_level", 0);
+    const pct = context.batteryPct ?? Math.max(0, Math.min(100, Number(battery) || 0));
+    const range = context.range ?? `${this._number("battery_range")} ${this._unit("battery_range", "km")}`;
+    const charging = this._charging();
+    const plugged = this._active("plug_connected");
+    const power = `${this._number("charging_power")} ${this._unit("charging_power", "kW")}`;
+    const acValue = context.chargeLimitValue ?? this._number("charging_limit", 100);
+    const acUnit = context.chargeLimitUnit ?? (this._unit("charging_limit", "%") || "%");
+    const hasDc = Boolean(this._entity("dc_charging_limit"));
+    const dcValue = this._number("dc_charging_limit", 100);
+    const dcUnit = this._unit("dc_charging_limit", "%") || "%";
+    const title = (icon, heading, caption) => `<div class="battery-detail-title"><ha-icon icon="${icon}"></ha-icon><div><h3>${heading}</h3><span>${caption}</span></div></div>`;
+
+    return `<main class="battery-detail" aria-label="Battery details">
+      <section class="battery-detail-card battery-detail-hero">
+        <div class="battery-detail-heading"><span>EV battery overview</span><h2>Battery</h2><p>Range, charging state, limits, and cable status in one focused view.</p></div>
+        <div class="battery-detail-gauge" style="--level:${pct}%"><div><strong>${this._safe(battery)}<small>%</small></strong><span>State of charge</span></div></div>
+        <div class="battery-detail-highlights">
+          <div><ha-icon icon="mdi:map-marker-distance"></ha-icon><span>Estimated range</span><strong>${this._safe(range)}</strong></div>
+          <div><ha-icon icon="mdi:battery-charging"></ha-icon><span>Charging state</span><strong class="${charging ? "good" : ""}">${charging ? "Charging" : "Not charging"}</strong></div>
+          <div><ha-icon icon="mdi:power-plug"></ha-icon><span>Plug connected</span><strong>${plugged ? "Yes" : "No"}</strong></div>
+        </div>
+      </section>
+      <div class="battery-detail-grid">
+        <section class="battery-detail-card">${title("mdi:ev-station", "Charge controls", "Remote actions require confirmation")}<div class="battery-detail-actions"><button data-action="start_charging"><ha-icon icon="mdi:play-circle-outline"></ha-icon>Start charging</button><button class="stop" data-action="stop_charging"><ha-icon icon="mdi:stop-circle-outline"></ha-icon>Stop charging</button></div>${this._notice ? `<p class="battery-detail-notice" role="status">${this._safe(this._notice)}</p>` : ""}</section>
+        <section class="battery-detail-card">${title("mdi:battery-sync", "Charge limits", "Configured charging targets")}<div class="battery-detail-limit"><span>AC target</span>${this._numberControl("charging_limit", acValue, acUnit)}</div>${hasDc ? `<div class="battery-detail-limit"><span>DC target</span>${this._numberControl("dc_charging_limit", dcValue, dcUnit)}</div>` : ""}</section>
+        <section class="battery-detail-card">${title("mdi:map-marker-distance", "Range context", "Current driving estimate")}<div class="battery-detail-stat"><strong>${this._safe(range)}</strong><span>Estimated remaining range</span></div><div class="battery-detail-progress"><span style="width:${pct}%"></span></div><p>Range changes with temperature, driving style, speed, and climate use.</p></section>
+        <section class="battery-detail-card">${title("mdi:heart-pulse", "Battery health", "Available battery signals")}<div class="battery-detail-list"><div><span>State of charge</span><strong>${this._safe(battery)}%</strong></div><div><span>Cable state</span><strong>${plugged ? "Connected" : "Disconnected"}</strong></div><div><span>Session state</span><strong class="${charging ? "good" : ""}">${charging ? "Active" : "Inactive"}</strong></div></div><p>State-of-health and battery temperature will appear when mapped entities become available.</p></section>
+        <section class="battery-detail-card battery-detail-session">${title("mdi:flash", "Charging session", "Live connection context")}<div class="battery-detail-session-body"><ha-icon class="${charging ? "active" : ""}" icon="mdi:ev-plug-type2"></ha-icon><div><span>Charging power</span><strong>${this._safe(power)}</strong></div><div><span>Current state</span><strong>${charging ? "Charging" : plugged ? "Ready to charge" : "Not connected"}</strong></div></div><p>Charging history and estimated completion can be added when the integration exposes those entities.</p></section>
+      </div>
+    </main>`;
   }
 
   _renderVehicleTab() {
@@ -299,7 +329,16 @@ class KiaDashboardCard extends HTMLElement {
   }
 
   _batteryTabStyles() {
-    return "";
+    return `
+      .battery-detail{margin-top:12px;display:grid;gap:12px}.battery-detail-card{background:linear-gradient(145deg,var(--kia-panel),var(--kia-card));border:1px solid var(--kia-line);border-radius:8px;box-shadow:var(--ha-card-box-shadow,0 8px 22px rgba(0,0,0,.14));padding:clamp(18px,2vw,28px);min-width:0}.battery-detail-card>p,.battery-detail-heading p{margin-top:12px;color:var(--kia-muted);line-height:1.5}
+      .battery-detail-hero{min-height:250px;display:grid;grid-template-columns:minmax(220px,.8fr) minmax(190px,.55fr) minmax(300px,1fr);gap:clamp(22px,3vw,54px);align-items:center}.battery-detail-heading>span{color:var(--blue);font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.battery-detail-heading h2{margin-top:7px;font-size:clamp(30px,3vw,46px);line-height:1}
+      .battery-detail-gauge{width:min(190px,100%);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;justify-self:center;background:conic-gradient(var(--green) var(--level),var(--kia-recessed) 0);position:relative}.battery-detail-gauge:before{content:"";position:absolute;inset:12px;border-radius:50%;background:var(--kia-card);border:1px solid var(--kia-line)}.battery-detail-gauge div{position:relative;text-align:center}.battery-detail-gauge strong{display:block;font-size:clamp(34px,3vw,48px)}.battery-detail-gauge small{font-size:.48em}.battery-detail-gauge span,.battery-detail-title span,.battery-detail-highlights span,.battery-detail-stat span,.battery-detail-session-body span{color:var(--kia-muted);font-size:13px}
+      .battery-detail-highlights{display:grid;gap:12px}.battery-detail-highlights>div{display:grid;grid-template-columns:34px 1fr;align-items:center;gap:2px 10px;padding:12px 14px;border-radius:8px;background:var(--kia-control);border:1px solid var(--kia-line)}.battery-detail-highlights ha-icon{grid-row:1/3;color:var(--blue);--mdc-icon-size:26px}.battery-detail-highlights strong{font-size:17px}.battery-detail .good{color:var(--green)}
+      .battery-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.battery-detail-title{display:flex;gap:12px;align-items:center;margin-bottom:20px}.battery-detail-title>ha-icon{color:var(--blue);--mdc-icon-size:28px}.battery-detail-title h3{margin:0 0 2px;font-size:20px}.battery-detail-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.battery-detail-actions button{min-height:54px;display:flex;align-items:center;justify-content:center;gap:9px;border:1px solid var(--green);border-radius:8px;background:color-mix(in srgb,var(--green) 12%,var(--kia-control));font-weight:800}.battery-detail-actions .stop{border-color:var(--amber);background:color-mix(in srgb,var(--amber) 10%,var(--kia-control))}.battery-detail-notice{margin:12px 0 0;padding:10px 12px;border-radius:8px;background:var(--kia-control);border:1px solid var(--kia-line)}
+      .battery-detail-limit+.battery-detail-limit{margin-top:18px}.battery-detail-limit>span{display:block;margin-bottom:7px;color:var(--kia-muted);font-size:13px}.battery-detail-limit .limit-control{grid-template-columns:minmax(90px,auto) minmax(120px,1fr)}.battery-detail-stat strong{display:block;font-size:clamp(28px,3vw,42px)}.battery-detail-progress{height:16px;margin-top:20px;padding:3px;border-radius:8px;background:var(--kia-recessed);border:1px solid var(--kia-line)}.battery-detail-progress span{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--red) 0 30%,var(--amber) 30% 55%,var(--green) 55% 100%)}
+      .battery-detail-list{display:grid;gap:1px;border:1px solid var(--kia-line);border-radius:8px;overflow:hidden;background:var(--kia-line)}.battery-detail-list>div{display:flex;justify-content:space-between;gap:18px;padding:12px 14px;background:var(--kia-control)}.battery-detail-list span{color:var(--kia-muted)}.battery-detail-session{grid-column:1/-1}.battery-detail-session-body{display:grid;grid-template-columns:64px repeat(2,minmax(0,1fr));align-items:center;gap:20px}.battery-detail-session-body>ha-icon{width:58px;height:58px;padding:14px;box-sizing:border-box;border-radius:50%;color:var(--kia-muted);background:var(--kia-control);border:1px solid var(--kia-line)}.battery-detail-session-body>ha-icon.active{color:var(--green)}.battery-detail-session-body strong{display:block;margin-top:4px;font-size:20px}
+      @media(max-width:1180px){.battery-detail-hero{grid-template-columns:1fr 1fr}.battery-detail-heading{grid-column:1/-1}}@media(max-width:760px){.battery-detail-hero,.battery-detail-grid{grid-template-columns:1fr}.battery-detail-heading,.battery-detail-session{grid-column:auto}.battery-detail-actions{grid-template-columns:1fr}.battery-detail-session-body{grid-template-columns:58px 1fr}.battery-detail-session-body>div:last-child{grid-column:2}.battery-detail-limit .limit-control{grid-template-columns:1fr}}
+    `;
   }
 
   _vehicleTabStyles() {

@@ -13,6 +13,7 @@ cards:
       battery_level: battery.level
       battery_range: battery.estimated_range
       charging_state: battery.charging_state
+      charging_power: battery.charging_power
       plug_connected: battery.plug_connected
       charging_limit: battery.target_charge_limit
       odometer: location.odometer
@@ -30,3 +31,4 @@ cards:
       tire_rear_right: tires.rear_right_pressure
       refresh: controls.refresh
       start_charging: controls.start_charging
+      stop_charging: controls.stop_charging
