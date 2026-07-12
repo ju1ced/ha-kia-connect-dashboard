@@ -279,7 +279,35 @@ class KiaDashboardCard extends HTMLElement {
   }
 
   _renderVehicleTab() {
-    return this._renderPlaceholder("mdi:car", "Vehicle");
+    const read = (key) => {
+      const entity = this._obj(key);
+      if (!entity) return { value: "Not configured", available: false };
+      if (["unknown", "unavailable"].includes(entity.state)) return { value: "Unavailable", available: false };
+      return { value: entity.state, available: true };
+    };
+    const tile = (key, icon, label, context, warning = false) => {
+      const current = read(key);
+      const tone = !current.available ? " unavailable" : warning ? " warning" : "";
+      return `<button class="vehicle-state${tone}" data-info="${key}" ${this._entity(key) ? "" : "disabled"}><ha-icon icon="${icon}"></ha-icon><span><small>${context}</small><strong>${label}</strong></span><b>${this._safe(current.value)}</b><ha-icon class="vehicle-state-indicator" icon="${!current.available ? "mdi:help-circle-outline" : warning ? "mdi:alert-circle-outline" : "mdi:check-circle-outline"}"></ha-icon></button>`;
+    };
+    const openings = [
+      ["front_left_door", "Front left", "Door"], ["front_right_door", "Front right", "Door"], ["rear_left_door", "Rear left", "Door"], ["rear_right_door", "Rear right", "Door"],
+      ["trunk", "Trunk", "Cargo opening"], ["hood", "Hood", "Service opening"],
+      ["front_left_window", "Front left", "Window"], ["front_right_window", "Front right", "Window"], ["rear_left_window", "Rear left", "Window"], ["rear_right_window", "Rear right", "Window"],
+    ];
+    const tires = [["tire_front_left", "Front left"], ["tire_front_right", "Front right"], ["tire_rear_left", "Rear left"], ["tire_rear_right", "Rear right"]];
+    const openWarnings = openings.filter(([key]) => this._obj(key) && this._active(key));
+    const tireWarnings = tires.filter(([key]) => this._obj(key) && this._tireStatus(key) !== "OK");
+    const unlocked = Boolean(this._obj("door_lock")) && !this._locked();
+    const warnings = [...(unlocked ? ["Vehicle doors are unlocked."] : []), ...openWarnings.map(([, label, context]) => `${context} ${label.toLowerCase()} is open.`), ...tireWarnings.map(([, label]) => `${label} tire pressure needs attention.`)];
+    const missing = ["door_lock", ...openings.map(([key]) => key)].some((key) => !read(key).available);
+    const heading = `<div class="vehicle-section-title"><ha-icon icon="mdi:car-door"></ha-icon><div><span>Perimeter</span><h2>Doors &amp; openings</h2></div></div>`;
+    return `<main class="vehicle-detail"><header class="vehicle-page-heading card"><div><span>Vehicle detail</span><h2>Ready-state check</h2><p>Review access points, exterior lights, and tire status before departure.</p></div><div class="vehicle-page-status ${warnings.length ? "warning" : ""}"><ha-icon icon="${warnings.length ? "mdi:alert-outline" : "mdi:shield-check-outline"}"></ha-icon><strong>${warnings.length ? `${warnings.length} item${warnings.length === 1 ? "" : "s"} to check` : "No active warnings"}</strong></div></header><section class="vehicle-detail-grid">
+      <article class="vehicle-section card vehicle-security"><div class="vehicle-section-title"><ha-icon icon="mdi:shield-car"></ha-icon><div><span>Access</span><h2>Locks &amp; lights</h2></div></div><div class="vehicle-state-list">${tile("door_lock", "mdi:car-door-lock", "Door lock", "Vehicle security", unlocked)}${tile("charge_port", "mdi:ev-plug-type2", "Charge port", "Port state", this._active("charge_port"))}${tile("lights", "mdi:car-light-high", "Headlights", "Exterior lights")}</div><p class="vehicle-section-note"><ha-icon icon="mdi:information-outline"></ha-icon>Remote lock and light commands remain disabled pending the action-safety review.</p></article>
+      <article class="vehicle-section card vehicle-openings">${heading}<div class="vehicle-opening-grid">${openings.map(([key, label, context]) => tile(key, key === "trunk" ? "mdi:car-back" : key === "hood" ? "mdi:car-cog" : "mdi:car-door", label, context, this._active(key))).join("")}</div></article>
+      <article class="vehicle-section card vehicle-tires"><div class="vehicle-section-title"><ha-icon icon="mdi:car-tire-alert"></ha-icon><div><span>Road contact</span><h2>Tire status</h2></div></div><div class="vehicle-tire-layout"><div>${tile("tire_front_left", "mdi:tire", "Front left", "Tire pressure", this._tireStatus("tire_front_left") !== "OK")}${tile("tire_rear_left", "mdi:tire", "Rear left", "Tire pressure", this._tireStatus("tire_rear_left") !== "OK")}</div><img src="${this._asset(this._config.images?.top || "ev6_top.png")}" alt="Top view of vehicle" onerror="this.style.display='none'"><div>${tile("tire_front_right", "mdi:tire", "Front right", "Tire pressure", this._tireStatus("tire_front_right") !== "OK")}${tile("tire_rear_right", "mdi:tire", "Rear right", "Tire pressure", this._tireStatus("tire_rear_right") !== "OK")}</div></div></article>
+      <article class="vehicle-section card vehicle-warnings"><div class="vehicle-section-title"><ha-icon icon="${warnings.length ? "mdi:alert-circle-outline" : "mdi:check-decagram-outline"}"></ha-icon><div><span>Summary</span><h2>${warnings.length ? "Items to review" : "Vehicle checks normal"}</h2></div></div>${warnings.length ? `<ul>${warnings.map((warning) => `<li>${this._safe(warning)}</li>`).join("")}</ul>` : `<p>${missing ? "No active warnings in available data. Check Settings for missing vehicle mappings." : "Locks, openings, and tire pressure report normal states."}</p>`}</article>
+    </section></main>`;
   }
 
   _renderClimateTab() {
@@ -303,7 +331,19 @@ class KiaDashboardCard extends HTMLElement {
   }
 
   _vehicleTabStyles() {
-    return "";
+    return `
+      .vehicle-detail { margin-top:12px; display:grid; gap:12px; } .vehicle-page-heading { min-height:118px; padding:22px 26px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
+      .vehicle-page-heading>div:first-child>span,.vehicle-section-title span { color:var(--blue); font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; } .vehicle-page-heading h2 { margin-top:4px; font-size:clamp(24px,2.2vw,34px); } .vehicle-page-heading p { margin-top:7px; color:var(--kia-muted); }
+      .vehicle-page-status { min-width:190px; padding:14px 16px; border:1px solid color-mix(in srgb,var(--green) 50%,var(--kia-line)); border-radius:8px; background:color-mix(in srgb,var(--green) 12%,var(--kia-card)); display:flex; align-items:center; gap:10px; } .vehicle-page-status ha-icon { color:var(--green); --mdc-icon-size:28px; } .vehicle-page-status.warning { border-color:var(--amber); background:color-mix(in srgb,var(--amber) 12%,var(--kia-card)); } .vehicle-page-status.warning ha-icon { color:var(--amber); }
+      .vehicle-detail-grid { display:grid; grid-template-columns:minmax(280px,.84fr) minmax(420px,1.45fr); grid-template-areas:"security openings" "tires warnings"; gap:12px; } .vehicle-section { padding:20px 22px; min-width:0; } .vehicle-security { grid-area:security; } .vehicle-openings { grid-area:openings; } .vehicle-tires { grid-area:tires; } .vehicle-warnings { grid-area:warnings; }
+      .vehicle-section-title { display:flex; align-items:center; gap:12px; margin-bottom:16px; } .vehicle-section-title>ha-icon { color:var(--blue); --mdc-icon-size:28px; } .vehicle-section-title h2 { margin-top:2px; font-size:20px; }
+      .vehicle-state-list { display:grid; gap:9px; } .vehicle-state { width:100%; min-height:58px; padding:9px 11px; border:1px solid var(--kia-line); border-radius:8px; background:var(--kia-control); display:grid; grid-template-columns:26px minmax(100px,1fr) auto 22px; align-items:center; gap:10px; text-align:left; } .vehicle-state:hover:not(:disabled),.vehicle-state:focus-visible { border-color:var(--blue); } .vehicle-state:disabled { cursor:default; opacity:.72; }
+      .vehicle-state>ha-icon:first-child { color:var(--kia-muted); --mdc-icon-size:21px; } .vehicle-state span { min-width:0; } .vehicle-state small { display:block; color:var(--kia-muted); font-size:11px; } .vehicle-state strong { display:block; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14px; } .vehicle-state b { max-width:116px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; text-transform:capitalize; }
+      .vehicle-state-indicator { color:var(--green); --mdc-icon-size:19px; } .vehicle-state.warning .vehicle-state-indicator { color:var(--amber); } .vehicle-state.unavailable .vehicle-state-indicator { color:var(--kia-muted); } .vehicle-section-note { margin-top:14px; padding-top:13px; border-top:1px solid var(--kia-line); display:flex; gap:8px; color:var(--kia-muted); font-size:12px; line-height:1.4; }
+      .vehicle-opening-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; } .vehicle-tire-layout { display:grid; grid-template-columns:minmax(125px,1fr) 92px minmax(125px,1fr); gap:12px; align-items:center; } .vehicle-tire-layout>div { display:grid; gap:10px; } .vehicle-tire-layout img { width:88px; height:154px; object-fit:contain; justify-self:center; filter:drop-shadow(0 10px 12px rgba(0,0,0,.34)); } .vehicle-tire-layout .vehicle-state { grid-template-columns:22px minmax(76px,1fr) auto 20px; padding-inline:9px; }
+      .vehicle-warnings { display:flex; flex-direction:column; justify-content:center; } .vehicle-warnings p,.vehicle-warnings ul { color:var(--kia-muted); line-height:1.55; } .vehicle-warnings ul { margin:0; padding-left:20px; }
+      @media (max-width:1180px) { .vehicle-detail-grid { grid-template-columns:1fr; grid-template-areas:"security" "openings" "tires" "warnings"; } } @media (max-width:760px) { .vehicle-page-heading { align-items:flex-start; flex-direction:column; } .vehicle-page-status { min-width:0; width:100%; box-sizing:border-box; } .vehicle-opening-grid,.vehicle-tire-layout { grid-template-columns:1fr; } .vehicle-tire-layout img { grid-row:1; height:126px; } }
+    `;
   }
 
   _climateTabStyles() {
