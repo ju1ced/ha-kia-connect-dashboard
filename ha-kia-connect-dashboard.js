@@ -291,7 +291,8 @@ class KiaDashboardCard extends HTMLElement {
   }
 
   _renderLocationTab(context) {
-    const { location, lastUpdated, mapTiles, markerImage } = context;
+    const { lastUpdated, mapTiles, markerImage } = context;
+    const trackerState = this._state("location", "Location unavailable");
     const odometer = `${this._number("odometer")} ${this._unit("odometer", "km")}`;
     const coords = this._trackerCoords();
     const coordinateLabel = coords ? `${coords.lat.toFixed(5)}, ${coords.lon.toFixed(5)}` : "Coordinates unavailable";
@@ -312,7 +313,7 @@ class KiaDashboardCard extends HTMLElement {
         </section>
 
         <section class="location-detail-summary card">
-          <div class="location-detail-heading"><div><span>Tracker</span><h2>${this._safe(location)}</h2></div><ha-icon icon="mdi:map-marker-outline"></ha-icon></div>
+          <div class="location-detail-heading"><div><span>Tracker</span><h2>${this._safe(trackerState)}</h2></div><ha-icon icon="mdi:map-marker-outline"></ha-icon></div>
           <div class="location-stat-grid">
             <button class="location-stat" data-info="odometer"><ha-icon icon="mdi:counter"></ha-icon><span>Odometer</span><strong>${this._safe(odometer)}</strong></button>
             <div class="location-stat"><ha-icon icon="mdi:clock-outline"></ha-icon><span>Last updated</span><strong>${this._safe(lastUpdated)}</strong></div>
@@ -321,13 +322,15 @@ class KiaDashboardCard extends HTMLElement {
 
         <section class="location-context-card location-parking card">
           <ha-icon icon="mdi:parking"></ha-icon>
-          <div><span>Parking context</span><h2>${this._safe(location)}</h2><p>The tracker state is the latest known parking area. Update freshness stays visible alongside it.</p></div>
+          <div><span>Parking context</span><h2>${this._safe(trackerState)}</h2><p>The tracker state is the latest known parking area. Update freshness stays visible alongside it.</p></div>
         </section>
 
         <section class="location-context-card location-trip card muted">
           <ha-icon icon="mdi:map-marker-path"></ha-icon>
           <div><span>Trip context</span><h2>Ready for future trip data</h2><p>Route, destination, and movement details remain read-only placeholders until mapped entities are defined.</p></div>
         </section>
+
+        <button class="location-back card" data-nav="overview"><ha-icon icon="mdi:arrow-left"></ha-icon><span>Back to Overview</span></button>
       </main>`;
   }
 
@@ -353,11 +356,13 @@ class KiaDashboardCard extends HTMLElement {
 
   _locationTabStyles() {
     return `
-      .location-detail { margin-top:12px; display:grid; grid-template-columns:minmax(0,1.45fr) minmax(300px,.75fr); grid-template-areas:"map summary" "map parking" "map trip"; gap:12px; align-items:stretch; }
+      .location-detail { margin-top:12px; display:grid; grid-template-columns:minmax(0,1.45fr) minmax(300px,.75fr); grid-template-areas:"map summary" "map parking" "map trip" "map back"; gap:12px; align-items:stretch; }
       .location-detail-map { grid-area:map; min-height:560px; padding:22px; display:grid; grid-template-rows:auto minmax(360px,1fr) auto; gap:16px; min-width:0; }
       .location-detail-summary { grid-area:summary; padding:22px; display:grid; gap:22px; }
       .location-context-card { padding:22px; display:grid; grid-template-columns:42px 1fr; gap:16px; align-items:start; }
       .location-parking { grid-area:parking; } .location-trip { grid-area:trip; }
+      .location-back { grid-area:back; min-height:52px; padding:0 20px; display:flex; align-items:center; justify-content:center; gap:10px; border-color:var(--blue); background:var(--kia-control); color:var(--kia-text); font-weight:800; }
+      .location-back ha-icon { color:var(--blue); --mdc-icon-size:21px; }
       .location-detail-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; min-width:0; }
       .location-detail-heading span,.location-stat span,.location-context-card span,.location-detail-caption { color:var(--kia-muted); font-size:13px; }
       .location-detail-heading h2,.location-context-card h2 { margin-top:5px; font-size:clamp(19px,1.55vw,26px); overflow-wrap:anywhere; }
@@ -373,8 +378,8 @@ class KiaDashboardCard extends HTMLElement {
       button.location-stat { cursor:pointer; } .location-stat ha-icon { grid-row:1 / 3; color:var(--blue); --mdc-icon-size:24px; }
       .location-stat strong { align-self:end; font-size:clamp(15px,1vw,18px); line-height:1.25; overflow-wrap:anywhere; }
       .location-context-card p { margin-top:8px; color:var(--kia-muted); font-size:14px; line-height:1.45; } .location-context-card.muted>ha-icon { color:var(--kia-muted); }
-      @media (max-width:980px) { .location-detail { grid-template-columns:1fr 1fr; grid-template-areas:"map map" "summary summary" "parking trip"; } .location-detail-map { min-height:500px; } }
-      @media (max-width:640px) { .location-detail { grid-template-columns:1fr; grid-template-areas:"map" "summary" "parking" "trip"; } .location-detail-map { min-height:0; padding:16px; grid-template-rows:auto minmax(300px,52vh) auto; } .location-detail-summary,.location-context-card { padding:18px; } .location-stat-grid { grid-template-columns:1fr; } }
+      @media (max-width:980px) { .location-detail { grid-template-columns:1fr 1fr; grid-template-areas:"map map" "summary summary" "parking trip" "back back"; } .location-detail-map { min-height:500px; } }
+      @media (max-width:640px) { .location-detail { grid-template-columns:1fr; grid-template-areas:"map" "summary" "parking" "trip" "back"; } .location-detail-map { min-height:0; padding:16px; grid-template-rows:auto minmax(300px,52vh) auto; } .location-detail-summary,.location-context-card { padding:18px; } .location-stat-grid { grid-template-columns:1fr; } }
     `;
   }
 
