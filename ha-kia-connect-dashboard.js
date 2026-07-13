@@ -296,8 +296,10 @@ class KiaDashboardCard extends HTMLElement {
     const chargingPower = this._number("charging_power");
     const chargingPowerUnit = this._unit("charging_power", "kW") || "kW";
     const chargingState = this._charging() ? "Charging" : this._state("charging_state");
-    const plugConnected = this._active("plug_connected");
-    const plugState = this._entity("plug_connected") ? (plugConnected ? "Connected" : "Disconnected") : "--";
+    const plugObject = this._obj("plug_connected");
+    const plugAvailable = Boolean(plugObject) && !["unknown", "unavailable"].includes(plugObject.state);
+    const plugConnected = plugAvailable && this._active("plug_connected");
+    const plugState = plugAvailable ? (plugConnected ? "Connected" : "Disconnected") : "--";
     const stat = (key, icon, label, value, unit = "", status = "") => `<button class="energy-stat${status ? ` ${status}` : ""}" data-info="${key}"><span class="energy-stat-icon"><ha-icon icon="${icon}"></ha-icon></span><span class="energy-stat-copy"><small>${label}</small><strong>${this._safe(value)}${unit ? ` <em>${this._safe(unit)}</em>` : ""}</strong></span><ha-icon class="energy-stat-link" icon="mdi:chevron-right"></ha-icon></button>`;
 
     return `<main class="energy-detail" aria-label="Energy details">
