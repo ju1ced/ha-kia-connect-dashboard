@@ -25,6 +25,7 @@ entities:
   battery_level: sensor.your_vehicle_ev_battery_level
   battery_range: sensor.your_vehicle_ev_range
   charging_state: binary_sensor.your_vehicle_ev_battery_charge
+  charging_power: sensor.your_vehicle_ev_charging_power
   plug_connected: binary_sensor.your_vehicle_ev_battery_plug
   charging_limit: number.your_vehicle_ac_charging_limit
   dc_charging_limit: number.your_vehicle_dc_charging_limit
