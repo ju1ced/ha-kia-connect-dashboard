@@ -48,6 +48,27 @@ entities:
   stop_charging: switch.your_vehicle_ev_charging
 ```
 
+## Optional Settings Entities
+
+The Settings panel can show additional read-only integration and dashboard
+feedback when these entity keys are configured:
+
+```yaml
+type: custom:kia-dashboard-card
+entities:
+  last_climate_result: sensor.your_vehicle_last_climate_result
+  last_charging_result: sensor.your_vehicle_last_charging_result
+  vehicle_data: sensor.your_vehicle_raw_data
+  dashboard_version: sensor.your_dashboard_version
+```
+
+- `last_climate_result` and `last_charging_result` provide command feedback;
+  they are intentionally separate from the physical climate and charging state.
+- `vehicle_data` is the read-only raw-data or mapping entity opened by Vehicle
+  Data Details.
+- `dashboard_version` supplies the displayed version. When it is omitted, the
+  Settings panel shows `Not configured` rather than assuming a release version.
+
 For Home Assistant sections dashboards, make the card span the full section:
 
 ```yaml
