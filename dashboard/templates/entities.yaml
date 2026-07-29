@@ -14,6 +14,22 @@ battery:
   estimated_range: sensor.kia_ev6_ev_range
   target_charge_limit: number.kia_ev6_ac_charging_limit
   plug_connected: binary_sensor.kia_ev6_ev_battery_plug
+  state_of_health: sensor.kia_ev6_ev_state_of_health_battery
+  capacity: sensor.kia_ev6_ev_battery_capacity
+  remaining_energy: sensor.kia_ev6_ev_battery_remaining_energy
+  pack_voltage: sensor.kia_ev6_ev_battery_pack_voltage
+  temperature_min: sensor.kia_ev6_ev_battery_temperature_min
+  temperature_max: sensor.kia_ev6_ev_battery_temperature_max
+  water_temperature: sensor.kia_ev6_ev_battery_water_temperature
+  heating: binary_sensor.kia_ev6_ev_battery_heating
+  heater_power: sensor.kia_ev6_ev_power_consumption_battery_heater
+  precondition: binary_sensor.kia_ev6_ev_battery_precondition
+  winter_mode: binary_sensor.kia_ev6_ev_battery_winter_mode
+  battery_12v_level: sensor.kia_ev6_car_battery_level
+  battery_12v_fault: binary_sensor.kia_ev6_12v_battery_fault
+  estimated_charge_duration: sensor.kia_ev6_estimated_charge_duration
+  average_energy_consumption: sensor.kia_ev6_average_energy_consumption
+  energy_consumption_90d: sensor.kia_ev6_90_day_energy_consumption
 
 charger:
   online: binary_sensor.home_charger_connected

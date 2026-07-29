@@ -140,9 +140,9 @@ async function run() {
     ],
     battery: [
       "Overzicht EV-batterij",
-      "Laadbediening",
+      "Batterijconditie",
       "Laadniveau",
-      "Kabelstatus",
+      "Thermisch beheer",
       "Huidige status",
     ],
     vehicle: [
@@ -296,6 +296,102 @@ async function run() {
   const centsEnergy = card._renderEnergyTab({});
   assert.match(centsEnergy, /EUR 2.77/);
   assert.match(centsEnergy, /27\.73 <em>EUR/);
+  Object.assign(card._config.entities, {
+    battery_state_of_health: "sensor.battery_soh",
+    battery_capacity: "sensor.battery_capacity",
+    battery_remaining_energy: "sensor.battery_remaining",
+    battery_pack_voltage: "sensor.battery_voltage",
+    battery_temperature_min: "sensor.battery_temp_min",
+    battery_temperature_max: "sensor.battery_temp_max",
+    battery_water_temperature: "sensor.battery_water_temp",
+    battery_heating: "binary_sensor.battery_heating",
+    battery_heater_power: "sensor.battery_heater_power",
+    battery_precondition: "binary_sensor.battery_precondition",
+    battery_winter_mode: "binary_sensor.battery_winter_mode",
+    battery_12v_level: "sensor.battery_12v_level",
+    battery_12v_fault: "binary_sensor.battery_12v_fault",
+    estimated_charge_duration: "sensor.charge_duration",
+    average_energy_consumption: "sensor.average_consumption",
+    energy_consumption_90d: "sensor.consumption_90d",
+    smart_key_battery_warning: "binary_sensor.smart_key_warning",
+    vent_windows: "button.vent_windows",
+    front_left_window_open: "button.front_left_window_open",
+    front_left_window_close: "button.front_left_window_close",
+  });
+  Object.assign(card._hass.states, {
+    "sensor.battery_soh": {
+      state: "100",
+      attributes: { unit_of_measurement: "%" },
+    },
+    "sensor.battery_capacity": {
+      state: "302400",
+      attributes: { unit_of_measurement: "kJ" },
+    },
+    "sensor.battery_remaining": {
+      state: "226771.2",
+      attributes: { unit_of_measurement: "kJ" },
+    },
+    "sensor.battery_voltage": {
+      state: "770.2",
+      attributes: { unit_of_measurement: "V" },
+    },
+    "sensor.battery_temp_min": {
+      state: "28",
+      attributes: { unit_of_measurement: "°C" },
+    },
+    "sensor.battery_temp_max": {
+      state: "33",
+      attributes: { unit_of_measurement: "°C" },
+    },
+    "sensor.battery_water_temp": {
+      state: "35",
+      attributes: { unit_of_measurement: "°C" },
+    },
+    "binary_sensor.battery_heating": { state: "off", attributes: {} },
+    "sensor.battery_heater_power": {
+      state: "0",
+      attributes: { unit_of_measurement: "W" },
+    },
+    "binary_sensor.battery_precondition": { state: "off", attributes: {} },
+    "binary_sensor.battery_winter_mode": { state: "on", attributes: {} },
+    "sensor.battery_12v_level": {
+      state: "100",
+      attributes: { unit_of_measurement: "%" },
+    },
+    "binary_sensor.battery_12v_fault": { state: "off", attributes: {} },
+    "sensor.charge_duration": { state: "1:45", attributes: {} },
+    "sensor.average_consumption": {
+      state: "17.2",
+      attributes: { unit_of_measurement: "kWh/100 km" },
+    },
+    "sensor.consumption_90d": {
+      state: "18.1",
+      attributes: { unit_of_measurement: "kWh/100 km" },
+    },
+    "binary_sensor.smart_key_warning": { state: "on", attributes: {} },
+    "button.vent_windows": { state: "unknown", attributes: {} },
+    "button.front_left_window_open": { state: "unknown", attributes: {} },
+    "button.front_left_window_close": { state: "unknown", attributes: {} },
+  });
+
+  const batteryDiagnostics = card._renderBatteryTab({});
+  assert.match(batteryDiagnostics, /100 %/);
+  assert.match(batteryDiagnostics, /63 kWh/);
+  assert.match(batteryDiagnostics, /84 kWh/);
+  assert.match(batteryDiagnostics, /770\.2 V/);
+  assert.match(batteryDiagnostics, /28 °C/);
+  assert.match(batteryDiagnostics, /33 °C/);
+  assert.match(batteryDiagnostics, /1:45/);
+  assert.match(card._renderEnergyTab({}), /17\.2/);
+  assert.match(card._renderEnergyTab({}), /18\.1/);
+  const vehicleControls = card._renderVehicleTab();
+  assert.match(vehicleControls, /Smart key battery/);
+  assert.match(vehicleControls, /Replace battery/);
+  assert.match(vehicleControls, /Window controls/);
+  assert.match(vehicleControls, /data-entity-action="front_left_window_open"/);
+  const climateControls = card._renderClimateTab();
+  assert.match(climateControls, /data-action="start_climate"/);
+  assert.match(climateControls, /data-entity-action="vent_windows"/);
 }
 
 run().catch((error) => {
