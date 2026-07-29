@@ -12,8 +12,10 @@ loaded by the Lovelace card itself.
      packages: !include_dir_named packages
    ```
 
-2. Copy `charger-history.yaml` to
-   `/config/packages/charger-history.yaml`.
+2. Copy `charger_history.yaml` to
+   `/config/packages/charger_history.yaml`. Home Assistant derives the package
+   slug from this filename when using `!include_dir_named`; keep the underscore
+   because hyphens are not valid in package slugs.
 3. Replace `sensor.your_charger_total_energy` with the charger's lifetime,
    monotonically increasing energy sensor.
 4. Restart Home Assistant.

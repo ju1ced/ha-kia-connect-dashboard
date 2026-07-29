@@ -61,7 +61,7 @@ sensors through `charger_energy_today`, `charger_energy_week`,
 When none are mapped, the Energy tab shows a clear helper-ready placeholder
 instead of inventing history from the current total.
 The repository includes a Home Assistant package example at
-`examples/home-assistant-packages/charger-history.yaml`; it creates daily,
+`examples/home-assistant-packages/charger_history.yaml`; it creates daily,
 weekly, and monthly utility meters plus a tariff-based monthly cost sensor.
 Individual available helpers render independently.
 

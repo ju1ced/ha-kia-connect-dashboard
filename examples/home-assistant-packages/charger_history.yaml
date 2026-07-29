@@ -1,5 +1,5 @@
 ---
-# Copy this file to /config/packages/charger-history.yaml and replace the
+# Copy this file to /config/packages/charger_history.yaml and replace the
 # placeholder source entity with the lifetime energy sensor of your charger.
 # Packages must be enabled in configuration.yaml before Home Assistant loads it.
 
