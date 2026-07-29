@@ -168,7 +168,7 @@ from `charger_session_energy`. Optional `charger_energy_today`,
 template sensors for persistent historical totals.
 
 A ready-to-copy Home Assistant package is available at
-`examples/home-assistant-packages/charger-history.yaml`. After replacing its
+`examples/home-assistant-packages/charger_history.yaml`. After replacing its
 source entity and restarting Home Assistant, map the generated helpers:
 
 ```yaml
