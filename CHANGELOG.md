@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Replaced raw binary on/off values in Vehicle with contextual lock, opening,
+  window, charge-port, light, and tire-status labels.
+
 - Added a built-in card version with optional HACS update-entity override and a
   read-only VIN quick reference in Vehicle.
 - Documented the complete optional Vehicle and Climate mapping contract.
