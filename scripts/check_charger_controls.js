@@ -51,6 +51,7 @@ card._config = {
     charger_energy_today: "sensor.home_charger_energy_today",
     charger_energy_month: "sensor.home_charger_energy_month",
     charger_energy_price: "sensor.home_energy_price",
+    vin: "sensor.vehicle_vin",
   },
 };
 card._hass = {
@@ -76,6 +77,10 @@ card._hass = {
     "sensor.home_energy_price": {
       state: "0.2773",
       attributes: { unit_of_measurement: "€/kWh" },
+    },
+    "sensor.vehicle_vin": {
+      state: "KNAC481A1T5253159",
+      attributes: { friendly_name: "Vehicle identification number" },
     },
     "sensor.home_charger_energy_today": {
       state: "4.2",
@@ -117,7 +122,22 @@ async function run() {
   assert.equal(card._chargerStatusLabel("suspended_evse"), "Paused by charger");
 
   const settings = card._renderSettingsTab();
-  assert.match(settings, /10 of 10 available/);
+  assert.match(settings, /11 of 11 available/);
+  assert.match(settings, /Dashboard version/);
+  assert.match(settings, /2.4.0/);
+  assert.equal(window.customCards[0].version, "2.4.0");
+
+  const vehicle = card._renderVehicleTab();
+  assert.match(vehicle, /KNAC481A1T5253159/);
+  assert.match(vehicle, /data-info="vin"/);
+
+  card._config.entities.dashboard_version = "update.dashboard";
+  card._hass.states["update.dashboard"] = {
+    state: "off",
+    attributes: { installed_version: "2.3.0" },
+  };
+  assert.match(card._renderSettingsTab(), /2.3.0/);
+  delete card._config.entities.dashboard_version;
 
   const energy = card._renderEnergyTab({});
   assert.match(energy, /Paused by charger/);

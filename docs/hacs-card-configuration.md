@@ -30,6 +30,7 @@ entities:
   charging_limit: number.your_vehicle_ac_charging_limit
   dc_charging_limit: number.your_vehicle_dc_charging_limit
   odometer: sensor.your_vehicle_odometer
+  vin: sensor.your_vehicle_identification_number
   location: device_tracker.your_vehicle_location
   last_updated: sensor.your_vehicle_last_refresh
   climate: climate.your_vehicle_climate_control
@@ -49,6 +50,35 @@ entities:
   stop_charging: switch.your_vehicle_ev_charging
 ```
 
+## Optional Vehicle and Climate Details
+
+Vehicle identity, individual openings, windows, and climate comfort signals use
+optional mappings. Only map entities that the vehicle integration actually
+exposes:
+
+```yaml
+type: custom:kia-dashboard-card
+entities:
+  vin: sensor.your_vehicle_identification_number
+  front_left_door: binary_sensor.your_vehicle_front_left_door
+  front_right_door: binary_sensor.your_vehicle_front_right_door
+  rear_left_door: binary_sensor.your_vehicle_rear_left_door
+  rear_right_door: binary_sensor.your_vehicle_rear_right_door
+  front_left_window: binary_sensor.your_vehicle_front_left_window
+  front_right_window: binary_sensor.your_vehicle_front_right_window
+  rear_left_window: binary_sensor.your_vehicle_rear_left_window
+  rear_right_window: binary_sensor.your_vehicle_rear_right_window
+  set_temperature: sensor.your_vehicle_set_temperature
+  cabin_temperature: sensor.your_vehicle_cabin_temperature
+  outside_temperature: sensor.your_vehicle_outside_temperature
+  defrost: binary_sensor.your_vehicle_defrost
+  steering_wheel_heater: binary_sensor.your_vehicle_steering_wheel_heater
+```
+
+The VIN appears as a read-only quick-reference button in the Vehicle header.
+Missing optional temperature or comfort entities remain unavailable; do not map
+a different measurement merely to fill an empty field.
+
 ## Optional Settings Entities
 
 The Settings panel can show additional read-only integration and dashboard
@@ -67,8 +97,9 @@ entities:
   they are intentionally separate from the physical climate and charging state.
 - `vehicle_data` is the read-only raw-data or mapping entity opened by Vehicle
   Data Details.
-- `dashboard_version` supplies the displayed version. When it is omitted, the
-  Settings panel shows `Not configured` rather than assuming a release version.
+- The card displays its built-in release version when `dashboard_version` is
+  omitted. An optional mapped entity overrides it; for `update.*` entities the
+  card reads `installed_version` before falling back to the entity state.
 
 For Home Assistant sections dashboards, make the card span the full section:
 

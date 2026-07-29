@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added a built-in card version with optional HACS update-entity override and a
+  read-only VIN quick reference in Vehicle.
+- Documented the complete optional Vehicle and Climate mapping contract.
+
 - Added a generic mapped charger energy-price sensor for session and monthly cost
   estimates, including EUR/kWh and cents-per-kWh unit handling.
 
