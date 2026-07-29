@@ -36,9 +36,10 @@ class KiaDashboardCard extends HTMLElement {
     return obj.state;
   }
 
-  _number(key, fallback = "--") {
+  _number(key, fallback = "--", precision = 1) {
     const value = Number.parseFloat(this._state(key, ""));
-    return Number.isFinite(value) ? Math.round(value * 10) / 10 : fallback;
+    const factor = 10 ** precision;
+    return Number.isFinite(value) ? Math.round(value * factor) / factor : fallback;
   }
 
   _unit(key, fallback = "") {
@@ -242,16 +243,41 @@ class KiaDashboardCard extends HTMLElement {
     }
   }
 
-  async _setNumber(entityKey, value) {
+  async _setNumber(entityKey, value, confirmation = "") {
     const entityId = this._entity(entityKey);
     if (!entityId || !this._hass) return;
     if (!entityId.startsWith("number.")) {
       this._noticeMessage(`Cannot adjust ${entityId}; expected number entity.`);
       return;
     }
+    if (confirmation && !this._confirm(confirmation)) {
+      this._noticeMessage("Action cancelled");
+      return;
+    }
     try {
       await this._hass.callService("number", "set_value", { entity_id: entityId, value: Number(value) });
-      this._noticeMessage(`Set ${entityId} to ${value} %`);
+      const unit = this._unit(entityKey);
+      this._noticeMessage(`Set ${entityId} to ${value}${unit ? ` ${unit}` : ""}`);
+    } catch (error) {
+      this._noticeMessage(this._actionErrorMessage(error, entityId));
+    }
+  }
+
+  async _setSelect(entityKey, option) {
+    const entityId = this._entity(entityKey);
+    if (!entityId || !this._hass) return;
+    const domain = entityId.split(".")[0];
+    if (!["select", "input_select"].includes(domain)) {
+      this._noticeMessage(`Cannot select an option on ${entityId}; expected select entity.`);
+      return;
+    }
+    if (!this._confirm(`Change charger mode to ${option}?`)) {
+      this._noticeMessage("Action cancelled");
+      return;
+    }
+    try {
+      await this._hass.callService(domain, "select_option", { entity_id: entityId, option });
+      this._noticeMessage(`Set ${entityId} to ${option}`);
     } catch (error) {
       this._noticeMessage(this._actionErrorMessage(error, entityId));
     }
@@ -263,6 +289,10 @@ class KiaDashboardCard extends HTMLElement {
     if (action === "stop_climate") this._callEntity(this._entity("stop_climate") ? "stop_climate" : "climate", "turn_off", "Stop climate now?");
     if (action === "start_charging") this._callEntity("start_charging", "turn_on", "Start charging now?");
     if (action === "stop_charging") this._callEntity("stop_charging", "turn_off", "Stop charging now?");
+    if (action === "charger_start") this._callEntity("charger_start", "turn_on", "Start the home charger now?");
+    if (action === "charger_pause") this._callEntity("charger_pause", "turn_off", "Pause the home charger now?");
+    if (action === "charger_resume") this._callEntity("charger_resume", "turn_on", "Resume the home charger now?");
+    if (action === "charger_stop") this._callEntity("charger_stop", "turn_off", "Stop the home charging session now?");
   }
 
   _nav(icon, label, section) {
@@ -409,14 +439,54 @@ class KiaDashboardCard extends HTMLElement {
     const plugAvailable = Boolean(plugObject) && !["unknown", "unavailable"].includes(plugObject.state);
     const plugConnected = plugAvailable && this._active("plug_connected");
     const plugState = plugAvailable ? (plugConnected ? "Connected" : "Disconnected") : "--";
-    const stat = (key, icon, label, value, unit = "", status = "") => `<button class="energy-stat${status ? ` ${status}` : ""}" data-info="${key}"><span class="energy-stat-icon"><ha-icon icon="${icon}"></ha-icon></span><span class="energy-stat-copy"><small>${label}</small><strong>${this._safe(value)}${unit ? ` <em>${this._safe(unit)}</em>` : ""}</strong></span><ha-icon class="energy-stat-link" icon="mdi:chevron-right"></ha-icon></button>`;
+
+    const stat = (key, icon, label, value, unit = "", status = "") => `<button class="energy-stat${status ? ` ${status}` : ""}" data-info="${key}"><span class="energy-stat-icon"><ha-icon icon="${icon}"></ha-icon></span><span class="energy-stat-copy"><small>${label}</small><strong>${this._safe(value)}${unit && value !== "--" ? ` <em>${this._safe(unit)}</em>` : ""}</strong></span><ha-icon class="energy-stat-link" icon="mdi:chevron-right"></ha-icon></button>`;
+    const usable = (key) => {
+      const obj = this._obj(key);
+      return Boolean(obj) && !["unknown", "unavailable", ""].includes(String(obj.state).toLowerCase());
+    };
+    const chargerState = this._state("charger_status", "Not mapped");
+    const chargerActive = ["charging", "started"].includes(String(chargerState).toLowerCase());
+    const chargerOnline = this._active("charger_online");
+    const chargerPower = this._number("charger_power");
+    const chargerCurrent = this._number("charger_current", "--", 3);
+    const sessionEnergy = this._number("charger_session_energy", "--", 3);
+    const totalEnergy = this._number("charger_total_energy", "--", 3);
+    const chargerMode = this._state("charger_mode", "Not mapped");
+    const controlsEnabled = this._config.charger_controls === true || this._config.charger?.controls === true;
+    const modeOptions = this._config.charger_modes || this._config.charger?.modes || {};
+    const modes = [
+      [modeOptions.standard || "standard", "mdi:flash", "Standard"],
+      [modeOptions.smart || "smart", "mdi:brain", "Smart"],
+      [modeOptions.solar || "solar", "mdi:solar-power", "Solar"],
+    ];
+    const modeEntity = this._entity("charger_mode");
+    const modeDomainSupported = modeEntity && ["select", "input_select"].includes(modeEntity.split(".")[0]);
+    const modeButtons = modes.map(([option, icon, label]) => {
+      const active = chargerMode.toLowerCase() === String(option).toLowerCase();
+      return `<button class="charger-mode${active ? " active" : ""}" data-select="charger_mode" data-option="${this._safe(option)}" ${!controlsEnabled || !modeDomainSupported ? "disabled" : ""}><ha-icon icon="${icon}"></ha-icon><span>${label}</span></button>`;
+    }).join("");
+    const actionButton = (action, key, icon, label, tone = "") => `<button class="charger-action${tone ? ` ${tone}` : ""}" data-action="${action}" ${!controlsEnabled || !this._entity(key) ? "disabled" : ""}><ha-icon icon="${icon}"></ha-icon><span>${label}</span></button>`;
+    const currentAttrs = this._rangeAttrs("charger_current_limit", 6, 32, 1);
+    const currentLimit = this._number("charger_current_limit");
+    const session = this._obj("charger_session_energy");
+    const sessionAttrs = session?.attributes || {};
+    const rawSessionDate = sessionAttrs.end_time ?? sessionAttrs.endTime ?? sessionAttrs.start_time ?? sessionAttrs.startTime ?? sessionAttrs.syncDate;
+    const sessionDate = rawSessionDate ? this._formatDate(Number.isFinite(Number(rawSessionDate)) ? new Date(Number(rawSessionDate)).toISOString() : rawSessionDate) : "No timestamp available";
+    const explicitCost = usable("charger_session_cost") ? this._number("charger_session_cost", "--", 2) : null;
+    const tariffItems = Array.isArray(sessionAttrs.hostTariffComponents) ? sessionAttrs.hostTariffComponents : [];
+    const tariff = Number.parseFloat(tariffItems.find((item) => String(item?.unit).toLowerCase() === "kwh")?.cost);
+    const estimatedCost = explicitCost !== null ? explicitCost : Number.isFinite(tariff) && sessionEnergy !== "--" ? Math.round(tariff * sessionEnergy * 100) / 100 : "--";
+    const historyKeys = ["charger_energy_today", "charger_energy_week", "charger_energy_month", "charger_cost_month"];
+    const historyAvailable = historyKeys.some((key) => usable(key));
 
     return `<main class="energy-detail" aria-label="Energy details">
-      <section class="energy-intro card"><div><span class="energy-eyebrow">Energy flow</span><h2>Range and charging at a glance</h2><p>Review the vehicle's remaining energy, charge target, live charging state, and cable connection without leaving the dashboard.</p></div><div class="energy-orbit" aria-hidden="true"><ha-icon icon="mdi:lightning-bolt"></ha-icon></div></section>
-      <section class="energy-section card"><div class="energy-heading"><span><ha-icon icon="mdi:map-marker-distance"></ha-icon></span><div><small>Range context</small><h2>Remaining energy</h2></div></div><div class="energy-stats">${stat("battery_range", "mdi:map-marker-distance", "Estimated range", range, rangeUnit)}${stat("battery_level", "mdi:battery-high", "Battery level", battery, batteryUnit, battery === "--" ? "" : "positive")}${stat("charging_limit", "mdi:battery-charging-80", "AC charge target", chargeTarget, chargeTargetUnit)}</div><p class="energy-note"><ha-icon icon="mdi:information-outline"></ha-icon><span>Range estimates respond to driving conditions and climate use. The Battery page owns charge controls.</span></p></section>
-      <section class="energy-section card"><div class="energy-heading"><span><ha-icon icon="mdi:ev-station"></ha-icon></span><div><small>Charging context</small><h2>Live connection</h2></div></div><div class="energy-stats">${stat("charging_state", "mdi:ev-station", "Charging state", chargingState, "", this._charging() ? "positive" : "")}${stat("charging_power", "mdi:flash", "Charging power", chargingPower, chargingPowerUnit, this._charging() ? "positive" : "")}${stat("plug_connected", "mdi:power-plug", "Plug", plugState, "", plugConnected ? "positive" : "")}</div><p class="energy-note"><ha-icon icon="mdi:shield-check-outline"></ha-icon><span>This page is read-only. Charging actions and limits remain grouped on Battery.</span></p></section>
-      <section class="energy-future card"><div class="energy-heading"><span><ha-icon icon="mdi:chart-timeline-variant"></ha-icon></span><div><small>Efficiency</small><h2>Consumption trends</h2></div></div><p>Average consumption, regeneration, and trip efficiency will appear here when those entities are available in the mapping contract.</p><div class="energy-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></section>
-      <section class="energy-future card"><div class="energy-heading"><span><ha-icon icon="mdi:history"></ha-icon></span><div><small>History</small><h2>Energy over time</h2></div></div><p>Historical charts stay reserved for statistics entities or helper sensors, keeping Overview focused on the vehicle's current state.</p><button class="energy-back" data-nav="overview"><ha-icon icon="mdi:arrow-left"></ha-icon><span>Back to Overview</span></button></section>
+      <section class="energy-intro card"><div><span class="energy-eyebrow">Home charging</span><h2>Vehicle and charger in one energy view</h2><p>Follow the live charging session, choose a charging strategy, and compare home energy flows without coupling the dashboard to one charger brand.</p></div><div class="energy-orbit" aria-hidden="true"><ha-icon icon="mdi:ev-station"></ha-icon></div></section>
+      <section class="energy-section card"><div class="energy-heading"><span><ha-icon icon="mdi:map-marker-distance"></ha-icon></span><div><small>Vehicle energy</small><h2>Range and connection</h2></div></div><div class="energy-stats">${stat("battery_range", "mdi:map-marker-distance", "Estimated range", range, rangeUnit)}${stat("battery_level", "mdi:battery-high", "Battery level", battery, batteryUnit, battery === "--" ? "" : "positive")}${stat("charging_limit", "mdi:battery-charging-80", "AC charge target", chargeTarget, chargeTargetUnit)}${stat("charging_state", "mdi:ev-station", "Vehicle charging state", chargingState, "", this._charging() ? "positive" : "")}${stat("charging_power", "mdi:flash", "Vehicle charging power", chargingPower, chargingPowerUnit, this._charging() ? "positive" : "")}${stat("plug_connected", "mdi:power-plug", "Vehicle plug", plugState, "", plugConnected ? "positive" : "")}</div><p class="energy-note"><ha-icon icon="mdi:information-outline"></ha-icon><span>Vehicle data remains available when no separate home charger is configured. The Battery page owns vehicle charge limits.</span></p></section>
+      <section class="energy-section charger-live card"><div class="energy-heading"><span><ha-icon icon="mdi:ev-station"></ha-icon></span><div><small>Home charger</small><h2>Live session</h2></div><span class="charger-health ${chargerOnline ? "online" : ""}"><i></i>${chargerOnline ? "Online" : usable("charger_online") ? "Offline" : "Not mapped"}</span></div><div class="charger-live-hero"><div><span>EVSE status</span><strong class="${chargerActive ? "positive-text" : ""}">${this._safe(chargerState)}</strong><small>${this._safe(chargerMode)}</small></div><ha-icon icon="${chargerActive ? "mdi:battery-charging" : "mdi:ev-plug-type2"}"></ha-icon></div><div class="energy-stats compact">${stat("charger_power", "mdi:flash", "Charger power", chargerPower, this._unit("charger_power", "W"), chargerActive ? "positive" : "")}${stat("charger_session_energy", "mdi:counter", "Session energy", sessionEnergy, this._unit("charger_session_energy", "kWh"))}${stat("charger_current", "mdi:current-ac", "Connector current", chargerCurrent, this._unit("charger_current", "A"))}${stat("charger_total_energy", "mdi:transmission-tower-import", "Total imported", totalEnergy, this._unit("charger_total_energy", "kWh"))}</div></section>
+      <section class="energy-section charger-control card"><div class="energy-heading"><span><ha-icon icon="mdi:tune-variant"></ha-icon></span><div><small>Charging strategy</small><h2>Charger control</h2></div><span class="charger-safety"><ha-icon icon="mdi:shield-check-outline"></ha-icon>${controlsEnabled ? "Enabled" : "Read only"}</span></div><div class="charger-modes">${modeButtons}</div><div class="charger-current"><div><span>Charging current</span><strong>${this._safe(currentLimit)}${currentLimit !== "--" ? ` ${this._safe(this._unit("charger_current_limit", "A"))}` : ""}</strong></div><input type="range" min="${currentAttrs.min}" max="${currentAttrs.max}" step="${currentAttrs.step}" value="${currentLimit === "--" ? currentAttrs.min : currentLimit}" data-number="charger_current_limit" data-confirm="Change the home charger current limit?" ${!controlsEnabled || !this._entity("charger_current_limit") ? "disabled" : ""}></div><div class="charger-actions">${actionButton("charger_start", "charger_start", "mdi:play", "Start", "start")}${actionButton("charger_pause", "charger_pause", "mdi:pause", "Pause")}${actionButton("charger_resume", "charger_resume", "mdi:play-pause", "Resume")}${actionButton("charger_stop", "charger_stop", "mdi:stop", "Stop", "stop")}</div>${this._notice ? `<p class="energy-notice">${this._safe(this._notice)}</p>` : ""}<p class="energy-note"><ha-icon icon="mdi:information-outline"></ha-icon><span>${controlsEnabled ? "Commands use the mapped Home Assistant entities and ask for confirmation." : "Set charger_controls: true after reviewing the mapped action entities to enable controls."}</span></p></section>
+      <section class="energy-section charger-flow card"><div class="energy-heading"><span><ha-icon icon="mdi:home-lightning-bolt-outline"></ha-icon></span><div><small>Home energy</small><h2>Power flow context</h2></div></div><div class="energy-stats compact">${stat("charger_pv_power", "mdi:solar-power", "Solar production", this._number("charger_pv_power"), this._unit("charger_pv_power", "W"), "positive")}${stat("charger_house_power", "mdi:home-lightning-bolt", "Home consumption", this._number("charger_house_power"), this._unit("charger_house_power", "W"))}${stat("charger_grid_power", "mdi:transmission-tower", "Grid power", this._number("charger_grid_power"), this._unit("charger_grid_power", "W"))}${stat("charger_grid_support", "mdi:transmission-tower-export", "Grid support", this._number("charger_grid_support"), this._unit("charger_grid_support", "A"))}</div><p class="energy-note"><ha-icon icon="mdi:leaf"></ha-icon><span>Smart and Solar remain charger-defined strategies; this card only reflects and selects the mapped Home Assistant mode.</span></p></section>
+      <section class="energy-section charger-history card"><div class="energy-heading"><span><ha-icon icon="mdi:history"></ha-icon></span><div><small>Charging history</small><h2>Latest session and totals</h2></div></div><div class="charger-session-summary"><div><span>Latest session</span><strong>${this._safe(sessionEnergy)}${sessionEnergy !== "--" ? ` ${this._safe(this._unit("charger_session_energy", "kWh"))}` : ""}</strong><small>${this._safe(sessionDate)}</small></div><div><span>Estimated cost</span><strong>${estimatedCost === "--" ? "--" : `EUR ${this._safe(Number(estimatedCost).toFixed(2))}`}</strong><small>${Number.isFinite(tariff) ? `Based on EUR ${this._safe(tariff)} / kWh` : "Map charger_session_cost or expose a tariff attribute"}</small></div></div>${historyAvailable ? `<div class="charger-history-grid">${stat("charger_energy_today", "mdi:calendar-today", "Today", this._number("charger_energy_today"), this._unit("charger_energy_today", "kWh"))}${stat("charger_energy_week", "mdi:calendar-week", "This week", this._number("charger_energy_week"), this._unit("charger_energy_week", "kWh"))}${stat("charger_energy_month", "mdi:calendar-month", "This month", this._number("charger_energy_month"), this._unit("charger_energy_month", "kWh"))}${stat("charger_cost_month", "mdi:cash", "Monthly cost", this._number("charger_cost_month"), this._unit("charger_cost_month", "EUR"))}</div>` : `<div class="charger-history-empty"><ha-icon icon="mdi:chart-timeline-variant"></ha-icon><div><strong>History helpers ready</strong><span>Map daily, weekly, or monthly utility-meter sensors to replace this placeholder with actual totals.</span></div></div>`}<button class="energy-back" data-nav="overview"><ha-icon icon="mdi:arrow-left"></ha-icon><span>Back to Overview</span></button></section>
     </main>`;
   }
 
@@ -527,6 +597,7 @@ class KiaDashboardCard extends HTMLElement {
   _energyTabStyles() {
     return `
       .energy-detail{margin-top:12px;display:grid;grid-template-columns:1.15fr 1fr;gap:12px}.energy-detail>.card{min-width:0;overflow:hidden}.energy-intro{grid-column:1/-1;min-height:150px;padding:clamp(24px,3vw,42px);display:flex;align-items:center;justify-content:space-between;gap:28px;position:relative}.energy-intro:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 82% 50%,color-mix(in srgb,var(--blue) 18%,transparent),transparent 28%);pointer-events:none}.energy-intro>div:first-child{position:relative;z-index:1;max-width:720px}.energy-eyebrow,.energy-heading small{color:var(--blue);font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.energy-intro h2{margin-top:7px;font-size:clamp(25px,2.4vw,36px)}.energy-intro p,.energy-future>p{margin-top:10px;color:var(--kia-muted);line-height:1.5}.energy-orbit{flex:0 0 92px;width:92px;height:92px;border-radius:50%;display:grid;place-items:center;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--kia-card));border:1px solid color-mix(in srgb,var(--blue) 48%,var(--kia-line));box-shadow:0 0 38px color-mix(in srgb,var(--blue) 18%,transparent)}.energy-orbit ha-icon{--mdc-icon-size:44px}.energy-section,.energy-future{padding:22px}.energy-heading{display:flex;align-items:center;gap:12px;margin-bottom:18px}.energy-heading>span{width:42px;height:42px;flex:0 0 42px;border-radius:8px;display:grid;place-items:center;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--kia-card));border:1px solid var(--kia-line)}.energy-heading h2{margin-top:3px;font-size:20px}.energy-stats{display:grid;gap:10px}.energy-stat{width:100%;min-height:76px;padding:12px 14px;display:grid;grid-template-columns:42px minmax(0,1fr) 22px;align-items:center;gap:12px;color:var(--kia-text);text-align:left;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control)}.energy-stat:hover,.energy-stat:focus-visible{border-color:var(--blue);outline:none}.energy-stat-icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--blue);background:color-mix(in srgb,var(--blue) 11%,var(--kia-card))}.energy-stat-icon ha-icon{--mdc-icon-size:22px}.energy-stat-copy{min-width:0}.energy-stat-copy small{display:block;color:var(--kia-muted);font-size:12px;font-weight:700}.energy-stat-copy strong{display:block;margin-top:3px;font-size:clamp(18px,1.7vw,24px);line-height:1.1;overflow-wrap:anywhere}.energy-stat-copy em{color:var(--kia-muted);font-size:.65em;font-style:normal;font-weight:700}.energy-stat-link{color:var(--kia-muted);--mdc-icon-size:20px}.energy-stat.positive .energy-stat-icon,.energy-stat.positive .energy-stat-copy strong{color:var(--green)}.energy-note{margin-top:14px;padding-top:14px;border-top:1px solid var(--kia-line);display:flex;align-items:flex-start;gap:9px;color:var(--kia-muted);font-size:12px;line-height:1.45}.energy-note ha-icon{flex:0 0 auto;color:var(--blue);--mdc-icon-size:18px}.energy-future{min-height:210px;position:relative}.energy-bars{height:64px;margin-top:20px;display:flex;align-items:flex-end;gap:8px;opacity:.65}.energy-bars i{flex:1;min-width:8px;height:38%;border-radius:4px 4px 0 0;background:color-mix(in srgb,var(--blue) 46%,var(--kia-line))}.energy-bars i:nth-child(2),.energy-bars i:nth-child(6){height:62%}.energy-bars i:nth-child(3){height:48%}.energy-bars i:nth-child(4){height:82%}.energy-bars i:nth-child(5){height:70%}.energy-bars i:nth-child(7){height:94%}.energy-back{margin-top:20px;min-height:46px;padding:0 16px;display:inline-flex;align-items:center;gap:9px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);font-weight:800}.energy-back ha-icon{color:var(--blue);--mdc-icon-size:20px}@media(max-width:900px){.energy-detail{grid-template-columns:1fr}.energy-intro{grid-column:auto}}@media(max-width:560px){.energy-intro{align-items:flex-start}.energy-orbit{width:64px;height:64px;flex-basis:64px}.energy-orbit ha-icon{--mdc-icon-size:32px}.energy-section,.energy-future{padding:18px}}
+      .energy-heading>div{min-width:0;flex:1}.energy-heading>.charger-health,.energy-heading>.charger-safety{width:auto;height:auto;flex:0 0 auto;border:0;background:transparent;display:flex;align-items:center;gap:7px;color:var(--kia-muted);font-size:11px;font-weight:800;white-space:nowrap}.charger-health i{width:8px;height:8px;border-radius:50%;background:var(--kia-muted);box-shadow:0 0 7px currentColor}.charger-health.online{color:var(--green)}.charger-health.online i{background:var(--green)}.charger-safety ha-icon{color:var(--blue);--mdc-icon-size:17px}.charger-live-hero{min-height:105px;margin-bottom:12px;padding:18px 20px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-recessed);display:flex;align-items:center;justify-content:space-between;gap:20px}.charger-live-hero span,.charger-live-hero small,.charger-current span,.charger-session-summary span,.charger-session-summary small,.charger-history-empty span{display:block;color:var(--kia-muted);font-size:12px}.charger-live-hero strong{display:block;margin:4px 0;font-size:clamp(24px,2.4vw,34px);text-transform:capitalize}.charger-live-hero>ha-icon{color:var(--blue);--mdc-icon-size:48px}.positive-text{color:var(--green)}.energy-stats.compact{grid-template-columns:repeat(2,minmax(0,1fr))}.charger-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.charger-mode{min-height:76px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-weight:800}.charger-mode ha-icon{color:var(--blue);--mdc-icon-size:26px}.charger-mode.active{border-color:var(--green);background:color-mix(in srgb,var(--green) 12%,var(--kia-card))}.charger-mode.active ha-icon,.charger-mode.active span{color:var(--green)}.charger-mode:disabled,.charger-action:disabled,.charger-current input:disabled{cursor:not-allowed;opacity:.5}.charger-current{margin-top:14px;padding:14px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-recessed);display:grid;grid-template-columns:auto minmax(120px,1fr);align-items:center;gap:18px}.charger-current strong{display:block;margin-top:3px}.charger-current input{width:100%;accent-color:var(--blue)}.charger-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px}.charger-action{min-height:48px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);display:flex;align-items:center;justify-content:center;gap:7px;font-weight:800}.charger-action ha-icon{color:var(--blue);--mdc-icon-size:20px}.charger-action.start{border-color:color-mix(in srgb,var(--green) 55%,var(--kia-line))}.charger-action.start ha-icon{color:var(--green)}.charger-action.stop{border-color:color-mix(in srgb,var(--red) 45%,var(--kia-line))}.charger-action.stop ha-icon{color:var(--red)}.energy-notice{margin-top:12px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--blue) 38%,var(--kia-line));border-radius:8px;background:color-mix(in srgb,var(--blue) 10%,var(--kia-card));color:var(--blue);font-size:12px}.charger-history{grid-column:1/-1}.charger-session-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.charger-session-summary>div{padding:18px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-recessed)}.charger-session-summary strong{display:block;margin:5px 0;font-size:clamp(24px,2.2vw,34px)}.charger-history-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}.charger-history-empty{min-height:92px;margin-top:10px;padding:18px;border:1px dashed var(--kia-line);border-radius:8px;background:var(--kia-recessed);display:flex;align-items:center;gap:15px}.charger-history-empty ha-icon{color:var(--blue);--mdc-icon-size:32px}.charger-history-empty strong{display:block;margin-bottom:4px}.charger-history-grid .energy-stat{grid-template-columns:36px minmax(0,1fr) 18px}.charger-history-grid .energy-stat-icon{width:34px;height:34px}@media(max-width:1050px){.energy-stats.compact,.charger-history-grid{grid-template-columns:1fr 1fr}.charger-actions{grid-template-columns:1fr 1fr}}@media(max-width:560px){.energy-stats.compact,.charger-history-grid,.charger-session-summary,.charger-current{grid-template-columns:1fr}.charger-modes{grid-template-columns:1fr}.energy-heading>.charger-health,.energy-heading>.charger-safety{grid-column:2;justify-self:start}.charger-actions{grid-template-columns:1fr 1fr}}
     `;
   }
 
@@ -729,7 +800,8 @@ class KiaDashboardCard extends HTMLElement {
     this.shadowRoot.querySelectorAll("[data-nav]").forEach((el) => el.addEventListener("click", () => this._navigate(el.dataset.nav)));
     this.shadowRoot.querySelectorAll("[data-info]").forEach((el) => el.addEventListener("click", () => this._moreInfo(el.dataset.info)));
     this.shadowRoot.querySelectorAll("[data-action]").forEach((el) => el.addEventListener("click", () => this._handleAction(el.dataset.action)));
-    this.shadowRoot.querySelectorAll("[data-number]").forEach((el) => el.addEventListener("change", () => this._setNumber(el.dataset.number, el.value)));
+    this.shadowRoot.querySelectorAll("[data-number]").forEach((el) => el.addEventListener("change", () => this._setNumber(el.dataset.number, el.value, el.dataset.confirm || "")));
+    this.shadowRoot.querySelectorAll("[data-select]").forEach((el) => el.addEventListener("click", () => this._setSelect(el.dataset.select, el.dataset.option)));
   }
 
   _styles() {

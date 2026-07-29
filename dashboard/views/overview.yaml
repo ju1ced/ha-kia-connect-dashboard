@@ -32,3 +32,24 @@ cards:
       refresh: controls.refresh
       start_charging: controls.start_charging
       stop_charging: controls.stop_charging
+      charger_online: charger.online
+      charger_status: charger.status
+      charger_mode: charger.mode
+      charger_power: charger.power
+      charger_current: charger.current
+      charger_current_limit: charger.current_limit
+      charger_session_energy: charger.session_energy
+      charger_total_energy: charger.total_energy
+      charger_grid_support: charger.grid_support
+      charger_pv_power: charger.pv_power
+      charger_house_power: charger.house_power
+      charger_grid_power: charger.grid_power
+      charger_start: charger.start
+      charger_pause: charger.pause
+      charger_resume: charger.resume
+      charger_stop: charger.stop
+      charger_energy_today: charger.energy_today
+      charger_energy_week: charger.energy_week
+      charger_energy_month: charger.energy_month
+      charger_session_cost: charger.session_cost
+      charger_cost_month: charger.cost_month

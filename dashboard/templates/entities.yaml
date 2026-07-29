@@ -14,6 +14,29 @@ battery:
   target_charge_limit: number.kia_ev6_ac_charging_limit
   plug_connected: binary_sensor.kia_ev6_ev_battery_plug
 
+charger:
+  online: binary_sensor.home_charger_connected
+  status: sensor.home_charger_status
+  mode: select.home_charger_mode
+  power: sensor.home_charger_power
+  current: sensor.home_charger_current
+  current_limit: number.home_charger_current_limit
+  session_energy: sensor.home_charger_session_energy
+  total_energy: sensor.home_charger_total_energy
+  grid_support: sensor.home_charger_grid_support
+  pv_power: sensor.home_pv_power
+  house_power: sensor.home_consumption_power
+  grid_power: sensor.home_grid_power
+  start: button.home_charger_start
+  pause: button.home_charger_pause
+  resume: button.home_charger_resume
+  stop: button.home_charger_stop
+  energy_today: sensor.home_charger_energy_today
+  energy_week: sensor.home_charger_energy_week
+  energy_month: sensor.home_charger_energy_month
+  session_cost: sensor.home_charger_session_cost
+  cost_month: sensor.home_charger_cost_month
+
 climate:
   set_temperature: sensor.kia_ev6_set_temperature
   hvac: climate.kia_ev6_climate_control
