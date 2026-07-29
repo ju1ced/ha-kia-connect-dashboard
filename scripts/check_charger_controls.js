@@ -130,6 +130,101 @@ async function run() {
   assert.match(card.shadowRoot.innerHTML, />Overzicht</);
   assert.match(card.shadowRoot.innerHTML, />Instellingen</);
   assert.match(card.shadowRoot.innerHTML, /Laadstatus/);
+  const dutchTabs = {
+    overview: [
+      "Snelle acties",
+      "Voertuigstatus",
+      "Gesloten",
+      "Laatst geparkeerd",
+      "Geen actieve dashboardwaarschuwingen",
+    ],
+    battery: [
+      "Overzicht EV-batterij",
+      "Laadbediening",
+      "Laadniveau",
+      "Kabelstatus",
+      "Huidige status",
+    ],
+    vehicle: [
+      "Controle vóór vertrek",
+      "Vergrendelingen &amp; verlichting",
+      "Deuren &amp; openingen",
+      "Bandenspanning",
+      "Voertuiggegevens onvolledig",
+    ],
+    climate: [
+      "Interieurcomfort",
+      "Gewenste interieurtemperatuur",
+      "Bediening op afstand",
+      "Systeemstatus",
+      "Stuurverwarming",
+    ],
+    energy: [
+      "Thuisladen",
+      "Voertuig en laadpunt in één energieoverzicht",
+      "Laadstrategie",
+      "Energiestroom",
+      "Laatste sessie en totalen",
+    ],
+    location: [
+      "Positie-informatie",
+      "Laatst bekende locatie",
+      "Parkeerinformatie",
+      "Klaar voor toekomstige ritgegevens",
+    ],
+    settings: [
+      "Dashboardbeheer",
+      "Entiteitstoewijzing",
+      "Actief thema",
+      "Dashboardacties",
+      "Onderhoudsfeedback",
+    ],
+  };
+  const forbiddenDutchUi = [
+    "Aanline",
+    "Ready-state check",
+    "Charge controls",
+    "State of charge",
+    "Locks &amp; lights",
+    "Prepare the cabin",
+    "Vehicle and charger in one energy view",
+    "Last known location",
+    "Dashboard administration",
+    "EV battery overview",
+    "Estimated range",
+    "Plug connected",
+    "Awaiting action-safety review",
+    "Current driving estimate",
+    "Battery health",
+    "Vehicle detail",
+    "Locks &amp; lights",
+    "Road contact",
+    "Cabin comfort",
+    "Remote controls",
+    "Home charging",
+    "Range and connection",
+    "Live session",
+    "Charging strategy",
+    "Power flow context",
+    "Latest session and totals",
+    "Position context",
+    "Parking context",
+    "Trip context",
+    "Entity mapping",
+  ];
+  for (const [tab, expected] of Object.entries(dutchTabs)) {
+    card._activeTab = tab;
+    card._render();
+    for (const label of expected)
+      assert.match(card.shadowRoot.innerHTML, new RegExp(label));
+    for (const label of forbiddenDutchUi)
+      assert.doesNotMatch(card.shadowRoot.innerHTML, new RegExp(label));
+  }
+  card._activeTab = "overview";
+  card._render();
+  assert.match(card.shadowRoot.innerHTML, />Online</);
+  assert.equal(card._localize("Online"), "Online");
+  assert.doesNotMatch(card.shadowRoot.innerHTML, /Aanline/);
 
   card._hass.locale.language = "nl-BE";
   assert.equal(card._language(), "nl");
