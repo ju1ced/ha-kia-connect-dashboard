@@ -116,12 +116,27 @@ charger_modes:
   solar: excess_only
 ```
 
+Some integrations lose the selected strategy while a charger is paused and
+resume in their default mode. Enable mode-aware resume to let the card remember
+the selected strategy before Pause and restore it through `charger_mode` when
+Resume is pressed:
+
+```yaml
+charger_resume_via_mode: true
+```
+
+The remembered value is kept for the current browser session. If no safe value
+is available, Resume sends no command and asks the user to choose Standard,
+Smart, or Solar explicitly. Leave this option disabled for integrations whose
+dedicated resume entity already preserves the charging strategy.
+
 ### Smappee EV example
 
 The `myny-git/smappee_ev` integration maps directly to the generic contract:
 
 ```yaml
 charger_controls: true
+charger_resume_via_mode: true
 entities:
   charger_online: binary_sensor.smappee_ev_YOURGATEWAY_mqtt_connected
   charger_status: sensor.smappee_ev_YOURSTATION_status_current_1
@@ -141,11 +156,31 @@ entities:
   charger_stop: button.smappee_ev_YOURSTATION_stop_charging_1
 ```
 
+Smappee EV 2026.7.x can expose `standard` after Pause and its Resume button can
+fall back to Standard when the previous mode is no longer present in integration
+state. `charger_resume_via_mode: true` avoids that fallback by restoring the mode
+the card observed before Pause.
+
 The latest-session card also reads compatible timestamp and tariff attributes
 from `charger_session_energy`. Optional `charger_energy_today`,
 `charger_energy_week`, `charger_energy_month`, `charger_session_cost`, and
 `charger_cost_month` mappings can point to Home Assistant utility meters or
 template sensors for persistent historical totals.
+
+A ready-to-copy Home Assistant package is available at
+`examples/home-assistant-packages/charger-history.yaml`. After replacing its
+source entity and restarting Home Assistant, map the generated helpers:
+
+```yaml
+entities:
+  charger_energy_today: sensor.kia_charger_energy_today
+  charger_energy_week: sensor.kia_charger_energy_week
+  charger_energy_month: sensor.kia_charger_energy_month
+  charger_cost_month: sensor.kia_charger_cost_this_month
+```
+
+The Energy tab renders whichever history helpers are available. Missing optional
+periods no longer create empty cards.
 
 ## Theme Behavior
 

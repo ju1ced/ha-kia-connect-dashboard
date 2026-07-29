@@ -22,6 +22,10 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "20"
+      - name: Check custom card syntax
+        run: node --check ha-kia-connect-dashboard.js
+      - name: Test charger controls
+        run: node scripts/check_charger_controls.js
       - name: Validate required structure
         run: python scripts/check_required_structure.py
       - name: Lint YAML

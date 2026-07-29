@@ -5,10 +5,13 @@ class KiaDashboardCard extends HTMLElement {
     this._config = {};
     this._notice = "";
     this._activeTab = "overview";
+    this._chargerModeBeforePause = "";
   }
 
   setConfig(config) {
+    const previousModeEntity = this._entity("charger_mode");
     this._config = config || {};
+    if (previousModeEntity !== this._entity("charger_mode")) this._chargerModeBeforePause = "";
     this._render();
   }
 
@@ -209,6 +212,66 @@ class KiaDashboardCard extends HTMLElement {
     return raw || `Action failed for ${entityId}`;
   }
 
+  _chargerModes() {
+    const modeOptions = this._config.charger_modes || this._config.charger?.modes || {};
+    return [
+      [modeOptions.standard || "standard", "mdi:flash", "Standard"],
+      [modeOptions.smart || "smart", "mdi:brain", "Smart"],
+      [modeOptions.solar || "solar", "mdi:solar-power", "Solar"],
+    ];
+  }
+
+  _chargerModeStorageKey() {
+    return `kia-dashboard:charger-mode:${this._entity("charger_mode") || "default"}`;
+  }
+
+  _validChargerMode(value) {
+    const mode = String(value || "").trim();
+    const match = this._chargerModes().find(([option]) => String(option).toLowerCase() === mode.toLowerCase());
+    return match ? String(match[0]) : "";
+  }
+
+  _rememberChargerMode(value = this._state("charger_mode", "")) {
+    const mode = this._validChargerMode(value);
+    if (!mode) return "";
+    this._chargerModeBeforePause = mode;
+    try {
+      window.sessionStorage?.setItem(this._chargerModeStorageKey(), mode);
+    } catch (_error) {
+      // Session storage is optional; the in-memory value still covers this card instance.
+    }
+    return mode;
+  }
+
+  _rememberedChargerMode() {
+    let mode = this._validChargerMode(this._chargerModeBeforePause);
+    if (mode) return mode;
+    try {
+      mode = this._validChargerMode(window.sessionStorage?.getItem(this._chargerModeStorageKey()));
+    } catch (_error) {
+      mode = "";
+    }
+    if (mode) this._chargerModeBeforePause = mode;
+    return mode;
+  }
+
+  _chargerStatusLabel(value) {
+    const labels = {
+      initialize: "Initializing",
+      available: "Available",
+      cable_connected: "Cable connected",
+      charging: "Charging",
+      charging_finished: "Charging finished",
+      error: "Charger error",
+      started: "Charging",
+      suspended: "Paused",
+      suspended_evse: "Paused by charger",
+      stopped: "Stopped",
+    };
+    const normalized = String(value || "").trim().toLowerCase();
+    return labels[normalized] || String(value || "Not mapped").replaceAll("_", " ");
+  }
+
   async _callEntity(entityKey, service, message) {
     const entityId = this._entity(entityKey);
     if (!entityId || !this._hass) {
@@ -263,7 +326,7 @@ class KiaDashboardCard extends HTMLElement {
     }
   }
 
-  async _setSelect(entityKey, option) {
+  async _setSelect(entityKey, option, confirmation = `Change charger mode to ${option}?`) {
     const entityId = this._entity(entityKey);
     if (!entityId || !this._hass) return;
     const domain = entityId.split(".")[0];
@@ -271,12 +334,13 @@ class KiaDashboardCard extends HTMLElement {
       this._noticeMessage(`Cannot select an option on ${entityId}; expected select entity.`);
       return;
     }
-    if (!this._confirm(`Change charger mode to ${option}?`)) {
+    if (confirmation && !this._confirm(confirmation)) {
       this._noticeMessage("Action cancelled");
       return;
     }
     try {
       await this._hass.callService(domain, "select_option", { entity_id: entityId, option });
+      this._rememberChargerMode(option);
       this._noticeMessage(`Set ${entityId} to ${option}`);
     } catch (error) {
       this._noticeMessage(this._actionErrorMessage(error, entityId));
@@ -290,8 +354,22 @@ class KiaDashboardCard extends HTMLElement {
     if (action === "start_charging") this._callEntity("start_charging", "turn_on", "Start charging now?");
     if (action === "stop_charging") this._callEntity("stop_charging", "turn_off", "Stop charging now?");
     if (action === "charger_start") this._callEntity("charger_start", "turn_on", "Start the home charger now?");
-    if (action === "charger_pause") this._callEntity("charger_pause", "turn_off", "Pause the home charger now?");
-    if (action === "charger_resume") this._callEntity("charger_resume", "turn_on", "Resume the home charger now?");
+    if (action === "charger_pause") {
+      this._rememberChargerMode();
+      this._callEntity("charger_pause", "turn_off", "Pause the home charger now?");
+    }
+    if (action === "charger_resume") {
+      if (this._config.charger_resume_via_mode === true) {
+        const mode = this._rememberedChargerMode();
+        if (!mode) {
+          this._noticeMessage("Previous charger mode is unknown. Choose Standard, Smart, or Solar to resume safely.");
+        } else {
+          this._setSelect("charger_mode", mode, `Resume the home charger in ${mode}?`);
+        }
+      } else {
+        this._callEntity("charger_resume", "turn_on", "Resume the home charger now?");
+      }
+    }
     if (action === "charger_stop") this._callEntity("charger_stop", "turn_off", "Stop the home charging session now?");
   }
 
@@ -454,12 +532,7 @@ class KiaDashboardCard extends HTMLElement {
     const totalEnergy = this._number("charger_total_energy", "--", 3);
     const chargerMode = this._state("charger_mode", "Not mapped");
     const controlsEnabled = this._config.charger_controls === true || this._config.charger?.controls === true;
-    const modeOptions = this._config.charger_modes || this._config.charger?.modes || {};
-    const modes = [
-      [modeOptions.standard || "standard", "mdi:flash", "Standard"],
-      [modeOptions.smart || "smart", "mdi:brain", "Smart"],
-      [modeOptions.solar || "solar", "mdi:solar-power", "Solar"],
-    ];
+    const modes = this._chargerModes();
     const modeEntity = this._entity("charger_mode");
     const modeDomainSupported = modeEntity && ["select", "input_select"].includes(modeEntity.split(".")[0]);
     const modeButtons = modes.map(([option, icon, label]) => {
@@ -467,6 +540,7 @@ class KiaDashboardCard extends HTMLElement {
       return `<button class="charger-mode${active ? " active" : ""}" data-select="charger_mode" data-option="${this._safe(option)}" ${!controlsEnabled || !modeDomainSupported ? "disabled" : ""}><ha-icon icon="${icon}"></ha-icon><span>${label}</span></button>`;
     }).join("");
     const actionButton = (action, key, icon, label, tone = "") => `<button class="charger-action${tone ? ` ${tone}` : ""}" data-action="${action}" ${!controlsEnabled || !this._entity(key) ? "disabled" : ""}><ha-icon icon="${icon}"></ha-icon><span>${label}</span></button>`;
+    const resumeEntityKey = this._config.charger_resume_via_mode === true ? "charger_mode" : "charger_resume";
     const currentAttrs = this._rangeAttrs("charger_current_limit", 6, 32, 1);
     const currentLimit = this._number("charger_current_limit");
     const session = this._obj("charger_session_energy");
@@ -477,16 +551,21 @@ class KiaDashboardCard extends HTMLElement {
     const tariffItems = Array.isArray(sessionAttrs.hostTariffComponents) ? sessionAttrs.hostTariffComponents : [];
     const tariff = Number.parseFloat(tariffItems.find((item) => String(item?.unit).toLowerCase() === "kwh")?.cost);
     const estimatedCost = explicitCost !== null ? explicitCost : Number.isFinite(tariff) && sessionEnergy !== "--" ? Math.round(tariff * sessionEnergy * 100) / 100 : "--";
-    const historyKeys = ["charger_energy_today", "charger_energy_week", "charger_energy_month", "charger_cost_month"];
-    const historyAvailable = historyKeys.some((key) => usable(key));
+    const historyItems = [
+      ["charger_energy_today", "mdi:calendar-today", "Today", "kWh"],
+      ["charger_energy_week", "mdi:calendar-week", "This week", "kWh"],
+      ["charger_energy_month", "mdi:calendar-month", "This month", "kWh"],
+      ["charger_cost_month", "mdi:cash", "Monthly cost", "EUR"],
+    ];
+    const historyCards = historyItems.filter(([key]) => usable(key)).map(([key, icon, label, unit]) => stat(key, icon, label, this._number(key), this._unit(key, unit))).join("");
 
     return `<main class="energy-detail" aria-label="Energy details">
       <section class="energy-intro card"><div><span class="energy-eyebrow">Home charging</span><h2>Vehicle and charger in one energy view</h2><p>Follow the live charging session, choose a charging strategy, and compare home energy flows without coupling the dashboard to one charger brand.</p></div><div class="energy-orbit" aria-hidden="true"><ha-icon icon="mdi:ev-station"></ha-icon></div></section>
       <section class="energy-section card"><div class="energy-heading"><span><ha-icon icon="mdi:map-marker-distance"></ha-icon></span><div><small>Vehicle energy</small><h2>Range and connection</h2></div></div><div class="energy-stats">${stat("battery_range", "mdi:map-marker-distance", "Estimated range", range, rangeUnit)}${stat("battery_level", "mdi:battery-high", "Battery level", battery, batteryUnit, battery === "--" ? "" : "positive")}${stat("charging_limit", "mdi:battery-charging-80", "AC charge target", chargeTarget, chargeTargetUnit)}${stat("charging_state", "mdi:ev-station", "Vehicle charging state", chargingState, "", this._charging() ? "positive" : "")}${stat("charging_power", "mdi:flash", "Vehicle charging power", chargingPower, chargingPowerUnit, this._charging() ? "positive" : "")}${stat("plug_connected", "mdi:power-plug", "Vehicle plug", plugState, "", plugConnected ? "positive" : "")}</div><p class="energy-note"><ha-icon icon="mdi:information-outline"></ha-icon><span>Vehicle data remains available when no separate home charger is configured. The Battery page owns vehicle charge limits.</span></p></section>
-      <section class="energy-section charger-live card"><div class="energy-heading"><span><ha-icon icon="mdi:ev-station"></ha-icon></span><div><small>Home charger</small><h2>Live session</h2></div><span class="charger-health ${chargerOnline ? "online" : ""}"><i></i>${chargerOnline ? "Online" : usable("charger_online") ? "Offline" : "Not mapped"}</span></div><div class="charger-live-hero"><div><span>EVSE status</span><strong class="${chargerActive ? "positive-text" : ""}">${this._safe(chargerState)}</strong><small>${this._safe(chargerMode)}</small></div><ha-icon icon="${chargerActive ? "mdi:battery-charging" : "mdi:ev-plug-type2"}"></ha-icon></div><div class="energy-stats compact">${stat("charger_power", "mdi:flash", "Charger power", chargerPower, this._unit("charger_power", "W"), chargerActive ? "positive" : "")}${stat("charger_session_energy", "mdi:counter", "Session energy", sessionEnergy, this._unit("charger_session_energy", "kWh"))}${stat("charger_current", "mdi:current-ac", "Connector current", chargerCurrent, this._unit("charger_current", "A"))}${stat("charger_total_energy", "mdi:transmission-tower-import", "Total imported", totalEnergy, this._unit("charger_total_energy", "kWh"))}</div></section>
-      <section class="energy-section charger-control card"><div class="energy-heading"><span><ha-icon icon="mdi:tune-variant"></ha-icon></span><div><small>Charging strategy</small><h2>Charger control</h2></div><span class="charger-safety"><ha-icon icon="mdi:shield-check-outline"></ha-icon>${controlsEnabled ? "Enabled" : "Read only"}</span></div><div class="charger-modes">${modeButtons}</div><div class="charger-current"><div><span>Charging current</span><strong>${this._safe(currentLimit)}${currentLimit !== "--" ? ` ${this._safe(this._unit("charger_current_limit", "A"))}` : ""}</strong></div><input type="range" min="${currentAttrs.min}" max="${currentAttrs.max}" step="${currentAttrs.step}" value="${currentLimit === "--" ? currentAttrs.min : currentLimit}" data-number="charger_current_limit" data-confirm="Change the home charger current limit?" ${!controlsEnabled || !this._entity("charger_current_limit") ? "disabled" : ""}></div><div class="charger-actions">${actionButton("charger_start", "charger_start", "mdi:play", "Start", "start")}${actionButton("charger_pause", "charger_pause", "mdi:pause", "Pause")}${actionButton("charger_resume", "charger_resume", "mdi:play-pause", "Resume")}${actionButton("charger_stop", "charger_stop", "mdi:stop", "Stop", "stop")}</div>${this._notice ? `<p class="energy-notice">${this._safe(this._notice)}</p>` : ""}<p class="energy-note"><ha-icon icon="mdi:information-outline"></ha-icon><span>${controlsEnabled ? "Commands use the mapped Home Assistant entities and ask for confirmation." : "Set charger_controls: true after reviewing the mapped action entities to enable controls."}</span></p></section>
+      <section class="energy-section charger-live card"><div class="energy-heading"><span><ha-icon icon="mdi:ev-station"></ha-icon></span><div><small>Home charger</small><h2>Live session</h2></div><span class="charger-health ${chargerOnline ? "online" : ""}"><i></i>${chargerOnline ? "Online" : usable("charger_online") ? "Offline" : "Not mapped"}</span></div><div class="charger-live-hero"><div><span>EVSE status</span><strong class="${chargerActive ? "positive-text" : ""}">${this._safe(this._chargerStatusLabel(chargerState))}</strong><small>${this._safe(chargerMode)}</small></div><ha-icon icon="${chargerActive ? "mdi:battery-charging" : "mdi:ev-plug-type2"}"></ha-icon></div><div class="energy-stats compact">${stat("charger_power", "mdi:flash", "Charger power", chargerPower, this._unit("charger_power", "W"), chargerActive ? "positive" : "")}${stat("charger_session_energy", "mdi:counter", "Session energy", sessionEnergy, this._unit("charger_session_energy", "kWh"))}${stat("charger_current", "mdi:current-ac", "Connector current", chargerCurrent, this._unit("charger_current", "A"))}${stat("charger_total_energy", "mdi:transmission-tower-import", "Total imported", totalEnergy, this._unit("charger_total_energy", "kWh"))}</div></section>
+      <section class="energy-section charger-control card"><div class="energy-heading"><span><ha-icon icon="mdi:tune-variant"></ha-icon></span><div><small>Charging strategy</small><h2>Charger control</h2></div><span class="charger-safety"><ha-icon icon="mdi:shield-check-outline"></ha-icon>${controlsEnabled ? "Enabled" : "Read only"}</span></div><div class="charger-modes">${modeButtons}</div><div class="charger-current"><div><span>Charging current</span><strong>${this._safe(currentLimit)}${currentLimit !== "--" ? ` ${this._safe(this._unit("charger_current_limit", "A"))}` : ""}</strong></div><input type="range" min="${currentAttrs.min}" max="${currentAttrs.max}" step="${currentAttrs.step}" value="${currentLimit === "--" ? currentAttrs.min : currentLimit}" data-number="charger_current_limit" data-confirm="Change the home charger current limit?" ${!controlsEnabled || !this._entity("charger_current_limit") ? "disabled" : ""}></div><div class="charger-actions">${actionButton("charger_start", "charger_start", "mdi:play", "Start", "start")}${actionButton("charger_pause", "charger_pause", "mdi:pause", "Pause")}${actionButton("charger_resume", resumeEntityKey, "mdi:play-pause", "Resume")}${actionButton("charger_stop", "charger_stop", "mdi:stop", "Stop", "stop")}</div>${this._notice ? `<p class="energy-notice">${this._safe(this._notice)}</p>` : ""}<p class="energy-note"><ha-icon icon="mdi:information-outline"></ha-icon><span>${controlsEnabled ? "Commands use the mapped Home Assistant entities and ask for confirmation." : "Set charger_controls: true after reviewing the mapped action entities to enable controls."}</span></p></section>
       <section class="energy-section charger-flow card"><div class="energy-heading"><span><ha-icon icon="mdi:home-lightning-bolt-outline"></ha-icon></span><div><small>Home energy</small><h2>Power flow context</h2></div></div><div class="energy-stats compact">${stat("charger_pv_power", "mdi:solar-power", "Solar production", this._number("charger_pv_power"), this._unit("charger_pv_power", "W"), "positive")}${stat("charger_house_power", "mdi:home-lightning-bolt", "Home consumption", this._number("charger_house_power"), this._unit("charger_house_power", "W"))}${stat("charger_grid_power", "mdi:transmission-tower", "Grid power", this._number("charger_grid_power"), this._unit("charger_grid_power", "W"))}${stat("charger_grid_support", "mdi:transmission-tower-export", "Grid support", this._number("charger_grid_support"), this._unit("charger_grid_support", "A"))}</div><p class="energy-note"><ha-icon icon="mdi:leaf"></ha-icon><span>Smart and Solar remain charger-defined strategies; this card only reflects and selects the mapped Home Assistant mode.</span></p></section>
-      <section class="energy-section charger-history card"><div class="energy-heading"><span><ha-icon icon="mdi:history"></ha-icon></span><div><small>Charging history</small><h2>Latest session and totals</h2></div></div><div class="charger-session-summary"><div><span>Latest session</span><strong>${this._safe(sessionEnergy)}${sessionEnergy !== "--" ? ` ${this._safe(this._unit("charger_session_energy", "kWh"))}` : ""}</strong><small>${this._safe(sessionDate)}</small></div><div><span>Estimated cost</span><strong>${estimatedCost === "--" ? "--" : `EUR ${this._safe(Number(estimatedCost).toFixed(2))}`}</strong><small>${Number.isFinite(tariff) ? `Based on EUR ${this._safe(tariff)} / kWh` : "Map charger_session_cost or expose a tariff attribute"}</small></div></div>${historyAvailable ? `<div class="charger-history-grid">${stat("charger_energy_today", "mdi:calendar-today", "Today", this._number("charger_energy_today"), this._unit("charger_energy_today", "kWh"))}${stat("charger_energy_week", "mdi:calendar-week", "This week", this._number("charger_energy_week"), this._unit("charger_energy_week", "kWh"))}${stat("charger_energy_month", "mdi:calendar-month", "This month", this._number("charger_energy_month"), this._unit("charger_energy_month", "kWh"))}${stat("charger_cost_month", "mdi:cash", "Monthly cost", this._number("charger_cost_month"), this._unit("charger_cost_month", "EUR"))}</div>` : `<div class="charger-history-empty"><ha-icon icon="mdi:chart-timeline-variant"></ha-icon><div><strong>History helpers ready</strong><span>Map daily, weekly, or monthly utility-meter sensors to replace this placeholder with actual totals.</span></div></div>`}<button class="energy-back" data-nav="overview"><ha-icon icon="mdi:arrow-left"></ha-icon><span>Back to Overview</span></button></section>
+      <section class="energy-section charger-history card"><div class="energy-heading"><span><ha-icon icon="mdi:history"></ha-icon></span><div><small>Charging history</small><h2>Latest session and totals</h2></div></div><div class="charger-session-summary"><div><span>Latest session</span><strong>${this._safe(sessionEnergy)}${sessionEnergy !== "--" ? ` ${this._safe(this._unit("charger_session_energy", "kWh"))}` : ""}</strong><small>${this._safe(sessionDate)}</small></div><div><span>Estimated cost</span><strong>${estimatedCost === "--" ? "--" : `EUR ${this._safe(Number(estimatedCost).toFixed(2))}`}</strong><small>${Number.isFinite(tariff) ? `Based on EUR ${this._safe(tariff)} / kWh` : "Map charger_session_cost or expose a tariff attribute"}</small></div></div>${historyCards ? `<div class="charger-history-grid">${historyCards}</div>` : `<div class="charger-history-empty"><ha-icon icon="mdi:chart-timeline-variant"></ha-icon><div><strong>History helpers ready</strong><span>Map daily, weekly, or monthly utility-meter sensors to replace this placeholder with actual totals.</span></div></div>`}<button class="energy-back" data-nav="overview"><ha-icon icon="mdi:arrow-left"></ha-icon><span>Back to Overview</span></button></section>
     </main>`;
   }
 
@@ -536,8 +615,13 @@ class KiaDashboardCard extends HTMLElement {
 
   _renderSettingsTab() {
     const configured = Object.entries(this._config.entities || {});
-    const available = configured.filter(([, entityId]) => { const state = this._hass?.states?.[entityId]?.state; return Boolean(state) && state !== "unknown" && state !== "unavailable"; });
-    const unavailable = configured.filter(([, entityId]) => { const state = this._hass?.states?.[entityId]?.state; return !state || state === "unknown" || state === "unavailable"; });
+    const entityAvailable = (entityId) => {
+      const state = this._hass?.states?.[entityId]?.state;
+      if (!state || state === "unavailable") return false;
+      return entityId.startsWith("button.") || state !== "unknown";
+    };
+    const available = configured.filter(([, entityId]) => entityAvailable(entityId));
+    const unavailable = configured.filter(([, entityId]) => !entityAvailable(entityId));
     const mappingState = configured.length ? `${available.length} of ${configured.length} available` : "No entities configured";
     const mappingOk = configured.length > 0 && unavailable.length === 0;
     const unavailableText = unavailable.length ? unavailable.map(([key]) => key.replaceAll("_", " ")).join(", ") : "All configured entities are reporting usable states.";
