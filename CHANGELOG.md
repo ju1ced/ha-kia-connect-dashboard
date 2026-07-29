@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added a generic mapped charger energy-price sensor for session and monthly cost
+  estimates, including EUR/kWh and cents-per-kWh unit handling.
+
 - Preserved charger strategy across Pause and Resume for integrations that lose
   their selected mode and otherwise fall back to Standard.
 - Added readable home-charger status labels and treated configured Home Assistant

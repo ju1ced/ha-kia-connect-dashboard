@@ -57,8 +57,10 @@ Standard.
 
 The history summary accepts optional Home Assistant utility-meter or template
 sensors through `charger_energy_today`, `charger_energy_week`,
-`charger_energy_month`, `charger_session_cost`, and `charger_cost_month`.
-When none are mapped, the Energy tab shows a clear helper-ready placeholder
+`charger_energy_month`, `charger_energy_price`, `charger_session_cost`, and
+`charger_cost_month`. A mapped energy price can estimate session and monthly
+costs when explicit cost sensors are absent, and accepts euro or cent per-kWh
+units. When none are mapped, the Energy tab shows a clear helper-ready placeholder
 instead of inventing history from the current total.
 The repository includes a Home Assistant package example at
 `examples/home-assistant-packages/charger_history.yaml`; it creates daily,

@@ -27,8 +27,14 @@ loaded by the Lovelace card itself.
      charger_energy_today: sensor.kia_charger_energy_today
      charger_energy_week: sensor.kia_charger_energy_week
      charger_energy_month: sensor.kia_charger_energy_month
+     charger_energy_price: input_number.kia_charger_energy_price
      charger_cost_month: sensor.kia_charger_cost_this_month
    ```
+
+If you already have an automatically updated average or total energy-price
+sensor, map that entity as `charger_energy_price` instead. You can omit
+`charger_cost_month` to let the card calculate monthly cost from that price and
+the monthly energy helper.
 
 A utility meter starts counting when Home Assistant first loads it. Its first
 daily, weekly, or monthly cycle is therefore partial; the next complete cycle is
