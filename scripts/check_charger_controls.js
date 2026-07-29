@@ -120,6 +120,26 @@ async function run() {
   card._config.charger_resume_via_mode = true;
 
   assert.equal(card._chargerStatusLabel("suspended_evse"), "Paused by charger");
+  card._hass.locale.language = "nl";
+  assert.equal(card._language(), "nl");
+  assert.equal(
+    card._chargerStatusLabel("suspended_evse"),
+    "Gepauzeerd door laadpunt",
+  );
+  card._render();
+  assert.match(card.shadowRoot.innerHTML, />Overzicht</);
+  assert.match(card.shadowRoot.innerHTML, />Instellingen</);
+  assert.match(card.shadowRoot.innerHTML, /Laadstatus/);
+
+  card._hass.locale.language = "nl-BE";
+  assert.equal(card._language(), "nl");
+  card._hass.locale.language = "nl-NL";
+  assert.equal(card._language(), "nl");
+  card._hass.locale.language = "fr-BE";
+  assert.equal(card._language(), "en");
+  card._render();
+  assert.match(card.shadowRoot.innerHTML, />Overview</);
+  assert.match(card.shadowRoot.innerHTML, />Settings</);
 
   const settings = card._renderSettingsTab();
   assert.match(settings, /11 of 11 available/);

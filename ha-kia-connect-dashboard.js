@@ -1,4 +1,56 @@
 const KIA_DASHBOARD_CARD_VERSION = "2.4.0";
+const KIA_DASHBOARD_NL = {
+  "AC charging limit": "AC-laadlimiet",
+  "Adjust target": "Doel aanpassen",
+  "All systems normal": "Alle systemen normaal",
+  "Available": "Beschikbaar",
+  "Back to Overview": "Terug naar Overzicht",
+  "Battery": "Batterij",
+  "Battery details": "Batterijdetails",
+  "Charge port": "Laadpoort",
+  "Charging": "Bezig met laden",
+  "Charging state": "Laadstatus",
+  "Climate": "Klimaat",
+  "Closed": "Gesloten",
+  "Connection": "Verbinding",
+  "Dashboard version": "Dashboardversie",
+  "DC charging limit": "DC-laadlimiet",
+  "Doors": "Deuren",
+  "Energy": "Energie",
+  "Entity mapping": "Entiteitstoewijzing",
+  "Front left": "Linksvoor",
+  "Front right": "Rechtsvoor",
+  "Last updated": "Laatst bijgewerkt",
+  "Lights": "Verlichting",
+  "Location": "Locatie",
+  "Locked": "Vergrendeld",
+  "No active warnings": "Geen actieve waarschuwingen",
+  "Not charging": "Niet aan het laden",
+  "Not configured": "Niet geconfigureerd",
+  "Not mapped": "Niet toegewezen",
+  "Odometer": "Kilometerstand",
+  "Off": "Uit",
+  "On": "Aan",
+  "Overview": "Overzicht",
+  "Paused by charger": "Gepauzeerd door laadpunt",
+  "Quick Actions": "Snelle acties",
+  "Range": "Bereik",
+  "Rear left": "Linksachter",
+  "Rear right": "Rechtsachter",
+  "Refresh Data": "Gegevens vernieuwen",
+  "Settings": "Instellingen",
+  "Start Charging": "Laden starten",
+  "Start Climate": "Klimaat starten",
+  "Stop Climate": "Klimaat stoppen",
+  "Tire Status": "Bandenstatus",
+  "Trunk": "Kofferbak",
+  "Unavailable": "Niet beschikbaar",
+  "Unlocked": "Ontgrendeld",
+  "Updated": "Bijgewerkt",
+  "Vehicle": "Voertuig",
+  "Vehicle Status": "Voertuigstatus",
+  "Windows": "Ramen",
+};
 
 class KiaDashboardCard extends HTMLElement {
   constructor() {
@@ -53,6 +105,19 @@ class KiaDashboardCard extends HTMLElement {
 
   _safe(value) {
     return String(value ?? "").replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char]);
+  }
+
+  _language() {
+    const language = String(this._hass?.locale?.language || "").toLowerCase();
+    return ["nl", "nl-be", "nl-nl"].includes(language) ? "nl" : "en";
+  }
+
+  _localize(value) {
+    const text = String(value ?? "");
+    if (this._language() !== "nl") return text;
+    return Object.entries(KIA_DASHBOARD_NL)
+      .sort(([left], [right]) => right.length - left.length)
+      .reduce((result, [english, dutch]) => result.replaceAll(english, dutch), text);
   }
 
   _active(key) {
@@ -194,7 +259,7 @@ class KiaDashboardCard extends HTMLElement {
 
   _confirm(message) {
     if (this._config.confirm_actions === false) return true;
-    return window.confirm(message);
+    return window.confirm(this._localize(message));
   }
 
   _noticeMessage(message) {
@@ -271,7 +336,7 @@ class KiaDashboardCard extends HTMLElement {
       stopped: "Stopped",
     };
     const normalized = String(value || "").trim().toLowerCase();
-    return labels[normalized] || String(value || "Not mapped").replaceAll("_", " ");
+    return this._localize(labels[normalized] || String(value || "Not mapped").replaceAll("_", " "));
   }
 
   async _callEntity(entityKey, service, message) {
@@ -878,7 +943,7 @@ class KiaDashboardCard extends HTMLElement {
     const mapTiles = this._mapTileGrid();
     const markerImage = this._asset(this._config.images?.map_marker || "ev6_top.png");
 
-    this.shadowRoot.innerHTML = `
+    this.shadowRoot.innerHTML = this._localize(`
       <style>${this._styles()}${this._tabStyles()}</style>
       <ha-card class="kia-shell">
         <section class="hero card">
@@ -910,7 +975,7 @@ class KiaDashboardCard extends HTMLElement {
         </nav>
 
         ${this._renderActiveTab({ battery, batteryPct, range, location, lastUpdated, chargeLimitValue, chargeLimitUnit, dcLimitMarkup, mapTiles, markerImage })}
-      </ha-card>`;
+      </ha-card>`);
 
     this.shadowRoot.querySelectorAll("[data-nav]").forEach((el) => el.addEventListener("click", () => this._navigate(el.dataset.nav)));
     this.shadowRoot.querySelectorAll("[data-info]").forEach((el) => el.addEventListener("click", () => this._moreInfo(el.dataset.info)));
