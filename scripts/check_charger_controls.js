@@ -127,9 +127,34 @@ async function run() {
   assert.match(settings, /2.4.0/);
   assert.equal(window.customCards[0].version, "2.4.0");
 
+  Object.assign(card._config.entities, {
+    door_lock: "lock.vehicle",
+    charge_port: "binary_sensor.charge_port",
+    lights: "binary_sensor.lights",
+    front_left_door: "binary_sensor.front_left_door",
+    front_right_window: "binary_sensor.front_right_window",
+    tire_front_left: "binary_sensor.tire_front_left",
+    tire_rear_right: "binary_sensor.tire_rear_right",
+  });
+  Object.assign(card._hass.states, {
+    "lock.vehicle": { state: "locked", attributes: {} },
+    "binary_sensor.charge_port": { state: "on", attributes: {} },
+    "binary_sensor.lights": { state: "off", attributes: {} },
+    "binary_sensor.front_left_door": { state: "off", attributes: {} },
+    "binary_sensor.front_right_window": { state: "on", attributes: {} },
+    "binary_sensor.tire_front_left": { state: "off", attributes: {} },
+    "binary_sensor.tire_rear_right": { state: "on", attributes: {} },
+  });
+
   const vehicle = card._renderVehicleTab();
   assert.match(vehicle, /KNAC481A1T5253159/);
   assert.match(vehicle, /data-info="vin"/);
+  assert.match(vehicle, /<b>Locked<\/b>/);
+  assert.match(vehicle, /<b>Closed<\/b>/);
+  assert.match(vehicle, /<b>Open<\/b>/);
+  assert.match(vehicle, /<b>Normal<\/b>/);
+  assert.match(vehicle, /<b>Attention<\/b>/);
+  assert.match(vehicle, /<b>Off<\/b>/);
 
   card._config.entities.dashboard_version = "update.dashboard";
   card._hass.states["update.dashboard"] = {
