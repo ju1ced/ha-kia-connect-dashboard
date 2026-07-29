@@ -106,20 +106,23 @@ entities:
   energy_consumption_90d: sensor.your_vehicle_90_day_energy_consumption
   smart_key_battery_warning: binary_sensor.your_vehicle_smart_key_battery_warning
   vent_windows: button.your_vehicle_vent_all_windows
-  front_left_window_open: button.your_vehicle_front_left_window_open
-  front_left_window_close: button.your_vehicle_front_left_window_close
-  front_right_window_open: button.your_vehicle_front_right_window_open
-  front_right_window_close: button.your_vehicle_front_right_window_close
-  rear_left_window_open: button.your_vehicle_rear_left_window_open
-  rear_left_window_close: button.your_vehicle_rear_left_window_close
-  rear_right_window_open: button.your_vehicle_rear_right_window_open
-  rear_right_window_close: button.your_vehicle_rear_right_window_close
+  front_left_window_open: cover.your_vehicle_front_left_window
+  front_left_window_close: cover.your_vehicle_front_left_window
+  front_right_window_open: cover.your_vehicle_front_right_window
+  front_right_window_close: cover.your_vehicle_front_right_window
+  rear_left_window_open: cover.your_vehicle_rear_left_window
+  rear_left_window_close: cover.your_vehicle_rear_left_window
+  rear_right_window_open: cover.your_vehicle_rear_right_window
+  rear_right_window_close: cover.your_vehicle_rear_right_window
 ```
 
 Energy-storage sensors reported in `kJ` are converted to `kWh` for display.
-All action mappings are optional. Buttons use `button.press`; switch mappings use
-the appropriate on service. Confirmation remains enabled unless
-`confirm_actions: false` is configured.
+All action mappings are optional. Window status can remain mapped to the
+integration's binary sensors, while the open and close action keys can both point
+to the same `cover.*` entity. The card calls `cover.open_cover` and
+`cover.close_cover` respectively. Button mappings continue to use
+`button.press`. Confirmation remains enabled unless `confirm_actions: false`
+is configured.
 
 ## Optional Settings Entities
 

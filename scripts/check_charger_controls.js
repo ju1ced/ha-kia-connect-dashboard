@@ -196,6 +196,7 @@ async function run() {
     "Awaiting action-safety review",
     "Current driving estimate",
     "Battery health",
+    "Traction battery and auxiliary system",
     "Vehicle detail",
     "Locks &amp; lights",
     "Road contact",
@@ -315,8 +316,18 @@ async function run() {
     energy_consumption_90d: "sensor.consumption_90d",
     smart_key_battery_warning: "binary_sensor.smart_key_warning",
     vent_windows: "button.vent_windows",
-    front_left_window_open: "button.front_left_window_open",
-    front_left_window_close: "button.front_left_window_close",
+    front_left_window: "binary_sensor.front_left_window",
+    front_right_window: "binary_sensor.front_right_window",
+    rear_left_window: "binary_sensor.rear_left_window",
+    rear_right_window: "binary_sensor.rear_right_window",
+    front_left_window_open: "cover.front_left_window",
+    front_left_window_close: "cover.front_left_window",
+    front_right_window_open: "cover.front_right_window",
+    front_right_window_close: "cover.front_right_window",
+    rear_left_window_open: "cover.rear_left_window",
+    rear_left_window_close: "cover.rear_left_window",
+    rear_right_window_open: "cover.rear_right_window",
+    rear_right_window_close: "cover.rear_right_window",
   });
   Object.assign(card._hass.states, {
     "sensor.battery_soh": {
@@ -370,8 +381,26 @@ async function run() {
     },
     "binary_sensor.smart_key_warning": { state: "on", attributes: {} },
     "button.vent_windows": { state: "unknown", attributes: {} },
-    "button.front_left_window_open": { state: "unknown", attributes: {} },
-    "button.front_left_window_close": { state: "unknown", attributes: {} },
+    "binary_sensor.front_left_window": { state: "off", attributes: {} },
+    "binary_sensor.front_right_window": { state: "off", attributes: {} },
+    "binary_sensor.rear_left_window": { state: "on", attributes: {} },
+    "binary_sensor.rear_right_window": { state: "off", attributes: {} },
+    "cover.front_left_window": {
+      state: "closed",
+      attributes: { current_position: 0 },
+    },
+    "cover.front_right_window": {
+      state: "closed",
+      attributes: { current_position: 0 },
+    },
+    "cover.rear_left_window": {
+      state: "open",
+      attributes: { current_position: 25 },
+    },
+    "cover.rear_right_window": {
+      state: "closed",
+      attributes: { current_position: 0 },
+    },
   });
 
   const batteryDiagnostics = card._renderBatteryTab({});
@@ -387,8 +416,31 @@ async function run() {
   const vehicleControls = card._renderVehicleTab();
   assert.match(vehicleControls, /Smart key battery/);
   assert.match(vehicleControls, /Replace battery/);
-  assert.match(vehicleControls, /Window controls/);
-  assert.match(vehicleControls, /data-entity-action="front_left_window_open"/);
+  assert.doesNotMatch(vehicleControls, /Window controls/);
+  assert.equal(
+    (vehicleControls.match(/class="vehicle-window-tile/g) || []).length,
+    4,
+  );
+  assert.match(
+    vehicleControls,
+    /data-entity-action="front_left_window_open" data-service="open"/,
+  );
+  assert.match(
+    vehicleControls,
+    /data-entity-action="rear_right_window_close" data-service="close"/,
+  );
+  await card._callEntity("front_left_window_open", "open", "");
+  assert.deepEqual(calls.shift(), {
+    domain: "cover",
+    service: "open_cover",
+    data: { entity_id: "cover.front_left_window" },
+  });
+  await card._callEntity("front_left_window_close", "close", "");
+  assert.deepEqual(calls.shift(), {
+    domain: "cover",
+    service: "close_cover",
+    data: { entity_id: "cover.front_left_window" },
+  });
   const climateControls = card._renderClimateTab();
   assert.match(climateControls, /data-action="start_climate"/);
   assert.match(climateControls, /data-entity-action="vent_windows"/);
