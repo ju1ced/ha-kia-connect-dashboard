@@ -96,6 +96,7 @@ entities:
   charger_current_limit: number.your_charger_current_limit
   charger_session_energy: sensor.your_charger_session_energy
   charger_total_energy: sensor.your_charger_total_energy
+  charger_energy_price: sensor.your_average_energy_price
   charger_grid_support: sensor.your_charger_grid_support
   charger_pv_power: sensor.your_home_pv_power
   charger_house_power: sensor.your_home_consumption_power
@@ -163,9 +164,17 @@ the card observed before Pause.
 
 The latest-session card also reads compatible timestamp and tariff attributes
 from `charger_session_energy`. Optional `charger_energy_today`,
-`charger_energy_week`, `charger_energy_month`, `charger_session_cost`, and
-`charger_cost_month` mappings can point to Home Assistant utility meters or
-template sensors for persistent historical totals.
+`charger_energy_week`, `charger_energy_month`, `charger_energy_price`,
+`charger_session_cost`, and `charger_cost_month` mappings can point to Home
+Assistant utility meters, tariff sensors, or template sensors for persistent
+historical totals.
+
+`charger_energy_price` accepts a sensor or input number in `EUR/kWh`, `€/kWh`,
+`ct/kWh`, or `c€/kWh`. A mapped price is shown in history and takes precedence
+over a tariff attribute when estimating the latest session. An explicit
+`charger_session_cost` still takes precedence. When monthly energy is available
+without `charger_cost_month`, the card calculates the monthly cost from the
+mapped price.
 
 A ready-to-copy Home Assistant package is available at
 `examples/home-assistant-packages/charger_history.yaml`. After replacing its
@@ -176,6 +185,7 @@ entities:
   charger_energy_today: sensor.kia_charger_energy_today
   charger_energy_week: sensor.kia_charger_energy_week
   charger_energy_month: sensor.kia_charger_energy_month
+  charger_energy_price: input_number.kia_charger_energy_price
   charger_cost_month: sensor.kia_charger_cost_this_month
 ```
 

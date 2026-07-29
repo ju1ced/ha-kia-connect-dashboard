@@ -47,7 +47,10 @@ card._config = {
     charger_start: "button.home_charger_start",
     charger_stop: "button.home_charger_stop",
     charger_status: "sensor.home_charger_status",
+    charger_session_energy: "sensor.home_charger_session_energy",
     charger_energy_today: "sensor.home_charger_energy_today",
+    charger_energy_month: "sensor.home_charger_energy_month",
+    charger_energy_price: "sensor.home_energy_price",
   },
 };
 card._hass = {
@@ -62,6 +65,18 @@ card._hass = {
     "button.home_charger_start": { state: "unknown", attributes: {} },
     "button.home_charger_stop": { state: "unknown", attributes: {} },
     "sensor.home_charger_status": { state: "suspended_evse", attributes: {} },
+    "sensor.home_charger_session_energy": {
+      state: "10",
+      attributes: { unit_of_measurement: "kWh" },
+    },
+    "sensor.home_charger_energy_month": {
+      state: "100",
+      attributes: { unit_of_measurement: "kWh" },
+    },
+    "sensor.home_energy_price": {
+      state: "0.2773",
+      attributes: { unit_of_measurement: "€/kWh" },
+    },
     "sensor.home_charger_energy_today": {
       state: "4.2",
       attributes: { unit_of_measurement: "kWh" },
@@ -102,12 +117,25 @@ async function run() {
   assert.equal(card._chargerStatusLabel("suspended_evse"), "Paused by charger");
 
   const settings = card._renderSettingsTab();
-  assert.match(settings, /7 of 7 available/);
+  assert.match(settings, /10 of 10 available/);
 
   const energy = card._renderEnergyTab({});
   assert.match(energy, /Paused by charger/);
   assert.match(energy, /Today/);
+  assert.match(energy, /Energy price/);
+  assert.match(energy, /0.2773/);
+  assert.match(energy, /EUR 2.77/);
+  assert.match(energy, /27\.73 <em>EUR/);
+  assert.match(energy, /from mapped energy price/);
   assert.doesNotMatch(energy, /This week/);
+
+  card._hass.states["sensor.home_energy_price"] = {
+    state: "27.73",
+    attributes: { unit_of_measurement: "ct/kWh" },
+  };
+  const centsEnergy = card._renderEnergyTab({});
+  assert.match(centsEnergy, /EUR 2.77/);
+  assert.match(centsEnergy, /27\.73 <em>EUR/);
 }
 
 run().catch((error) => {
