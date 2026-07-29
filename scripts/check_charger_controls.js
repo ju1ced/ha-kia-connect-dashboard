@@ -132,7 +132,10 @@ async function run() {
   assert.match(vehicle, /data-info="vin"/);
 
   card._config.entities.dashboard_version = "update.dashboard";
-  card._hass.states["update.dashboard"] = { state: "off", attributes: { installed_version: "2.3.0" } };
+  card._hass.states["update.dashboard"] = {
+    state: "off",
+    attributes: { installed_version: "2.3.0" },
+  };
   assert.match(card._renderSettingsTab(), /2.3.0/);
   delete card._config.entities.dashboard_version;
 
