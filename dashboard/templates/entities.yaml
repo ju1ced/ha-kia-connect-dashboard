@@ -5,6 +5,7 @@ vehicle:
   name: "Kia EV6"
   model: "EV6 GT-Line RWD"
   year: 2026
+  vin: sensor.kia_ev6_vehicle_identification_number
 
 battery:
   level: sensor.kia_ev6_ev_battery_level
