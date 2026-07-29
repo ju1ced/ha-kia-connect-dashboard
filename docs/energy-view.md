@@ -36,6 +36,30 @@ Energy cards must not hardcode Home Assistant entity IDs. New efficiency or
 history metrics should first be added to `dashboard/templates/entities.yaml`,
 then consumed by logical mapping names from these cards.
 
+## Home Charger Contract
+
+The custom card Energy renderer accepts optional `charger_*` mappings without
+depending on a charger vendor. It separates the surface into:
+
+- live EVSE status, power, current, session energy, and total imported energy;
+- mode, current-limit, and session controls;
+- solar, household, grid, and grid-support context;
+- latest-session cost context and optional historical totals.
+
+Commands are opt-in through `charger_controls: true` and continue to use Home
+Assistant entities. Button entities are pressed, select entities receive
+`select_option`, and number entities receive `set_value`. Browser confirmation
+remains enabled unless the existing `confirm_actions` option is disabled.
+
+The history summary accepts optional Home Assistant utility-meter or template
+sensors through `charger_energy_today`, `charger_energy_week`,
+`charger_energy_month`, `charger_session_cost`, and `charger_cost_month`.
+When none are mapped, the Energy tab shows a clear helper-ready placeholder
+instead of inventing history from the current total.
+
+See `docs/hacs-card-configuration.md` for the generic mapping and a Smappee EV
+example.
+
 ## Follow-up Work
 
 - Add explicit energy and efficiency mapping keys when the reference entities are

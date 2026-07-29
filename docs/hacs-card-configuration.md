@@ -78,6 +78,75 @@ layout_options:
   grid_rows: auto
 ```
 
+## Optional Home Charger
+
+The Energy tab accepts a brand-independent charger mapping. Read-only entities
+work immediately; charger commands remain disabled until `charger_controls` is
+explicitly set to `true`.
+
+```yaml
+type: custom:kia-dashboard-card
+charger_controls: false
+entities:
+  charger_online: binary_sensor.your_charger_connected
+  charger_status: sensor.your_charger_status
+  charger_mode: select.your_charger_mode
+  charger_power: sensor.your_charger_power
+  charger_current: sensor.your_charger_current
+  charger_current_limit: number.your_charger_current_limit
+  charger_session_energy: sensor.your_charger_session_energy
+  charger_total_energy: sensor.your_charger_total_energy
+  charger_grid_support: sensor.your_charger_grid_support
+  charger_pv_power: sensor.your_home_pv_power
+  charger_house_power: sensor.your_home_consumption_power
+  charger_grid_power: sensor.your_home_grid_power
+  charger_start: button.your_charger_start
+  charger_pause: button.your_charger_pause
+  charger_resume: button.your_charger_resume
+  charger_stop: button.your_charger_stop
+```
+
+Mode values default to `standard`, `smart`, and `solar`. Integrations using
+different option names can map them without changing the card:
+
+```yaml
+charger_modes:
+  standard: normal
+  smart: balanced
+  solar: excess_only
+```
+
+### Smappee EV example
+
+The `myny-git/smappee_ev` integration maps directly to the generic contract:
+
+```yaml
+charger_controls: true
+entities:
+  charger_online: binary_sensor.smappee_ev_YOURGATEWAY_mqtt_connected
+  charger_status: sensor.smappee_ev_YOURSTATION_status_current_1
+  charger_mode: select.smappee_ev_YOURSTATION_charging_mode_1
+  charger_power: sensor.smappee_ev_YOURSTATION_power_total_1
+  charger_current: sensor.smappee_ev_YOURSTATION_current_total_1
+  charger_current_limit: number.smappee_ev_YOURSTATION_current_1
+  charger_session_energy: sensor.smappee_ev_YOURSTATION_session_energy_1
+  charger_total_energy: sensor.smappee_ev_YOURSTATION_energy_import_kwh_1
+  charger_grid_support: sensor.smappee_ev_YOURSTATION_support_grid_1
+  charger_pv_power: sensor.smappee_ev_YOURGATEWAY_pv_power
+  charger_house_power: sensor.smappee_ev_YOURGATEWAY_house_consumption_power
+  charger_grid_power: sensor.smappee_ev_YOURGATEWAY_grid_power
+  charger_start: button.smappee_ev_YOURSTATION_start_charging_1
+  charger_pause: button.smappee_ev_YOURSTATION_pause_charging_1
+  charger_resume: button.smappee_ev_YOURSTATION_resume_charging_1
+  charger_stop: button.smappee_ev_YOURSTATION_stop_charging_1
+```
+
+The latest-session card also reads compatible timestamp and tariff attributes
+from `charger_session_energy`. Optional `charger_energy_today`,
+`charger_energy_week`, `charger_energy_month`, `charger_session_cost`, and
+`charger_cost_month` mappings can point to Home Assistant utility meters or
+template sensors for persistent historical totals.
+
 ## Theme Behavior
 
 The card follows Home Assistant theme variables for background, card surface,
