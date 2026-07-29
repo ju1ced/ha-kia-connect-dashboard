@@ -95,6 +95,14 @@ controls:
   stop_climate: switch.kia_ev6_climate
   start_charging: switch.kia_ev6_ev_charging
   stop_charging: switch.kia_ev6_ev_charging
+  front_left_window_open: cover.kia_ev6_front_left_window
+  front_left_window_close: cover.kia_ev6_front_left_window
+  front_right_window_open: cover.kia_ev6_front_right_window
+  front_right_window_close: cover.kia_ev6_front_right_window
+  rear_left_window_open: cover.kia_ev6_rear_left_window
+  rear_left_window_close: cover.kia_ev6_rear_left_window
+  rear_right_window_open: cover.kia_ev6_rear_right_window
+  rear_right_window_close: cover.kia_ev6_rear_right_window
   last_refresh_result: sensor.kia_ev6_last_refresh
   last_climate_result: switch.kia_ev6_climate
   last_charging_result: switch.kia_ev6_ev_charging

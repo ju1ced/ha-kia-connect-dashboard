@@ -8,7 +8,7 @@ ALLOWED = Path("dashboard/templates/entities.yaml")
 ALLOWED_PACKAGE_ROOT = Path("examples/home-assistant-packages")
 IGNORED_PARTS = {".git", "build", "dist", "node_modules"}
 IGNORED_KEYS = {"perform_action"}
-PATTERN = re.compile(r"\b(?:sensor|binary_sensor|switch|lock|climate|device_tracker|button|number|select|input_boolean|input_number|input_select)\.[a-zA-Z0-9_]+\b")
+PATTERN = re.compile(r"\b(?:sensor|binary_sensor|switch|cover|lock|climate|device_tracker|button|number|select|input_boolean|input_number|input_select)\.[a-zA-Z0-9_]+\b")
 KEY = re.compile(r"^\s*(?:-\s*)?([a-z_]+):")
 violations = []
 
