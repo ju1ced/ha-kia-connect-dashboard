@@ -1,0 +1,49 @@
+---
+# Copy this file to /config/packages/charger-history.yaml and replace the
+# placeholder source entity with the lifetime energy sensor of your charger.
+# Packages must be enabled in configuration.yaml before Home Assistant loads it.
+
+input_number:
+  kia_charger_energy_price:
+    name: Kia charger energy price
+    icon: mdi:currency-eur
+    min: 0
+    max: 2
+    step: 0.0001
+    mode: box
+    unit_of_measurement: EUR/kWh
+
+utility_meter:
+  kia_charger_energy_today:
+    name: Kia charger energy today
+    source: sensor.your_charger_total_energy
+    cycle: daily
+    periodically_resetting: false
+    always_available: true
+  kia_charger_energy_week:
+    name: Kia charger energy this week
+    source: sensor.your_charger_total_energy
+    cycle: weekly
+    periodically_resetting: false
+    always_available: true
+  kia_charger_energy_month:
+    name: Kia charger energy this month
+    source: sensor.your_charger_total_energy
+    cycle: monthly
+    periodically_resetting: false
+    always_available: true
+
+template:
+  - sensor:
+      - name: Kia charger cost this month
+        unique_id: kia_charger_cost_month
+        icon: mdi:cash
+        device_class: monetary
+        state_class: total
+        unit_of_measurement: EUR
+        availability: >-
+          {{ has_value('sensor.kia_charger_energy_month') and
+             has_value('input_number.kia_charger_energy_price') }}
+        state: >-
+          {{ (states('sensor.kia_charger_energy_month') | float(0) *
+              states('input_number.kia_charger_energy_price') | float(0)) | round(2) }}

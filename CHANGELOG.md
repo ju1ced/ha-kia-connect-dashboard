@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Preserved charger strategy across Pause and Resume for integrations that lose
+  their selected mode and otherwise fall back to Standard.
+- Added readable home-charger status labels and treated configured Home Assistant
+  button entities with an initial `unknown` state as actionable mappings.
+- Added ready-to-copy daily, weekly, and monthly charger utility meters plus a
+  monthly tariff-cost helper, with incremental history rendering in Energy.
 - Reworked the Overview summary panels to use inline, card-local layout rules so
   Home Assistant renders the battery, action, vehicle, location, and tire content
   as explicit full-panel compositions instead of compact centered blocks.
