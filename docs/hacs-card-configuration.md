@@ -79,6 +79,48 @@ The VIN appears as a read-only quick-reference button in the Vehicle header.
 Missing optional temperature or comfort entities remain unavailable; do not map
 a different measurement merely to fill an empty field.
 
+## Optional Battery Diagnostics and Efficiency
+
+Battery focuses on pack condition, thermal management, the 12V system, and the
+current charging estimate. Energy owns driving-efficiency trends. Vehicle shows
+the Smart Key battery warning and optional individual window actions.
+
+```yaml
+type: custom:kia-dashboard-card
+entities:
+  battery_state_of_health: sensor.your_vehicle_ev_state_of_health_battery
+  battery_capacity: sensor.your_vehicle_ev_battery_capacity
+  battery_remaining_energy: sensor.your_vehicle_ev_battery_remaining_energy
+  battery_pack_voltage: sensor.your_vehicle_ev_battery_pack_voltage
+  battery_temperature_min: sensor.your_vehicle_ev_battery_temperature_min
+  battery_temperature_max: sensor.your_vehicle_ev_battery_temperature_max
+  battery_water_temperature: sensor.your_vehicle_ev_battery_water_temperature
+  battery_heating: binary_sensor.your_vehicle_ev_battery_heating
+  battery_heater_power: sensor.your_vehicle_ev_power_consumption_battery_heater
+  battery_precondition: binary_sensor.your_vehicle_ev_battery_precondition
+  battery_winter_mode: binary_sensor.your_vehicle_ev_battery_winter_mode
+  battery_12v_level: sensor.your_vehicle_car_battery_level
+  battery_12v_fault: binary_sensor.your_vehicle_12v_battery_fault
+  estimated_charge_duration: sensor.your_vehicle_estimated_charge_duration
+  average_energy_consumption: sensor.your_vehicle_average_energy_consumption
+  energy_consumption_90d: sensor.your_vehicle_90_day_energy_consumption
+  smart_key_battery_warning: binary_sensor.your_vehicle_smart_key_battery_warning
+  vent_windows: button.your_vehicle_vent_all_windows
+  front_left_window_open: button.your_vehicle_front_left_window_open
+  front_left_window_close: button.your_vehicle_front_left_window_close
+  front_right_window_open: button.your_vehicle_front_right_window_open
+  front_right_window_close: button.your_vehicle_front_right_window_close
+  rear_left_window_open: button.your_vehicle_rear_left_window_open
+  rear_left_window_close: button.your_vehicle_rear_left_window_close
+  rear_right_window_open: button.your_vehicle_rear_right_window_open
+  rear_right_window_close: button.your_vehicle_rear_right_window_close
+```
+
+Energy-storage sensors reported in `kJ` are converted to `kWh` for display.
+All action mappings are optional. Buttons use `button.press`; switch mappings use
+the appropriate on service. Confirmation remains enabled unless
+`confirm_actions: false` is configured.
+
 ## Optional Settings Entities
 
 The Settings panel can show additional read-only integration and dashboard
