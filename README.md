@@ -9,13 +9,13 @@ open-source Hyundai/Kia dashboard for Home Assistant users.
 
 ## Status
 
-This repository now contains a HACS-installable Lovelace card, Kia Horizon theme
-tokens, mapped entity contracts for the repository-side YAML render flow,
-read-only entity diagnostics, runtime mapping health checks, and a first-test
-render path for Home Assistant. The Overview is moving to a custom Lovelace card
-so the production layout can match the visual render more closely than nested
-YAML cards allow. Real Home Assistant screenshots and medium-risk vehicle
-actions are still in progress.
+The current stable HACS card provides responsive Overview, Battery, Vehicle,
+Climate, Energy, Location, and Settings views. It supports Dutch and English,
+battery diagnostics, cover-based window controls, generic home charger mappings,
+Smappee strategy controls, charging history helpers, tariff estimates, and
+repository-side validation tools. Trip analytics, additional climate comfort
+features, reviewed medium-risk vehicle actions, and complete screenshot
+documentation remain planned.
 
 ## Mission
 
@@ -34,8 +34,9 @@ The dashboard architecture is intentionally vehicle-agnostic.
 - Kia Connect inspired visual language.
 - HACS users configure entities directly on `custom:kia-dashboard-card`.
 - Repository-side YAML renders use example mappings only.
-- Overview layout is owned by a dedicated Lovelace custom card.
-- Detail pages remain modular YAML while the custom-card pattern matures.
+- The HACS custom card owns the primary production dashboard experience.
+- The repository-side modular YAML flow remains available for rendering and
+  architecture validation while its long-term support scope is reviewed.
 - Production-quality documentation and validation.
 
 ## HACS Card Usage
@@ -98,12 +99,14 @@ static path, for example `/config/www/vehicles/ev6_front_right.png`,
 Reference renders are available in `docs/screenshots/` and documented in
 `docs/visual-reference.md`.
 
-## Planned Documentation
+## Planned Work
 
-- Customization guide.
-- Troubleshooting guide.
-- FAQ.
-- Real Home Assistant screenshot gallery.
+- Climate comfort entities and schedules.
+- Trip, regeneration, and long-term energy analytics.
+- Reviewed lock, light, and other medium-risk vehicle actions.
+- Installation, customization, troubleshooting, FAQ, and current screenshots.
+
+See `ROADMAP.md` and `TASKS.md` for the maintained project plan.
 
 ## Repository Layout
 

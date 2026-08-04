@@ -1,21 +1,28 @@
 # Issue Backlog
 
-## Repository
+## Current limitations
 
-- Create entity mapping validation script.
-- Create missing asset validation script.
-- Create Lovelace structure validation script.
+- Trip route, destination, distance, duration, and movement data are placeholders
+  until generic entity mappings are defined.
+- Seat comfort, rear-window heating, and climate schedules are not yet mapped.
+- Remote lock and light actions remain read-only pending action-safety review and
+  reliable command-result entities.
+- Real Home Assistant screenshots do not yet cover every view, breakpoint, and
+  theme mode.
+- The legacy modular YAML flow and the HACS custom card overlap and need a clear
+  long-term support decision.
 
-## Dashboard
+## Maintenance risks
 
-- Design Overview page layout.
-- Design Battery page information hierarchy.
-- Design Tire Status picture-elements card.
-- Define popup interaction model.
+- The built-in card version is manually maintained and can drift from GitHub
+  releases without an automated validation check.
+- Planning and changelog documents require explicit updates during every release.
+- Optional entities vary significantly between Hyundai/Kia integration versions;
+  new mappings must remain capability-driven and optional.
 
-## Documentation
+## Completed backlog items
 
-- Add installation guide.
-- Add customization guide.
-- Add troubleshooting guide.
-- Add FAQ.
+The repository already includes entity-reference, mapped-key, image-reference,
+required-structure, runtime-health, syntax, formatting, Markdown, and YAML
+validation. Core Overview, Battery, Vehicle, Climate, Energy, Location, and
+Settings layouts are implemented.

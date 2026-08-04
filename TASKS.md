@@ -1,99 +1,42 @@
 # Tasks
 
-## Milestone 1
+## Maintenance
 
-- [x] Create project management documents.
-- [x] Create baseline repository structure.
-- [x] Add README, contributing, changelog, and license files.
-- [x] Add GitHub issue and pull request templates.
-- [x] Add initial CI validation workflow.
+- [x] Synchronize the built-in card version with v2.5.1.
+- [x] Replace the pre-HACS roadmap with the current product roadmap.
+- [x] Reconcile milestones, tasks, and issue backlog with shipped functionality.
+- [ ] Automate built-in version validation against release metadata.
+- [ ] Decide whether legacy modular YAML views remain a supported install path.
+- [ ] Move released development notes out of the Unreleased changelog section as
+      part of each release.
 
-## Milestone 2
+## Climate comfort
 
-- [x] Finalize entity mapping schema.
-- [x] Define Lovelace include conventions.
-- [x] Document dashboard extension points.
+- [ ] Inventory available seat-heating and seat-ventilation entities.
+- [ ] Inventory rear-window heater and additional comfort entities.
+- [ ] Define a generic mapping contract for climate schedules or departure time.
+- [ ] Implement and test the mapped climate comfort controls.
 
-## Milestone 3
+## Trips and energy analytics
 
-- [x] Implement Kia Horizon theme tokens.
-- [x] Validate light/dark contrast.
+- [ ] Inventory trip, regeneration, and driving-history entities.
+- [ ] Define optional route, destination, distance, duration, and movement keys.
+- [ ] Replace the Location trip placeholder when usable mappings exist.
+- [ ] Add consumption and regeneration charts backed by Home Assistant history or
+      statistics.
 
-## Milestone 4
+## Safe vehicle actions
 
-- [x] Implement Overview view shell.
-- [x] Implement hero, battery, quick actions, map, vehicle status, tire status, and footer cards.
+- [ ] Review lock and unlock entities, confirmation wording, and result feedback.
+- [ ] Review supported light, trunk, hood, and charge-port actions separately.
+- [ ] Keep every action disabled until its state and command result are observable.
+- [ ] Add regression tests for each approved action domain and failure path.
 
-## Milestone 5
+## Documentation and visual QA
 
-- [x] Add Battery detail view shell.
-- [x] Add charging controls, range, health, session, and back navigation cards.
-- [x] Connect Battery cards to reusable mapped-entity templates.
-
-## Milestone 6
-
-- [x] Add Vehicle detail view shell.
-- [x] Add locks, openings, lights, warnings, and back navigation cards.
-- [x] Connect Vehicle cards to reusable mapped-entity templates.
-
-## Milestone 7
-
-- [x] Add Climate detail view shell.
-- [x] Add temperature, controls, comfort, session, and back navigation cards.
-- [x] Connect Climate cards to reusable mapped-entity templates.
-
-## Milestone 8
-
-- [x] Add Energy detail view shell.
-- [x] Add efficiency, range context, charging context, history, and back navigation cards.
-- [x] Connect Energy cards to reusable mapped-entity templates.
-
-## Milestone 9
-
-- [x] Add Location detail view shell.
-- [x] Add map context, odometer, parking, trip context, and back navigation cards.
-- [x] Connect Location cards to reusable mapped-entity templates.
-
-## Milestone 10
-
-- [x] Add Settings detail view shell.
-- [x] Add mapping, theme, actions, maintenance, and back navigation cards.
-- [x] Connect Settings cards to reusable mapped-entity templates.
-
-## Milestone 11
-
-- [x] Add reusable mapped state row, action button, section note, and back navigation patterns.
-- [x] Document mapped template ownership and review rules.
-- [x] Convert Battery cards to reusable mapped-entity templates.
-- [x] Convert Vehicle cards to reusable mapped-entity templates.
-- [x] Convert Climate cards to reusable mapped-entity templates.
-- [x] Convert Energy cards to reusable mapped-entity templates.
-- [x] Convert Location cards to reusable mapped-entity templates.
-- [x] Convert Settings cards to reusable mapped-entity templates.
-
-## Milestone 12
-
-- [x] Add read-only entity diagnostics guidance to Settings.
-- [x] Add reusable mapped entity diagnostics template.
-- [x] Add runtime mapping health example contract.
-- [x] Add first Home Assistant test render path.
-- [x] Add first Home Assistant test checklist.
-- [x] Add runtime mapping health checks.
-- [x] Decide where inline unavailable-entity alerts should appear.
-
-## Milestone 13
-
-- [x] Add action safety contract.
-- [x] Add confirmation-capable mapped action template.
-- [x] Add Settings feedback rows for refresh result, mapping health, and version.
-- [x] Bind low-risk Settings actions to real targets.
-- [x] Add feedback rows for last command results.
-
-## Milestone 14
-
-- [x] Add the first dark visual Overview card layer.
-- [x] Document required visual Lovelace resources.
-- [x] Convert Battery detail page to the visual card pattern.
-- [x] Convert Vehicle detail page to the visual card pattern.
-- [x] Convert Climate, Energy, Location, and Settings pages to the visual card pattern.
-- [ ] Capture real Home Assistant screenshots after the visual pass is installed.
+- [ ] Capture real Home Assistant screenshots for every view.
+- [ ] Validate desktop, tablet, and mobile layouts.
+- [ ] Validate light and dark Home Assistant themes.
+- [ ] Complete installation and customization guides.
+- [ ] Complete troubleshooting and FAQ documentation.
+- [ ] Publish an anonymized, complete reference card configuration.
