@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Synchronized the built-in card version shown in Settings with the latest stable
+  release.
+- Refreshed the roadmap, milestones, task list, issue backlog, and README to
+  reflect the post-v2.5.1 project state.
+
+## 2.5.1 - 2026-07-29
+
+- Combined traction-battery condition and 12V status into one balanced Battery
+  card.
+- Integrated four compact window status and cover controls into Vehicle.
+- Added `cover.open_cover` and `cover.close_cover` support to the card and
+  repository render tooling.
+
+## 2.5.0 - 2026-07-29
+
+- Added traction-battery diagnostics, thermal management, 12V status, estimated
+  charge duration, and energy-consumption mappings.
+- Added Smart Key battery feedback, climate actions, and optional window action
+  mappings.
+
+## Earlier development history
+
 - Replaced raw binary on/off values in Vehicle with contextual lock, opening,
   window, charge-port, light, and tire-status labels.
 

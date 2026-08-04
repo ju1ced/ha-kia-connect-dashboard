@@ -1,64 +1,56 @@
 # Roadmap
 
-## Milestone 1: Repository Setup
+The HACS card, core vehicle views, Dutch localization, Home Assistant locale
+selection, Smappee charger integration, battery diagnostics, and window controls
+are available in the current stable release.
 
-Create baseline repository metadata, planning documents, contribution guidance,
-and directory structure.
+## Completed foundation
 
-## Milestone 2: Architecture
+- HACS-installable `custom:kia-dashboard-card` with responsive light and dark UI.
+- Overview, Battery, Vehicle, Climate, Energy, Location, and Settings views.
+- Generic Home Assistant entity mapping with repository-side render validation.
+- Dutch and English UI selected from the Home Assistant locale.
+- Battery condition, thermal management, 12V status, charge limits, and session
+  context.
+- Vehicle openings, tire status, Smart Key warning, and cover-based window
+  controls.
+- Home charger status, Smappee strategy controls, Pause/Resume mode retention,
+  energy context, history helpers, and tariff estimates.
+- Confirmation and feedback patterns for enabled remote actions.
 
-Finalize entity mapping rules, include strategy, template boundaries, and
-validation contracts.
+## Next: Climate comfort
 
-## Milestone 3: Theme
+- Map seat heating and ventilation where entities are available.
+- Add rear-window heating and any remaining comfort signals.
+- Define climate schedules or departure-time support without coupling the card to
+  one integration.
 
-Implement the Kia Horizon theme with semantic colors, spacing, borders, and card
-styling.
+## Next: Trips and energy analytics
 
-## Milestone 4: Overview
+- Replace the read-only trip placeholder with mapped route, destination,
+  distance, duration, and movement data.
+- Add regeneration and driving-history signals where integrations expose them.
+- Add consumption charts and long-term statistics using Home Assistant history
+  and statistics entities.
 
-Build the first complete Overview view using reusable cards and mapped entities
-only.
+## Next: Safe vehicle actions
 
-## Milestone 5: Battery
+- Review lock and unlock actions with confirmations and command-result feedback.
+- Review supported light, trunk, hood, and charge-port actions individually.
+- Keep unsupported or insufficiently observable actions read-only.
 
-Add battery health, charging, limits, temperature, history, and preconditioning
-views.
+## Next: Documentation and visual QA
 
-## Milestone 6: Vehicle
+- Capture current Home Assistant screenshots for every view.
+- Complete installation, customization, troubleshooting, and FAQ documentation.
+- Validate desktop, tablet, mobile, light, and dark layouts against real entity
+  states.
+- Publish a complete reference configuration using anonymized entity examples.
 
-Add doors, windows, trunk, hood, lights, warnings, and VIN details.
+## Maintenance
 
-## Milestone 7: Climate
-
-Add climate, seats, steering wheel heater, rear window heater, defrost, and
-schedules.
-
-## Milestone 8: Energy
-
-Add consumption, regeneration, averages, 90-day statistics, and driving history.
-
-## Milestone 9: First Home Assistant Test
-
-Render the dashboard for a real Home Assistant instance, validate entity mapping,
-load the Kia Horizon theme, verify navigation from the existing home dashboard,
-and capture first real screenshots.
-
-## Milestone 10: Safe Vehicle Actions
-
-Enable medium-risk vehicle actions only after confirmation behavior,
-last-command feedback, and Home Assistant test evidence are reviewed.
-
-## Milestone 11: Documentation
-
-Complete installation, customization, troubleshooting, FAQ, and screenshot
-documentation.
-
-## Milestone 12: Release Candidate
-
-Harden validation, collect user feedback, fix release blockers, and prepare
-versioning.
-
-## Milestone 13: Version 1.0
-
-Publish the first stable open-source release.
+- Keep the built-in card version, changelog, release tag, and HACS metadata in
+  sync.
+- Retire or clearly label legacy YAML paths as the custom card becomes the main
+  supported experience.
+- Keep planning documents aligned with shipped releases and verified entities.

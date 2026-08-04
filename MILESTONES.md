@@ -1,49 +1,42 @@
 # Milestones
 
-## Milestone 1: Repository Setup
+## Delivered
 
-- Outcome: Baseline structure, docs, contribution templates, and CI skeleton.
+### Foundation and architecture
 
-## Milestone 2: Architecture
+- Repository structure, CI, entity abstraction, theme tokens, and validation.
 
-- Outcome: Stable dashboard architecture and entity abstraction contract.
+### Core dashboard
 
-## Milestone 3: Theme
+- Overview, Battery, Vehicle, Climate, Energy, Location, and Settings views.
+- Responsive custom-card layout with Dutch and English localization.
 
-- Outcome: Nebula theme ready for dashboard implementation.
+### Vehicle and charging integrations
 
-## Milestone 4: Overview
+- Battery diagnostics and vehicle status.
+- Cover-based window controls.
+- Generic home charger contract with Smappee controls, history, and tariff
+  context.
 
-- Outcome: First polished vehicle overview experience.
+### Stable releases
 
-## Milestone 5: Battery
+- HACS packaging and stable public releases through v2.5.1.
 
-- Outcome: Battery and charging detail pages.
+## Planned
 
-## Milestone 6: Vehicle
+### Climate comfort
 
-- Outcome: Vehicle state and warnings pages.
+- Seat comfort, rear-window heating, and scheduling support.
 
-## Milestone 7: Climate
+### Trips and analytics
 
-- Outcome: Climate controls and schedule pages.
+- Mapped trip context, regeneration, charts, and driving history.
 
-## Milestone 8: Energy
+### Safe vehicle actions
 
-- Outcome: Energy analytics and driving history pages.
+- Reviewed lock, light, and other medium-risk remote actions.
 
-## Milestone 9: Animations
+### Documentation and hardening
 
-- Outcome: Production-ready conditional visuals and animations.
-
-## Milestone 10: Documentation
-
-- Outcome: Complete user and maintainer documentation.
-
-## Milestone 11: Release Candidate
-
-- Outcome: Validated pre-1.0 release candidate.
-
-## Milestone 12: Version 1.0
-
-- Outcome: Stable public release.
+- Current screenshots, complete user guides, responsive QA, and legacy-path
+  cleanup.
