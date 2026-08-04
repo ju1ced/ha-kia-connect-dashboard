@@ -73,11 +73,27 @@ entities:
   outside_temperature: sensor.your_vehicle_outside_temperature
   defrost: binary_sensor.your_vehicle_defrost
   steering_wheel_heater: binary_sensor.your_vehicle_steering_wheel_heater
+  rear_window_heater: switch.your_vehicle_rear_window_heater
+  driver_seat_heating: select.your_vehicle_driver_seat_heating
+  passenger_seat_heating: select.your_vehicle_passenger_seat_heating
+  rear_left_seat_heating: select.your_vehicle_rear_left_seat_heating
+  rear_right_seat_heating: select.your_vehicle_rear_right_seat_heating
+  driver_seat_ventilation: select.your_vehicle_driver_seat_ventilation
+  passenger_seat_ventilation: select.your_vehicle_passenger_seat_ventilation
+  rear_left_seat_ventilation: select.your_vehicle_rear_left_seat_ventilation
+  rear_right_seat_ventilation: select.your_vehicle_rear_right_seat_ventilation
+  climate_schedule: input_boolean.your_vehicle_climate_schedule
+  climate_departure_time: input_datetime.your_vehicle_departure_time
 ```
 
 The VIN appears as a read-only quick-reference button in the Vehicle header.
 Missing optional temperature or comfort entities remain unavailable; do not map
-a different measurement merely to fill an empty field.
+a different measurement merely to fill an empty field. Seat and rear-window
+comfort tiles only appear when mapped. `switch.*`, `input_boolean.*`, and
+`button.*` mappings are actionable with confirmation; other domains open the
+standard Home Assistant entity dialog. Climate schedule and departure mappings
+are intentionally context-only until an integration-independent service
+contract exists.
 
 ## Optional Battery Diagnostics and Efficiency
 

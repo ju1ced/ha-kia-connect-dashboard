@@ -14,8 +14,8 @@
 
 - [ ] Inventory available seat-heating and seat-ventilation entities.
 - [ ] Inventory rear-window heater and additional comfort entities.
-- [ ] Define a generic mapping contract for climate schedules or departure time.
-- [ ] Implement and test the mapped climate comfort controls.
+- [x] Define a generic mapping contract for climate schedules or departure time.
+- [x] Implement and test the mapped climate comfort controls.
 
 ## Trips and energy analytics
 

@@ -316,6 +316,13 @@ async function run() {
     energy_consumption_90d: "sensor.consumption_90d",
     smart_key_battery_warning: "binary_sensor.smart_key_warning",
     vent_windows: "button.vent_windows",
+    rear_window_heater: "switch.rear_window_heater",
+    driver_seat_heating: "switch.driver_seat_heating",
+    passenger_seat_heating: "select.passenger_seat_heating",
+    rear_left_seat_heating: "button.rear_left_seat_heating",
+    driver_seat_ventilation: "binary_sensor.driver_seat_ventilation",
+    climate_schedule: "input_boolean.climate_schedule",
+    climate_departure_time: "input_datetime.climate_departure_time",
     front_left_window: "binary_sensor.front_left_window",
     front_right_window: "binary_sensor.front_right_window",
     rear_left_window: "binary_sensor.rear_left_window",
@@ -381,6 +388,19 @@ async function run() {
     },
     "binary_sensor.smart_key_warning": { state: "on", attributes: {} },
     "button.vent_windows": { state: "unknown", attributes: {} },
+    "switch.rear_window_heater": { state: "on", attributes: {} },
+    "switch.driver_seat_heating": { state: "off", attributes: {} },
+    "button.rear_left_seat_heating": { state: "unknown", attributes: {} },
+    "select.passenger_seat_heating": {
+      state: "high",
+      attributes: { options: ["off", "low", "medium", "high"] },
+    },
+    "binary_sensor.driver_seat_ventilation": { state: "on", attributes: {} },
+    "input_boolean.climate_schedule": { state: "on", attributes: {} },
+    "input_datetime.climate_departure_time": {
+      state: "07:30:00",
+      attributes: { has_date: false, has_time: true },
+    },
     "binary_sensor.front_left_window": { state: "off", attributes: {} },
     "binary_sensor.front_right_window": { state: "off", attributes: {} },
     "binary_sensor.rear_left_window": { state: "on", attributes: {} },
@@ -444,6 +464,42 @@ async function run() {
   const climateControls = card._renderClimateTab();
   assert.match(climateControls, /data-action="start_climate"/);
   assert.match(climateControls, /data-entity-action="vent_windows"/);
+  assert.match(climateControls, /Rear window heat/);
+  assert.match(climateControls, /Driver seat heating/);
+  assert.match(climateControls, /Passenger seat heating/);
+  assert.match(climateControls, /Rear left seat heating/);
+  assert.match(climateControls, /<strong>Ready<\/strong>/);
+  assert.match(climateControls, /data-entity-action="rear_left_seat_heating"/);
+  assert.match(climateControls, /Driver seat ventilation/);
+  assert.match(climateControls, /Climate schedule/);
+  assert.match(climateControls, /07:30:00/);
+  assert.match(
+    climateControls,
+    /data-entity-action="rear_window_heater" data-service="turn_off"/,
+  );
+  assert.match(
+    climateControls,
+    /data-entity-action="driver_seat_heating" data-service="turn_on"/,
+  );
+  assert.match(climateControls, /data-info="passenger_seat_heating"/);
+  await card._callEntity(
+    "driver_seat_heating",
+    "turn_on",
+    "Change climate comfort setting?",
+  );
+  assert.deepEqual(calls.shift(), {
+    domain: "switch",
+    service: "turn_on",
+    data: { entity_id: "switch.driver_seat_heating" },
+  });
+  card._hass.locale.language = "nl";
+  card._activeTab = "climate";
+  card._render();
+  const dutchClimateControls = card.shadowRoot.innerHTML;
+  assert.match(dutchClimateControls, /Achterruitverwarming/);
+  assert.match(dutchClimateControls, /Bestuurderszetel verwarmen/);
+  assert.match(dutchClimateControls, /Klimaatschema/);
+  assert.match(dutchClimateControls, /Volgend vertrek/);
 }
 
 run().catch((error) => {

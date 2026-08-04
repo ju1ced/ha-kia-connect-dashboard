@@ -35,7 +35,7 @@ NAVIGATION_LINE = re.compile(
 LOGICAL_KEY = re.compile(r"^([a-z][a-z0-9_]*)\s*(?:\.|/)\s*([a-z][a-z0-9_]*)$")
 REAL_ENTITY = re.compile(
     r"^(?:sensor|binary_sensor|switch|cover|lock|climate|device_tracker|button|"
-    r"number|select|input_boolean|input_number|input_select)\."
+    r"number|select|input_boolean|input_datetime|input_number|input_select)\."
     r"[a-zA-Z0-9_]+$"
 )
 IGNORED_VALUE_KEYS = {"perform_action"}

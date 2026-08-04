@@ -1,9 +1,19 @@
 ---
-type: custom:decluttering-card
-template: kia_visual_text_panel
-variables:
-  - title: Session
-  - content: >-
-      Remote climate session details will live here once mapped state and
-      service handling are introduced. Expected follow-up fields include
-      requested mode, target temperature, timer, and last command result.
+type: grid
+columns: 2
+square: false
+cards:
+  - type: custom:decluttering-card
+    template: kia_visual_stat_tile
+    variables:
+      - entity: climate / schedule
+      - name: Climate schedule
+      - icon: mdi:calendar-clock
+      - label: Schedule context
+  - type: custom:decluttering-card
+    template: kia_visual_stat_tile
+    variables:
+      - entity: climate / departure_time
+      - name: Next departure
+      - icon: mdi:clock-start
+      - label: Departure context

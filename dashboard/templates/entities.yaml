@@ -59,6 +59,17 @@ climate:
   hvac: climate.kia_ev6_climate_control
   defrost: binary_sensor.kia_ev6_defrost
   steering_wheel_heater: binary_sensor.kia_ev6_steering_wheel_heater
+  rear_window_heater: switch.kia_ev6_rear_window_heater
+  driver_seat_heating: select.kia_ev6_driver_seat_heating
+  passenger_seat_heating: select.kia_ev6_passenger_seat_heating
+  rear_left_seat_heating: select.kia_ev6_rear_left_seat_heating
+  rear_right_seat_heating: select.kia_ev6_rear_right_seat_heating
+  driver_seat_ventilation: select.kia_ev6_driver_seat_ventilation
+  passenger_seat_ventilation: select.kia_ev6_passenger_seat_ventilation
+  rear_left_seat_ventilation: select.kia_ev6_rear_left_seat_ventilation
+  rear_right_seat_ventilation: select.kia_ev6_rear_right_seat_ventilation
+  schedule: input_boolean.kia_ev6_climate_schedule
+  departure_time: input_datetime.kia_ev6_departure_time
 
 location:
   tracker: device_tracker.kia_ev6_location
