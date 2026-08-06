@@ -16,22 +16,20 @@ are available in the current stable release.
   controls.
 - Home charger status, Smappee strategy controls, Pause/Resume mode retention,
   energy context, history helpers, and tariff estimates.
+- Seat comfort, rear-window heating, and departure schedule context.
+- Daily driving distance, efficiency, regeneration summaries, and 14-day
+  consumption and regeneration charts.
 - Confirmation and feedback patterns for enabled remote actions.
 
-## Next: Climate comfort
+## Next: Rich trip data
 
-- Map seat heating and ventilation where entities are available.
-- Add rear-window heating and any remaining comfort signals.
-- Define climate schedules or departure-time support without coupling the card to
-  one integration.
-
-## Next: Trips and energy analytics
-
-- Replace the read-only trip placeholder with mapped route, destination,
-  distance, duration, and movement data.
-- Add regeneration and driving-history signals where integrations expose them.
-- Add consumption charts and long-term statistics using Home Assistant history
-  and statistics entities.
+- Investigate Tronity or another provider for individual trip routes,
+  destinations, duration, and movement data not exposed by Kia Connect.
+- Define optional provider-neutral mappings without coupling the card to one API.
+- Add further long-term statistics where reliable entities are available.
+- Follow the server-side integration plan in
+  [`docs/tronity-api.md`](docs/tronity-api.md) once the authenticated endpoint
+  schema has been verified.
 
 ## Next: Safe vehicle actions
 
