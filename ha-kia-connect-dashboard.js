@@ -1,4 +1,4 @@
-const KIA_DASHBOARD_CARD_VERSION = "2.5.1";
+const KIA_DASHBOARD_CARD_VERSION = "2.6.0";
 const KIA_DASHBOARD_NL = {
   "AC charge target": "AC-laaddoel",
   "AC charging limit": "AC-laadlimiet",
