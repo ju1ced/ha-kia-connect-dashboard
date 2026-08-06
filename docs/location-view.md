@@ -19,8 +19,8 @@ odometer, parking state, trip context, and a return path to Overview.
 - `dashboard/cards/location-odometer.yaml` owns odometer display.
 - `dashboard/cards/location-parking.yaml` owns parking and update freshness
   context.
-- `dashboard/cards/location-trip-context.yaml` owns future trip and movement
-  context.
+- `dashboard/cards/location-trip-context.yaml` owns mapped daily-driving and
+  drive-mode context.
 - `dashboard/cards/location-back-navigation.yaml` owns return navigation to
   Overview.
 
@@ -38,8 +38,9 @@ odometer, parking, or trip values should first be added to
 `dashboard/templates/entities.yaml`, then consumed by logical mapping names from
 these cards.
 
-## Follow-up Work
+## Driving Context
 
-- Decide whether the tracker should render as a native map card or a compact
-  status card first.
-- Add parking freshness and trip metrics once the reference entities are known.
+When `today_driving_stats` or `daily_driving_stats` is mapped, the trip block
+shows today's distance and calculated consumption. `drive_mode` adds the current
+drive mode. The original placeholder remains when none of these mappings are
+available; route and destination are deliberately not inferred.

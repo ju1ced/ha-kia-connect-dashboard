@@ -13,8 +13,8 @@ charging context, history, and a return path to Overview.
 ## Card Ownership
 
 - `dashboard/cards/energy-hero.yaml` owns page context and energy mapping scope.
-- `dashboard/cards/energy-efficiency.yaml` owns future consumption and
-  efficiency trends.
+- `dashboard/cards/energy-efficiency.yaml` documents consumption, regeneration,
+  and driving-history ownership.
 - `dashboard/cards/energy-range-context.yaml` owns range, charge level, and
   charge target context.
 - `dashboard/cards/energy-charging-context.yaml` owns charging state, charging
@@ -27,8 +27,10 @@ charging context, history, and a return path to Overview.
 ## Mapped Template Usage
 
 Energy detail cards use `custom:decluttering-card` wrappers for range rows,
-charging rows, placeholder section notes, and back navigation. Chart-ready blocks
-remain section notes until statistics entities or helper sensors are mapped.
+charging rows, section notes, and back navigation. The custom card renders a
+compact 14-day chart when a date-keyed daily-driving statistics sensor is
+mapped. It uses the integration's attributes directly and does not create Home
+Assistant helpers.
 
 ## Entity Rules
 
@@ -70,9 +72,10 @@ Individual available helpers render independently.
 See `docs/hacs-card-configuration.md` for the generic mapping and a Smappee EV
 example.
 
-## Follow-up Work
+## Driving Analytics Contract
 
-- Add explicit energy and efficiency mapping keys when the reference entities are
-  known.
-- Decide which chart card should render historical consumption once statistics
-  entities exist.
+The optional `daily_driving_stats`, `today_driving_stats`,
+`total_energy_regeneration`, and `drive_mode` mappings add daily consumption,
+regeneration, distance, trip efficiency, and current drive-mode context. Daily
+attributes are expected to use ISO dates as keys and expose `distance`,
+`total_consumed`, and `regenerated_energy`, with energy values in Wh.

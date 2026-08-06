@@ -53,10 +53,16 @@ const KIA_DASHBOARD_NL = {
   "Configuration": "Configuratie",
   "Configured charging targets": "Geconfigureerde laaddoelen",
   "Connected": "Verbonden",
+  "Consumed": "Verbruikt",
   "Connection": "Verbinding",
   "Connector current": "Aansluitstroom",
   "Coordinates unavailable": "Coördinaten niet beschikbaar",
   "Current driving estimate": "Huidige rijbereikschatting",
+  "Daily driving history": "Dagelijkse rijgeschiedenis",
+  "Distance today": "Afstand vandaag",
+  "Drive mode": "Rijmodus",
+  "Driving analytics": "Rij-analyse",
+  "Driving context": "Rij-informatie",
   "Current state": "Huidige status",
   "Dashboard actions": "Dashboardacties",
   "Dashboard administration": "Dashboardbeheer",
@@ -75,6 +81,7 @@ const KIA_DASHBOARD_NL = {
   "Energy": "Energie",
   "Energy details": "Energiedetails",
   "Energy price": "Energieprijs",
+  "Energy regenerated": "Teruggewonnen energie",
   "Entity mapping": "Entiteitstoewijzing",
   "Estimated cost": "Geschatte kosten",
   "Estimated range": "Geschat bereik",
@@ -162,6 +169,7 @@ const KIA_DASHBOARD_NL = {
   "Ready-state check": "Controle vóór vertrek",
   "Rear left": "Linksachter",
   "Rear right": "Rechtsachter",
+  "Regenerated": "Teruggewonnen",
   "Refresh Data": "Gegevens vernieuwen",
   "Refresh vehicle": "Voertuig vernieuwen",
   "Remote climate session": "Klimaatsessie op afstand",
@@ -219,6 +227,9 @@ const KIA_DASHBOARD_NL = {
   "System state": "Systeemstatus",
   "Temperature": "Temperatuur",
   "This month": "Deze maand",
+  "Today&apos;s driving": "Ritgegevens van vandaag",
+  "Total regeneration": "Totale regeneratie",
+  "of consumption": "van het verbruik",
   "This week": "Deze week",
   "Tire pressure": "Bandenspanning",
   "Tire Status": "Bandenstatus",
@@ -401,6 +412,33 @@ class KiaDashboardCard extends HTMLElement {
 
   _unit(key, fallback = "") {
     return this._obj(key)?.attributes?.unit_of_measurement || fallback;
+  }
+
+  _drivingHistory() {
+    const attributes = this._obj("daily_driving_stats")?.attributes || {};
+    return Object.entries(attributes)
+      .filter(([date, value]) => /^\d{4}-\d{2}-\d{2}$/.test(date) && value && typeof value === "object")
+      .map(([date, value]) => ({
+        date,
+        distance: Number.parseFloat(value.distance) || 0,
+        consumed: Number.parseFloat(value.total_consumed) || 0,
+        regenerated: Number.parseFloat(value.regenerated_energy) || 0,
+      }))
+      .sort((left, right) => left.date.localeCompare(right.date));
+  }
+
+  _todayDriving() {
+    const mapped = this._obj("today_driving_stats");
+    if (mapped && !["unknown", "unavailable"].includes(mapped.state)) {
+      const value = mapped.attributes || {};
+      return {
+        date: value.today_date || mapped.state,
+        distance: Number.parseFloat(value.distance) || 0,
+        consumed: Number.parseFloat(value.total_consumed) || 0,
+        regenerated: Number.parseFloat(value.regenerated_energy) || 0,
+      };
+    }
+    return this._drivingHistory().at(-1) || null;
   }
 
   _safe(value) {
@@ -958,7 +996,8 @@ class KiaDashboardCard extends HTMLElement {
     const chargeTarget = this._number("charging_limit");
     const chargeTargetUnit = this._unit("charging_limit", "%") || "%";
     const chargingPower = this._number("charging_power");
-    const chargingPowerUnit = this._unit("charging_power", "kW") || "kW";    const averageConsumption = this._number("average_energy_consumption");
+    const chargingPowerUnit = this._unit("charging_power", "kW") || "kW";
+    const averageConsumption = this._number("average_energy_consumption");
     const averageConsumptionUnit = this._unit("average_energy_consumption", "kWh/100 km");
     const consumption90d = this._number("energy_consumption_90d");
     const consumption90dUnit = this._unit("energy_consumption_90d", "kWh/100 km");
@@ -967,6 +1006,35 @@ class KiaDashboardCard extends HTMLElement {
     const plugAvailable = Boolean(plugObject) && !["unknown", "unavailable"].includes(plugObject.state);
     const plugConnected = plugAvailable && this._active("plug_connected");
     const plugState = plugAvailable ? (plugConnected ? "Connected" : "Disconnected") : "--";
+    const todayDriving = this._todayDriving();
+    const drivingHistory = this._drivingHistory().slice(-14);
+    const totalRegeneration = this._number("total_energy_regeneration");
+    const totalRegenerationUnit = this._unit("total_energy_regeneration", "Wh");
+    const displayEnergy = (value, unit = "Wh") => {
+      if (!Number.isFinite(Number(value))) return "--";
+      const kwh = String(unit).toLowerCase() === "kwh" ? Number(value) : Number(value) / 1000;
+      return `${Math.round(kwh * 10) / 10} kWh`;
+    };
+    const todayEfficiency = todayDriving?.distance > 0 ? Math.round((todayDriving.consumed / 1000 / todayDriving.distance) * 1000) / 10 : "--";
+    const todayRegenRatio = todayDriving?.consumed > 0 ? Math.round((todayDriving.regenerated / todayDriving.consumed) * 100) : "--";
+    const chartMaximum = Math.max(1, ...drivingHistory.flatMap((day) => [day.consumed, day.regenerated]));
+    const drivingBars = drivingHistory.map((day) => {
+      const consumedHeight = Math.max(3, Math.round((day.consumed / chartMaximum) * 100));
+      const regeneratedHeight = Math.max(3, Math.round((day.regenerated / chartMaximum) * 100));
+      const label = day.date.slice(5).replace("-", "/");
+      const title = `${day.date}: ${displayEnergy(day.consumed)} consumed, ${displayEnergy(day.regenerated)} regenerated, ${Math.round(day.distance * 10) / 10} km`;
+      return `<div class="driving-day" title="${this._safe(title)}"><div><i class="consumed" style="height:${consumedHeight}%"></i><i class="regenerated" style="height:${regeneratedHeight}%"></i></div><span>${this._safe(label)}</span></div>`;
+    }).join("");
+    const drivingAnalytics = todayDriving || drivingHistory.length || totalRegeneration !== "--" ? `
+      <section class="energy-section driving-analytics card"><div class="energy-heading"><span><ha-icon icon="mdi:chart-box-outline"></ha-icon></span><div><small>Driving analytics</small><h2>Daily driving history</h2></div></div>
+        <div class="driving-summary">
+          <button data-info="today_driving_stats"><span>Distance today</span><strong>${this._safe(todayDriving ? Math.round(todayDriving.distance * 10) / 10 : "--")} <em>km</em></strong></button>
+          <button data-info="today_driving_stats"><span>Average energy consumption</span><strong>${this._safe(todayEfficiency)} <em>kWh/100 km</em></strong></button>
+          <button data-info="today_driving_stats"><span>Energy regenerated</span><strong>${this._safe(todayDriving ? displayEnergy(todayDriving.regenerated) : "--")}</strong><small>${this._safe(todayRegenRatio)}${todayRegenRatio === "--" ? "" : "%"} of consumption</small></button>
+          <button data-info="total_energy_regeneration"><span>Total regeneration</span><strong>${this._safe(totalRegeneration === "--" ? "--" : displayEnergy(totalRegeneration, totalRegenerationUnit))}</strong></button>
+        </div>
+        ${drivingBars ? `<div class="driving-chart" role="img" aria-label="Daily consumption and regenerated energy over the latest ${drivingHistory.length} driving days"><div class="driving-chart-legend"><span><i class="consumed"></i>Consumed</span><span><i class="regenerated"></i>Regenerated</span></div><div class="driving-chart-bars">${drivingBars}</div></div>` : ""}
+      </section>` : "";
 
     const stat = (key, icon, label, value, unit = "", status = "") => `<button class="energy-stat${status ? ` ${status}` : ""}" data-info="${key}"><span class="energy-stat-icon"><ha-icon icon="${icon}"></ha-icon></span><span class="energy-stat-copy"><small>${label}</small><strong>${this._safe(value)}${unit && value !== "--" ? ` <em>${this._safe(unit)}</em>` : ""}</strong></span><ha-icon class="energy-stat-link" icon="mdi:chevron-right"></ha-icon></button>`;
     const usable = (key) => {
@@ -1033,6 +1101,7 @@ class KiaDashboardCard extends HTMLElement {
     return `<main class="energy-detail" aria-label="Energy details">
       <section class="energy-intro card"><div><span class="energy-eyebrow">Home charging</span><h2>Vehicle and charger in one energy view</h2><p>Follow the live charging session, choose a charging strategy, and compare home energy flows without coupling the dashboard to one charger brand.</p></div><div class="energy-orbit" aria-hidden="true"><ha-icon icon="mdi:ev-station"></ha-icon></div></section>
       <section class="energy-section card"><div class="energy-heading"><span><ha-icon icon="mdi:map-marker-distance"></ha-icon></span><div><small>Vehicle energy</small><h2>Range and connection</h2></div></div><div class="energy-stats">${stat("battery_range", "mdi:map-marker-distance", "Estimated range", range, rangeUnit)}${stat("battery_level", "mdi:battery-high", "Battery level", battery, batteryUnit, battery === "--" ? "" : "positive")}${stat("charging_limit", "mdi:battery-charging-80", "AC charge target", chargeTarget, chargeTargetUnit)}${stat("charging_state", "mdi:ev-station", "Vehicle charging state", chargingState, "", this._charging() ? "positive" : "")}${stat("charging_power", "mdi:flash", "Vehicle charging power", chargingPower, chargingPowerUnit, this._charging() ? "positive" : "")}${stat("plug_connected", "mdi:power-plug", "Vehicle plug", plugState, "", plugConnected ? "positive" : "")}${stat("average_energy_consumption", "mdi:gauge", "Average energy consumption", averageConsumption, averageConsumptionUnit)}${stat("energy_consumption_90d", "mdi:chart-timeline-variant", "90-day energy consumption", consumption90d, consumption90dUnit)}</div><p class="energy-note"><ha-icon icon="mdi:information-outline"></ha-icon><span>Vehicle data remains available when no separate home charger is configured. The Battery page owns vehicle charge limits.</span></p></section>
+      ${drivingAnalytics}
       <section class="energy-section charger-live card"><div class="energy-heading"><span><ha-icon icon="mdi:ev-station"></ha-icon></span><div><small>Home charger</small><h2>Live session</h2></div><span class="charger-health ${chargerOnline ? "online" : ""}"><i></i>${chargerOnline ? "Online" : usable("charger_online") ? "Offline" : "Not mapped"}</span></div><div class="charger-live-hero"><div><span>EVSE status</span><strong class="${chargerActive ? "positive-text" : ""}">${this._safe(this._chargerStatusLabel(chargerState))}</strong><small>${this._safe(chargerMode)}</small></div><ha-icon icon="${chargerActive ? "mdi:battery-charging" : "mdi:ev-plug-type2"}"></ha-icon></div><div class="energy-stats compact">${stat("charger_power", "mdi:flash", "Charger power", chargerPower, this._unit("charger_power", "W"), chargerActive ? "positive" : "")}${stat("charger_session_energy", "mdi:counter", "Session energy", sessionEnergy, this._unit("charger_session_energy", "kWh"))}${stat("charger_current", "mdi:current-ac", "Connector current", chargerCurrent, this._unit("charger_current", "A"))}${stat("charger_total_energy", "mdi:transmission-tower-import", "Total imported", totalEnergy, this._unit("charger_total_energy", "kWh"))}</div></section>
       <section class="energy-section charger-control card"><div class="energy-heading"><span><ha-icon icon="mdi:tune-variant"></ha-icon></span><div><small>Charging strategy</small><h2>Charger control</h2></div><span class="charger-safety"><ha-icon icon="mdi:shield-check-outline"></ha-icon>${controlsEnabled ? "Enabled" : "Read only"}</span></div><div class="charger-modes">${modeButtons}</div><div class="charger-current"><div><span>Charging current</span><strong>${this._safe(currentLimit)}${currentLimit !== "--" ? ` ${this._safe(this._unit("charger_current_limit", "A"))}` : ""}</strong></div><input type="range" min="${currentAttrs.min}" max="${currentAttrs.max}" step="${currentAttrs.step}" value="${currentLimit === "--" ? currentAttrs.min : currentLimit}" data-number="charger_current_limit" data-confirm="Change the home charger current limit?" ${!controlsEnabled || !this._entity("charger_current_limit") ? "disabled" : ""}></div><div class="charger-actions">${actionButton("charger_start", "charger_start", "mdi:play", "Start", "start")}${actionButton("charger_pause", "charger_pause", "mdi:pause", "Pause")}${actionButton("charger_resume", resumeEntityKey, "mdi:play-pause", "Resume")}${actionButton("charger_stop", "charger_stop", "mdi:stop", "Stop", "stop")}</div>${this._notice ? `<p class="energy-notice">${this._safe(this._notice)}</p>` : ""}<p class="energy-note"><ha-icon icon="mdi:information-outline"></ha-icon><span>${controlsEnabled ? "Commands use the mapped Home Assistant entities and ask for confirmation." : "Set charger_controls: true after reviewing the mapped action entities to enable controls."}</span></p></section>
       <section class="energy-section charger-flow card"><div class="energy-heading"><span><ha-icon icon="mdi:home-lightning-bolt-outline"></ha-icon></span><div><small>Home energy</small><h2>Power flow context</h2></div></div><div class="energy-stats compact">${stat("charger_pv_power", "mdi:solar-power", "Solar production", this._number("charger_pv_power"), this._unit("charger_pv_power", "W"), "positive")}${stat("charger_house_power", "mdi:home-lightning-bolt", "Home consumption", this._number("charger_house_power"), this._unit("charger_house_power", "W"))}${stat("charger_grid_power", "mdi:transmission-tower", "Grid power", this._number("charger_grid_power"), this._unit("charger_grid_power", "W"))}${stat("charger_grid_support", "mdi:transmission-tower-export", "Grid support", this._number("charger_grid_support"), this._unit("charger_grid_support", "A"))}</div><p class="energy-note"><ha-icon icon="mdi:leaf"></ha-icon><span>Smart and Solar remain charger-defined strategies; this card only reflects and selects the mapped Home Assistant mode.</span></p></section>
@@ -1047,6 +1116,19 @@ class KiaDashboardCard extends HTMLElement {
     const coords = this._trackerCoords();
     const coordinateLabel = coords ? `${coords.lat.toFixed(5)}, ${coords.lon.toFixed(5)}` : "Coordinates unavailable";
     const trackerEntity = this._entity("location");
+    const todayDriving = this._todayDriving();
+    const driveMode = this._state("drive_mode", "--");
+    const drivingContextAvailable = Boolean(todayDriving) || driveMode !== "--";
+    const todayEfficiency = todayDriving?.distance > 0 ? Math.round((todayDriving.consumed / 1000 / todayDriving.distance) * 1000) / 10 : "--";
+    const drivingContext = drivingContextAvailable ? `
+          <ha-icon icon="mdi:road-variant"></ha-icon>
+          <div><span>Driving context</span><h2>Today&apos;s driving</h2><div class="location-trip-stats">
+            <button data-info="today_driving_stats"><span>Distance today</span><strong>${this._safe(todayDriving ? Math.round(todayDriving.distance * 10) / 10 : "--")} km</strong></button>
+            <button data-info="today_driving_stats"><span>Average energy consumption</span><strong>${this._safe(todayEfficiency)} kWh/100 km</strong></button>
+            <button data-info="drive_mode"><span>Drive mode</span><strong>${this._safe(driveMode)}</strong></button>
+          </div></div>` : `
+          <ha-icon icon="mdi:map-marker-path"></ha-icon>
+          <div><span>Trip context</span><h2>Ready for future trip data</h2><p>Route, destination, and movement details remain read-only placeholders until mapped entities are defined.</p></div>`;
 
     return `
       <main class="location-detail" aria-label="Location details">
@@ -1075,10 +1157,7 @@ class KiaDashboardCard extends HTMLElement {
           <div><span>Parking context</span><h2>${this._safe(trackerState)}</h2><p>The tracker state is the latest known parking area. Update freshness stays visible alongside it.</p></div>
         </section>
 
-        <section class="location-context-card location-trip card muted">
-          <ha-icon icon="mdi:map-marker-path"></ha-icon>
-          <div><span>Trip context</span><h2>Ready for future trip data</h2><p>Route, destination, and movement details remain read-only placeholders until mapped entities are defined.</p></div>
-        </section>
+        <section class="location-context-card location-trip card${drivingContextAvailable ? "" : " muted"}">${drivingContext}</section>
 
         <button class="location-back card" data-nav="overview"><ha-icon icon="mdi:arrow-left"></ha-icon><span>Back to Overview</span></button>
       </main>`;
@@ -1158,6 +1237,7 @@ class KiaDashboardCard extends HTMLElement {
     return `
       .energy-detail{margin-top:12px;display:grid;grid-template-columns:1.15fr 1fr;gap:12px}.energy-detail>.card{min-width:0;overflow:hidden}.energy-intro{grid-column:1/-1;min-height:150px;padding:clamp(24px,3vw,42px);display:flex;align-items:center;justify-content:space-between;gap:28px;position:relative}.energy-intro:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 82% 50%,color-mix(in srgb,var(--blue) 18%,transparent),transparent 28%);pointer-events:none}.energy-intro>div:first-child{position:relative;z-index:1;max-width:720px}.energy-eyebrow,.energy-heading small{color:var(--blue);font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.energy-intro h2{margin-top:7px;font-size:clamp(25px,2.4vw,36px)}.energy-intro p,.energy-future>p{margin-top:10px;color:var(--kia-muted);line-height:1.5}.energy-orbit{flex:0 0 92px;width:92px;height:92px;border-radius:50%;display:grid;place-items:center;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--kia-card));border:1px solid color-mix(in srgb,var(--blue) 48%,var(--kia-line));box-shadow:0 0 38px color-mix(in srgb,var(--blue) 18%,transparent)}.energy-orbit ha-icon{--mdc-icon-size:44px}.energy-section,.energy-future{padding:22px}.energy-heading{display:flex;align-items:center;gap:12px;margin-bottom:18px}.energy-heading>span{width:42px;height:42px;flex:0 0 42px;border-radius:8px;display:grid;place-items:center;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--kia-card));border:1px solid var(--kia-line)}.energy-heading h2{margin-top:3px;font-size:20px}.energy-stats{display:grid;gap:10px}.energy-stat{width:100%;min-height:76px;padding:12px 14px;display:grid;grid-template-columns:42px minmax(0,1fr) 22px;align-items:center;gap:12px;color:var(--kia-text);text-align:left;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control)}.energy-stat:hover,.energy-stat:focus-visible{border-color:var(--blue);outline:none}.energy-stat-icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--blue);background:color-mix(in srgb,var(--blue) 11%,var(--kia-card))}.energy-stat-icon ha-icon{--mdc-icon-size:22px}.energy-stat-copy{min-width:0}.energy-stat-copy small{display:block;color:var(--kia-muted);font-size:12px;font-weight:700}.energy-stat-copy strong{display:block;margin-top:3px;font-size:clamp(18px,1.7vw,24px);line-height:1.1;overflow-wrap:anywhere}.energy-stat-copy em{color:var(--kia-muted);font-size:.65em;font-style:normal;font-weight:700}.energy-stat-link{color:var(--kia-muted);--mdc-icon-size:20px}.energy-stat.positive .energy-stat-icon,.energy-stat.positive .energy-stat-copy strong{color:var(--green)}.energy-note{margin-top:14px;padding-top:14px;border-top:1px solid var(--kia-line);display:flex;align-items:flex-start;gap:9px;color:var(--kia-muted);font-size:12px;line-height:1.45}.energy-note ha-icon{flex:0 0 auto;color:var(--blue);--mdc-icon-size:18px}.energy-future{min-height:210px;position:relative}.energy-bars{height:64px;margin-top:20px;display:flex;align-items:flex-end;gap:8px;opacity:.65}.energy-bars i{flex:1;min-width:8px;height:38%;border-radius:4px 4px 0 0;background:color-mix(in srgb,var(--blue) 46%,var(--kia-line))}.energy-bars i:nth-child(2),.energy-bars i:nth-child(6){height:62%}.energy-bars i:nth-child(3){height:48%}.energy-bars i:nth-child(4){height:82%}.energy-bars i:nth-child(5){height:70%}.energy-bars i:nth-child(7){height:94%}.energy-back{margin-top:20px;min-height:46px;padding:0 16px;display:inline-flex;align-items:center;gap:9px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);font-weight:800}.energy-back ha-icon{color:var(--blue);--mdc-icon-size:20px}@media(max-width:900px){.energy-detail{grid-template-columns:1fr}.energy-intro{grid-column:auto}}@media(max-width:560px){.energy-intro{align-items:flex-start}.energy-orbit{width:64px;height:64px;flex-basis:64px}.energy-orbit ha-icon{--mdc-icon-size:32px}.energy-section,.energy-future{padding:18px}}
       .energy-heading>div{min-width:0;flex:1}.energy-heading>.charger-health,.energy-heading>.charger-safety{width:auto;height:auto;flex:0 0 auto;border:0;background:transparent;display:flex;align-items:center;gap:7px;color:var(--kia-muted);font-size:11px;font-weight:800;white-space:nowrap}.charger-health i{width:8px;height:8px;border-radius:50%;background:var(--kia-muted);box-shadow:0 0 7px currentColor}.charger-health.online{color:var(--green)}.charger-health.online i{background:var(--green)}.charger-safety ha-icon{color:var(--blue);--mdc-icon-size:17px}.charger-live-hero{min-height:105px;margin-bottom:12px;padding:18px 20px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-recessed);display:flex;align-items:center;justify-content:space-between;gap:20px}.charger-live-hero span,.charger-live-hero small,.charger-current span,.charger-session-summary span,.charger-session-summary small,.charger-history-empty span{display:block;color:var(--kia-muted);font-size:12px}.charger-live-hero strong{display:block;margin:4px 0;font-size:clamp(24px,2.4vw,34px);text-transform:capitalize}.charger-live-hero>ha-icon{color:var(--blue);--mdc-icon-size:48px}.positive-text{color:var(--green)}.energy-stats.compact{grid-template-columns:repeat(2,minmax(0,1fr))}.charger-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.charger-mode{min-height:76px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-weight:800}.charger-mode ha-icon{color:var(--blue);--mdc-icon-size:26px}.charger-mode.active{border-color:var(--green);background:color-mix(in srgb,var(--green) 12%,var(--kia-card))}.charger-mode.active ha-icon,.charger-mode.active span{color:var(--green)}.charger-mode:disabled,.charger-action:disabled,.charger-current input:disabled{cursor:not-allowed;opacity:.5}.charger-current{margin-top:14px;padding:14px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-recessed);display:grid;grid-template-columns:auto minmax(120px,1fr);align-items:center;gap:18px}.charger-current strong{display:block;margin-top:3px}.charger-current input{width:100%;accent-color:var(--blue)}.charger-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px}.charger-action{min-height:48px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);display:flex;align-items:center;justify-content:center;gap:7px;font-weight:800}.charger-action ha-icon{color:var(--blue);--mdc-icon-size:20px}.charger-action.start{border-color:color-mix(in srgb,var(--green) 55%,var(--kia-line))}.charger-action.start ha-icon{color:var(--green)}.charger-action.stop{border-color:color-mix(in srgb,var(--red) 45%,var(--kia-line))}.charger-action.stop ha-icon{color:var(--red)}.energy-notice{margin-top:12px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--blue) 38%,var(--kia-line));border-radius:8px;background:color-mix(in srgb,var(--blue) 10%,var(--kia-card));color:var(--blue);font-size:12px}.charger-history{grid-column:1/-1}.charger-session-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.charger-session-summary>div{padding:18px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-recessed)}.charger-session-summary strong{display:block;margin:5px 0;font-size:clamp(24px,2.2vw,34px)}.charger-history-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}.charger-history-empty{min-height:92px;margin-top:10px;padding:18px;border:1px dashed var(--kia-line);border-radius:8px;background:var(--kia-recessed);display:flex;align-items:center;gap:15px}.charger-history-empty ha-icon{color:var(--blue);--mdc-icon-size:32px}.charger-history-empty strong{display:block;margin-bottom:4px}.charger-history-grid .energy-stat{grid-template-columns:36px minmax(0,1fr) 18px}.charger-history-grid .energy-stat-icon{width:34px;height:34px}@media(max-width:1050px){.energy-stats.compact,.charger-history-grid{grid-template-columns:1fr 1fr}.charger-actions{grid-template-columns:1fr 1fr}}@media(max-width:560px){.energy-stats.compact,.charger-history-grid,.charger-session-summary,.charger-current{grid-template-columns:1fr}.charger-modes{grid-template-columns:1fr}.energy-heading>.charger-health,.energy-heading>.charger-safety{grid-column:2;justify-self:start}.charger-actions{grid-template-columns:1fr 1fr}}
+      .driving-analytics{grid-column:1/-1}.driving-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.driving-summary button{min-height:92px;padding:15px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);color:var(--kia-text);text-align:left}.driving-summary button:hover,.driving-summary button:focus-visible{border-color:var(--blue)}.driving-summary span,.driving-summary small{display:block;color:var(--kia-muted);font-size:12px}.driving-summary strong{display:block;margin-top:6px;font-size:clamp(18px,1.6vw,24px)}.driving-summary em{color:var(--kia-muted);font-size:.65em;font-style:normal}.driving-summary small{margin-top:4px}.driving-chart{margin-top:18px;padding:16px 16px 10px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-recessed)}.driving-chart-legend{display:flex;justify-content:flex-end;gap:16px;color:var(--kia-muted);font-size:11px}.driving-chart-legend span{display:flex;align-items:center;gap:5px}.driving-chart-legend i{width:9px;height:9px;border-radius:2px}.driving-chart i.consumed{background:var(--blue)}.driving-chart i.regenerated{background:var(--green)}.driving-chart-bars{height:150px;margin-top:12px;display:flex;align-items:stretch;gap:7px}.driving-day{min-width:0;flex:1;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:7px}.driving-day>div{min-height:0;display:flex;align-items:flex-end;justify-content:center;gap:2px;border-bottom:1px solid var(--kia-line)}.driving-day>div i{width:min(11px,44%);min-height:3px;border-radius:3px 3px 0 0}.driving-day>span{overflow:hidden;color:var(--kia-muted);font-size:9px;text-align:center}@media(max-width:760px){.driving-summary{grid-template-columns:1fr 1fr}.driving-chart-bars{height:120px;gap:3px}.driving-day>span{font-size:8px}}@media(max-width:460px){.driving-summary{grid-template-columns:1fr}.driving-chart{padding-inline:10px}.driving-chart-legend{justify-content:flex-start}}
     `;
   }
 
@@ -1185,8 +1265,9 @@ class KiaDashboardCard extends HTMLElement {
       button.location-stat { cursor:pointer; } .location-stat ha-icon { grid-row:1 / 3; color:var(--blue); --mdc-icon-size:24px; }
       .location-stat strong { align-self:end; font-size:clamp(15px,1vw,18px); line-height:1.25; overflow-wrap:anywhere; }
       .location-context-card p { margin-top:8px; color:var(--kia-muted); font-size:14px; line-height:1.45; } .location-context-card.muted>ha-icon { color:var(--kia-muted); }
+      .location-trip-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}.location-trip-stats button{min-width:0;padding:10px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);color:var(--kia-text);text-align:left}.location-trip-stats button:hover,.location-trip-stats button:focus-visible{border-color:var(--blue)}.location-trip-stats span{display:block;font-size:11px}.location-trip-stats strong{display:block;margin-top:4px;font-size:13px;overflow-wrap:anywhere}
       @media (max-width:980px) { .location-detail { grid-template-columns:1fr 1fr; grid-template-areas:"map map" "summary summary" "parking trip" "back back"; } .location-detail-map { min-height:500px; } }
-      @media (max-width:640px) { .location-detail { grid-template-columns:1fr; grid-template-areas:"map" "summary" "parking" "trip" "back"; } .location-detail-map { min-height:0; padding:16px; grid-template-rows:auto minmax(300px,52vh) auto; } .location-detail-summary,.location-context-card { padding:18px; } .location-stat-grid { grid-template-columns:1fr; } }
+      @media (max-width:640px) { .location-detail { grid-template-columns:1fr; grid-template-areas:"map" "summary" "parking" "trip" "back"; } .location-detail-map { min-height:0; padding:16px; grid-template-rows:auto minmax(300px,52vh) auto; } .location-detail-summary,.location-context-card { padding:18px; } .location-stat-grid,.location-trip-stats { grid-template-columns:1fr; } }
     `;
   }
 

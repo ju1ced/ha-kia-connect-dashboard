@@ -134,6 +134,10 @@ entities:
   estimated_charge_duration: sensor.your_vehicle_estimated_charge_duration
   average_energy_consumption: sensor.your_vehicle_average_energy_consumption
   energy_consumption_90d: sensor.your_vehicle_90_day_energy_consumption
+  daily_driving_stats: sensor.your_vehicle_daily_driving_stats
+  today_driving_stats: sensor.your_vehicle_today_s_daily_driving_stats
+  total_energy_regeneration: sensor.your_vehicle_total_energy_regeneration
+  drive_mode: sensor.your_vehicle_drive_mode
   smart_key_battery_warning: binary_sensor.your_vehicle_smart_key_battery_warning
   vent_windows: button.your_vehicle_vent_all_windows
   front_left_window_open: cover.your_vehicle_front_left_window
@@ -153,6 +157,14 @@ to the same `cover.*` entity. The card calls `cover.open_cover` and
 `cover.close_cover` respectively. Button mappings continue to use
 `button.press`. Confirmation remains enabled unless `confirm_actions: false`
 is configured.
+
+The four driving mappings are also optional. When available, the Energy view
+renders the latest 14 driving days directly from the date-keyed attributes of
+`daily_driving_stats`, together with today's distance, efficiency, regenerated
+energy, and total regeneration. The Location view replaces its placeholder with
+today's driving context and the current drive mode. No helper entities are
+required, and route or destination data is not inferred when the integration
+does not expose it.
 
 ## Optional Settings Entities
 
