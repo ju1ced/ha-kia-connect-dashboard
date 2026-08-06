@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added optional daily-driving, today's-driving, total-regeneration, and
+  drive-mode mappings verified against live Kia Connect entities.
+- Added a 14-day consumption and regeneration chart with today's distance and
+  efficiency to Energy.
+- Replaced the Location trip placeholder with mapped daily driving context while
+  retaining the placeholder when no compatible entities are configured.
+
 ## 2.6.0 - 2026-08-06
 
 - Added optional seat-heating, seat-ventilation, rear-window-heating, climate

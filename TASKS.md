@@ -19,10 +19,10 @@
 
 ## Trips and energy analytics
 
-- [ ] Inventory trip, regeneration, and driving-history entities.
+- [x] Inventory trip, regeneration, and driving-history entities.
 - [ ] Define optional route, destination, distance, duration, and movement keys.
-- [ ] Replace the Location trip placeholder when usable mappings exist.
-- [ ] Add consumption and regeneration charts backed by Home Assistant history or
+- [x] Replace the Location trip placeholder when usable mappings exist.
+- [x] Add consumption and regeneration charts backed by Home Assistant history or
       statistics.
 
 ## Safe vehicle actions

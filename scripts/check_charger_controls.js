@@ -314,6 +314,10 @@ async function run() {
     estimated_charge_duration: "sensor.charge_duration",
     average_energy_consumption: "sensor.average_consumption",
     energy_consumption_90d: "sensor.consumption_90d",
+    daily_driving_stats: "sensor.daily_driving_stats",
+    today_driving_stats: "sensor.today_driving_stats",
+    total_energy_regeneration: "sensor.total_regeneration",
+    drive_mode: "sensor.drive_mode",
     smart_key_battery_warning: "binary_sensor.smart_key_warning",
     vent_windows: "button.vent_windows",
     rear_window_heater: "switch.rear_window_heater",
@@ -386,6 +390,36 @@ async function run() {
       state: "18.1",
       attributes: { unit_of_measurement: "kWh/100 km" },
     },
+    "sensor.daily_driving_stats": {
+      state: "2",
+      attributes: {
+        "2026-08-05": {
+          distance: 10.5,
+          total_consumed: 1235,
+          regenerated_energy: 721,
+        },
+        "2026-08-06": {
+          distance: 46.3,
+          total_consumed: 6856,
+          regenerated_energy: 2623,
+        },
+        unit_of_measurement: "d",
+      },
+    },
+    "sensor.today_driving_stats": {
+      state: "2026-08-06",
+      attributes: {
+        today_date: "2026-08-06",
+        distance: 46.3,
+        total_consumed: 6856,
+        regenerated_energy: 2623,
+      },
+    },
+    "sensor.total_regeneration": {
+      state: "293022",
+      attributes: { unit_of_measurement: "Wh" },
+    },
+    "sensor.drive_mode": { state: "Normal", attributes: {} },
     "binary_sensor.smart_key_warning": { state: "on", attributes: {} },
     "button.vent_windows": { state: "unknown", attributes: {} },
     "switch.rear_window_heater": { state: "on", attributes: {} },
@@ -433,6 +467,33 @@ async function run() {
   assert.match(batteryDiagnostics, /1:45/);
   assert.match(card._renderEnergyTab({}), /17\.2/);
   assert.match(card._renderEnergyTab({}), /18\.1/);
+  const drivingEnergy = card._renderEnergyTab({});
+  assert.match(drivingEnergy, /Daily driving history/);
+  assert.match(drivingEnergy, /46\.3/);
+  assert.match(drivingEnergy, /14\.8/);
+  assert.match(drivingEnergy, /293 kWh/);
+  assert.equal((drivingEnergy.match(/class="driving-day"/g) || []).length, 2);
+  const drivingLocation = card._renderLocationTab({
+    lastUpdated: "now",
+    mapTiles: null,
+    markerImage: "",
+  });
+  assert.match(drivingLocation, /Today&apos;s driving/);
+  assert.match(drivingLocation, /Normal/);
+  assert.doesNotMatch(drivingLocation, /Ready for future trip data/);
+  const fallbackCard = new Card();
+  fallbackCard._config = { entities: {} };
+  fallbackCard._hass = { locale: { language: "en" }, states: {} };
+  const fallbackLocation = fallbackCard._renderLocationTab({
+    lastUpdated: "--",
+    mapTiles: null,
+    markerImage: "",
+  });
+  assert.match(fallbackLocation, /Ready for future trip data/);
+  assert.doesNotMatch(
+    fallbackCard._renderEnergyTab({}),
+    /Daily driving history/,
+  );
   const vehicleControls = card._renderVehicleTab();
   assert.match(vehicleControls, /Smart key battery/);
   assert.match(vehicleControls, /Replace battery/);
@@ -543,6 +604,13 @@ async function run() {
   assert.match(dutchClimateControls, /Volgend vertrek/);
   assert.match(dutchClimateControls, /Vertrekprogramma 1/);
   assert.match(dutchClimateControls, /Vertrektijd 2/);
+  card._activeTab = "energy";
+  card._render();
+  const dutchDrivingAnalytics = card.shadowRoot.innerHTML;
+  assert.match(dutchDrivingAnalytics, /Dagelijkse rijgeschiedenis/);
+  assert.match(dutchDrivingAnalytics, /Afstand vandaag/);
+  assert.match(dutchDrivingAnalytics, /Teruggewonnen energie/);
+  assert.match(dutchDrivingAnalytics, /Totale regeneratie/);
 }
 
 run().catch((error) => {

@@ -4,6 +4,5 @@ template: kia_visual_text_panel
 variables:
   - title: Efficiency
   - content: >-
-      Efficiency trends will be rendered here once consumption metrics are
-      mapped. Expected follow-up fields include average consumption, recent
-      consumption, regeneration summary, and trip efficiency.
+      The custom card renders recent consumption, regeneration, distance, and
+      trip efficiency when daily driving statistics are mapped.

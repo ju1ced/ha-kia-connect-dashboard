@@ -31,6 +31,12 @@ battery:
   average_energy_consumption: sensor.kia_ev6_average_energy_consumption
   energy_consumption_90d: sensor.kia_ev6_90_day_energy_consumption
 
+driving:
+  daily_stats: sensor.kia_ev6_daily_driving_stats
+  today_stats: sensor.kia_ev6_today_s_daily_driving_stats
+  total_regeneration: sensor.kia_ev6_total_energy_regeneration
+  mode: sensor.kia_ev6_drive_mode
+
 charger:
   online: binary_sensor.home_charger_connected
   status: sensor.home_charger_status
