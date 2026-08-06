@@ -11,8 +11,8 @@ from typing import Any
 
 DEFAULT_ENTITY_MAP = Path("dashboard/templates/entities.yaml")
 ENTITY_ID = re.compile(
-    r"^(?:sensor|binary_sensor|switch|lock|climate|device_tracker|button|"
-    r"number|select|input_boolean|input_number|input_select)\."
+    r"^(?:sensor|binary_sensor|switch|cover|lock|climate|device_tracker|button|"
+    r"number|select|input_boolean|input_datetime|input_number|input_select)\."
     r"[a-zA-Z0-9_]+$"
 )
 GROUP_LINE = re.compile(r"^([a-z][a-z0-9_]*):\s*$")

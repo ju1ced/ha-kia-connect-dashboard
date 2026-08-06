@@ -181,6 +181,36 @@ const KIA_DASHBOARD_NL = {
   "Start Climate": "Klimaat starten",
   "State of charge": "Laadniveau",
   "Steering wheel heat": "Stuurverwarming",
+  "Rear window heat": "Achterruitverwarming",
+  "Seat comfort": "Zetelcomfort",
+  "Driver seat": "Bestuurderszetel",
+  "Passenger seat": "Passagierszetel",
+  "Rear left seat": "Zetel linksachter",
+  "Rear right seat": "Zetel rechtsachter",
+  "Driver seat heating": "Bestuurderszetel verwarmen",
+  "Passenger seat heating": "Passagierszetel verwarmen",
+  "Rear left seat heating": "Zetel linksachter verwarmen",
+  "Rear right seat heating": "Zetel rechtsachter verwarmen",
+  "Driver seat ventilation": "Bestuurderszetel ventileren",
+  "Passenger seat ventilation": "Passagierszetel ventileren",
+  "Rear left seat ventilation": "Zetel linksachter ventileren",
+  "Rear right seat ventilation": "Zetel rechtsachter ventileren",
+  "Climate schedule": "Klimaatschema",
+  "Next departure": "Volgend vertrek",
+  "Departure schedule 1": "Vertrekprogramma 1",
+  "Departure schedule 2": "Vertrekprogramma 2",
+  "Departure time 1": "Vertrektijd 1",
+  "Departure time 2": "Vertrektijd 2",
+  "Departure days 1": "Vertrekdagen 1",
+  "Departure days 2": "Vertrekdagen 2",
+  "Schedule and departure context": "Schema- en vertrekinformatie",
+  "Open details": "Details openen",
+  "Ready": "Gereed",
+  "Turn off": "Uitschakelen",
+  "Turn on": "Inschakelen",
+  "Activate rear window heat?": "Achterruitverwarming activeren?",
+  "Deactivate rear window heat?": "Achterruitverwarming uitschakelen?",
+  "Change climate comfort setting?": "Klimaatcomfortinstelling wijzigen?",
   "Stop": "Stoppen",
   "Stop charging": "Laden stoppen",
   "Stop Climate": "Klimaat stoppen",
@@ -876,15 +906,50 @@ class KiaDashboardCard extends HTMLElement {
       if (!obj || ["unknown", "unavailable"].includes(obj.state)) return "Unavailable";
       return this._active(key) ? "On" : "Off";
     };
+    const comfortTile = (key, icon, label) => {
+      const entityId = this._entity(key);
+      if (!entityId) return "";
+      const domain = entityId.split(".")[0];
+      const obj = this._obj(key);
+      const unavailable = !obj || obj.state === "unavailable" || (domain !== "button" && obj.state === "unknown");
+      const active = !unavailable && this._active(key);
+      const value = domain === "button" && !unavailable ? "Ready" : unavailable ? "Unavailable" : String(obj.state).replaceAll("_", " ");
+      const actionable = ["button", "switch", "input_boolean"].includes(domain);
+      const service = domain === "button" || !active ? "turn_on" : "turn_off";
+      const confirmation = "Change climate comfort setting?";
+      const interaction = actionable ? `data-entity-action="${key}" data-service="${service}" data-confirm="${confirmation}"` : `data-info="${key}"`;
+      return `<button class="climate-comfort-tile${active ? " active" : ""}${unavailable ? " unavailable" : ""}" ${interaction}><ha-icon icon="${icon}"></ha-icon><span>${label}</span><strong>${this._safe(value)}</strong><small>${actionable ? (active ? "Turn off" : "Turn on") : "Open details"}</small></button>`;
+    };
+    const seatComfort = [
+      ["driver_seat", "Driver seat", "driver_seat_heating", "Driver seat heating", "driver_seat_ventilation", "Driver seat ventilation"],
+      ["passenger_seat", "Passenger seat", "passenger_seat_heating", "Passenger seat heating", "passenger_seat_ventilation", "Passenger seat ventilation"],
+      ["rear_left_seat", "Rear left seat", "rear_left_seat_heating", "Rear left seat heating", "rear_left_seat_ventilation", "Rear left seat ventilation"],
+      ["rear_right_seat", "Rear right seat", "rear_right_seat_heating", "Rear right seat heating", "rear_right_seat_ventilation", "Rear right seat ventilation"],
+    ].flatMap(([combinedKey, combinedLabel, heatingKey, heatingLabel, ventilationKey, ventilationLabel]) => {
+      if (this._entity(combinedKey)) return [comfortTile(combinedKey, "mdi:car-seat", combinedLabel)];
+      return [
+        comfortTile(heatingKey, "mdi:car-seat-heater", heatingLabel),
+        comfortTile(ventilationKey, "mdi:car-seat-cooler", ventilationLabel),
+      ];
+    }).filter(Boolean).join("");
+    const scheduleTiles = [
+      ["climate_schedule", "Climate schedule"],
+      ["climate_departure_time", "Next departure"],
+      ["climate_schedule_1", "Departure schedule 1"],
+      ["climate_departure_time_1", "Departure time 1"],
+      ["climate_departure_days_1", "Departure days 1"],
+      ["climate_schedule_2", "Departure schedule 2"],
+      ["climate_departure_time_2", "Departure time 2"],
+      ["climate_departure_days_2", "Departure days 2"],
+    ].filter(([key]) => this._entity(key)).map(([key, label]) => `<button data-info="${key}"><span>${label}</span><strong>${this._safe(this._state(key, "Unavailable"))}</strong></button>`).join("");
     return `<main class="climate-detail" aria-label="Climate details">
       <section class="climate-intro card"><div><span class="climate-eyebrow">Cabin comfort</span><h2>Climate</h2><p>Review temperature, HVAC state, comfort features, and remote controls.</p></div><div class="climate-state ${on ? "is-on" : ""}"><ha-icon icon="${on ? "mdi:fan" : "mdi:fan-off"}"></ha-icon><span>Climate system</span><strong>${this._safe(on ? "On" : this._state("climate", "Unavailable"))}</strong></div></section>
       <section class="climate-temperature card"><div class="climate-heading"><ha-icon icon="mdi:thermometer"></ha-icon><div><span>Temperature</span><h2>Cabin target</h2></div></div><strong class="climate-target">${temp(target)}</strong><div class="climate-readings"><button data-info="cabin_temperature"><span>Cabin</span><strong>${temp(cabin)}</strong></button><button data-info="outside_temperature"><span>Outside</span><strong>${temp(outside)}</strong></button></div></section>
       <section class="climate-controls card"><div class="climate-heading"><ha-icon icon="mdi:remote"></ha-icon><div><span>Remote controls</span><h2>Prepare the cabin</h2></div></div><div class="climate-actions"><button data-action="start_climate" ${this._entity("start_climate") || this._entity("climate") ? "" : "disabled"}><ha-icon icon="mdi:fan"></ha-icon>Start Climate</button><button class="stop" data-action="stop_climate" ${this._entity("stop_climate") || this._entity("climate") ? "" : "disabled"}><ha-icon icon="mdi:fan-off"></ha-icon>Stop Climate</button><button data-entity-action="vent_windows" data-service="turn_on" data-confirm="Vent all windows now?" ${this._entity("vent_windows") ? "" : "disabled"}><ha-icon icon="mdi:car-door"></ha-icon>Vent all windows</button></div>${this._notice ? `<p class="notice">${this._safe(this._notice)}</p>` : ""}</section>
-      <section class="climate-comfort card"><div class="climate-heading"><ha-icon icon="mdi:car-seat"></ha-icon><div><span>Comfort</span><h2>System state</h2></div></div><div class="climate-readings three"><button data-info="climate"><span>HVAC mode</span><strong>${this._safe(attrs.hvac_action || this._state("climate"))}</strong></button><button data-info="defrost"><span>Defrost</span><strong>${mappedState("defrost")}</strong></button><button data-info="steering_wheel_heater"><span>Steering wheel heat</span><strong>${mappedState("steering_wheel_heater")}</strong></button></div></section>
-      <section class="climate-session card"><ha-icon icon="mdi:timer-outline"></ha-icon><div><span>Remote climate session</span><h2>${this._safe(this._entity("last_climate_result") ? this._state("last_climate_result") : "No command result mapped")}</h2><p>Timer and requested mode will appear when mapped state is available.</p></div></section>
+      <section class="climate-comfort card"><div class="climate-heading"><ha-icon icon="mdi:car-seat"></ha-icon><div><span>Comfort</span><h2>System state</h2></div></div><div class="climate-readings climate-system-grid"><button data-info="climate"><span>HVAC mode</span><strong>${this._safe(attrs.hvac_action || this._state("climate"))}</strong></button><button data-info="defrost"><span>Defrost</span><strong>${mappedState("defrost")}</strong></button><button data-info="steering_wheel_heater"><span>Steering wheel heat</span><strong>${mappedState("steering_wheel_heater")}</strong></button>${comfortTile("rear_window_heater", "mdi:car-defrost-rear", "Rear window heat")}</div>${seatComfort ? `<div class="climate-subheading"><span>Seat comfort</span></div><div class="climate-comfort-grid">${seatComfort}</div>` : ""}</section>
+      <section class="climate-session card"><ha-icon icon="mdi:timer-outline"></ha-icon><div class="climate-session-copy"><span>Remote climate session</span><h2>${this._safe(this._entity("last_climate_result") ? this._state("last_climate_result") : "No command result mapped")}</h2><p>${scheduleTiles ? "Schedule and departure context" : "Timer and requested mode will appear when mapped state is available."}</p>${scheduleTiles ? `<div class="climate-readings climate-schedule-grid">${scheduleTiles}</div>` : ""}</div></section>
     </main>`;
   }
-
   _renderEnergyTab() {
     const battery = this._number("battery_level");
     const batteryUnit = this._unit("battery_level", "%") || "%";
@@ -1085,7 +1150,7 @@ class KiaDashboardCard extends HTMLElement {
 
   _climateTabStyles() {
     return `
-      .climate-detail{margin-top:12px;display:grid;grid-template-columns:1.15fr .85fr;grid-template-areas:"intro intro" "temperature controls" "comfort comfort" "session session";gap:12px}.climate-detail>.card{padding:clamp(20px,2.2vw,32px);min-width:0}.climate-intro{grid-area:intro;display:grid;grid-template-columns:1fr auto;align-items:center;gap:28px;min-height:150px;overflow:hidden}.climate-eyebrow,.climate-heading span,.climate-session span{color:var(--blue);font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.climate-intro h2{margin-top:4px;font-size:clamp(30px,3vw,46px)}.climate-intro p,.climate-session p{margin-top:8px;color:var(--kia-muted);line-height:1.5}.climate-state{min-width:180px;padding:18px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);display:grid;grid-template-columns:34px 1fr;gap:3px 12px;align-items:center}.climate-state ha-icon{grid-row:1/3;color:var(--kia-muted);--mdc-icon-size:30px}.climate-state span,.climate-readings span{color:var(--kia-muted);font-size:12px}.climate-state strong{font-size:20px;text-transform:capitalize}.climate-state.is-on{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 14%,var(--kia-card))}.climate-state.is-on ha-icon,.climate-state.is-on strong{color:var(--blue)}.climate-temperature{grid-area:temperature}.climate-controls{grid-area:controls}.climate-comfort{grid-area:comfort}.climate-session{grid-area:session}.climate-heading{display:flex;gap:13px;align-items:center;margin-bottom:20px}.climate-heading>ha-icon{color:var(--blue);--mdc-icon-size:30px}.climate-heading h2{margin-top:2px;font-size:21px}.climate-target{min-height:120px;border-radius:8px;background:var(--kia-recessed);border:1px solid var(--kia-line);display:grid;place-items:center;font-size:clamp(38px,4vw,58px)}.climate-readings,.climate-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}.climate-readings.three{grid-template-columns:repeat(3,minmax(0,1fr))}.climate-readings button{border:1px solid var(--kia-line);background:var(--kia-control);border-radius:8px;min-height:78px;padding:14px;display:flex;flex-direction:column;text-align:left;justify-content:center}.climate-readings strong{margin-top:4px;overflow-wrap:anywhere;text-transform:capitalize}.climate-actions button{min-height:112px;border:1px solid var(--blue);border-radius:8px;background:color-mix(in srgb,var(--blue) 14%,var(--kia-card));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-weight:800}.climate-actions ha-icon{color:var(--blue);--mdc-icon-size:34px}.climate-actions button:disabled{cursor:not-allowed;opacity:.58}.climate-actions .stop{border-color:var(--amber)}.climate-actions .stop ha-icon{color:var(--amber)}.climate-actions{grid-template-columns:repeat(3,minmax(0,1fr))}.climate-session{display:flex;align-items:center;gap:20px}.climate-session>ha-icon{color:var(--blue);--mdc-icon-size:42px}.climate-session h2{margin-top:5px;font-size:clamp(18px,2vw,24px);overflow-wrap:anywhere}@media(max-width:760px){.climate-detail{grid-template-columns:1fr;grid-template-areas:"intro" "temperature" "controls" "comfort" "session"}.climate-intro{grid-template-columns:1fr}.climate-readings,.climate-readings.three,.climate-actions{grid-template-columns:1fr}.climate-session{align-items:flex-start}}
+      .climate-detail{margin-top:12px;display:grid;grid-template-columns:1.15fr .85fr;grid-template-areas:"intro intro" "temperature controls" "comfort comfort" "session session";gap:12px}.climate-detail>.card{padding:clamp(20px,2.2vw,32px);min-width:0}.climate-intro{grid-area:intro;display:grid;grid-template-columns:1fr auto;align-items:center;gap:28px;min-height:150px;overflow:hidden}.climate-eyebrow,.climate-heading span,.climate-session-copy>span{color:var(--blue);font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.climate-intro h2{margin-top:4px;font-size:clamp(30px,3vw,46px)}.climate-intro p,.climate-session p{margin-top:8px;color:var(--kia-muted);line-height:1.5}.climate-state{min-width:180px;padding:18px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);display:grid;grid-template-columns:34px 1fr;gap:3px 12px;align-items:center}.climate-state ha-icon{grid-row:1/3;color:var(--kia-muted);--mdc-icon-size:30px}.climate-state span,.climate-readings span{color:var(--kia-muted);font-size:12px}.climate-state strong{font-size:20px;text-transform:capitalize}.climate-state.is-on{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 14%,var(--kia-card))}.climate-state.is-on ha-icon,.climate-state.is-on strong{color:var(--blue)}.climate-temperature{grid-area:temperature}.climate-controls{grid-area:controls}.climate-comfort{grid-area:comfort}.climate-session{grid-area:session}.climate-heading{display:flex;gap:13px;align-items:center;margin-bottom:20px}.climate-heading>ha-icon{color:var(--blue);--mdc-icon-size:30px}.climate-heading h2{margin-top:2px;font-size:21px}.climate-target{min-height:120px;border-radius:8px;background:var(--kia-recessed);border:1px solid var(--kia-line);display:grid;place-items:center;font-size:clamp(38px,4vw,58px)}.climate-readings,.climate-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}.climate-readings.three{grid-template-columns:repeat(3,minmax(0,1fr))}.climate-readings button{border:1px solid var(--kia-line);background:var(--kia-control);border-radius:8px;min-height:78px;padding:14px;display:flex;flex-direction:column;text-align:left;justify-content:center}.climate-readings strong{margin-top:4px;overflow-wrap:anywhere;text-transform:capitalize}.climate-actions button{min-height:112px;border:1px solid var(--blue);border-radius:8px;background:color-mix(in srgb,var(--blue) 14%,var(--kia-card));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-weight:800}.climate-actions ha-icon{color:var(--blue);--mdc-icon-size:34px}.climate-actions button:disabled{cursor:not-allowed;opacity:.58}.climate-actions .stop{border-color:var(--amber)}.climate-actions .stop ha-icon{color:var(--amber)}.climate-actions{grid-template-columns:repeat(3,minmax(0,1fr))}.climate-session{display:flex;align-items:center;gap:20px}.climate-session>ha-icon{color:var(--blue);--mdc-icon-size:42px}.climate-session h2{margin-top:5px;font-size:clamp(18px,2vw,24px);overflow-wrap:anywhere}.climate-system-grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}.climate-subheading{margin-top:22px;padding-top:18px;border-top:1px solid var(--kia-line)}.climate-subheading span{color:var(--blue);font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.climate-comfort-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:12px}.climate-comfort-tile{min-height:112px;padding:14px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);display:grid;grid-template-columns:34px 1fr;grid-template-rows:auto auto auto;gap:3px 10px;text-align:left;align-items:center}.climate-comfort-tile ha-icon{grid-row:1/4;color:var(--blue);--mdc-icon-size:28px}.climate-comfort-tile span,.climate-comfort-tile small{color:var(--kia-muted);font-size:12px}.climate-comfort-tile strong{overflow-wrap:anywhere;text-transform:capitalize}.climate-comfort-tile.active{border-color:var(--green);background:color-mix(in srgb,var(--green) 12%,var(--kia-card))}.climate-comfort-tile.active ha-icon,.climate-comfort-tile.active strong{color:var(--green)}.climate-comfort-tile.unavailable{opacity:.58}.climate-session-copy{min-width:0;flex:1}.climate-schedule-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-width:760px}@media(max-width:1000px){.climate-comfort-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.climate-detail{grid-template-columns:1fr;grid-template-areas:"intro" "temperature" "controls" "comfort" "session"}.climate-intro{grid-template-columns:1fr}.climate-readings,.climate-readings.three,.climate-actions,.climate-comfort-grid,.climate-schedule-grid{grid-template-columns:1fr}.climate-session{align-items:flex-start}}
     `;
   }
 

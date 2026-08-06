@@ -26,10 +26,74 @@ cards:
           - name: Steering wheel heater
           - icon: mdi:steering
           - label: Comfort state
-  - type: custom:decluttering-card
-    template: kia_visual_text_panel
-    variables:
-      - title: Comfort
-      - content: >-
-          Comfort toggles should remain grouped here so remote cabin controls
-          are easy to review before activation.
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: climate / rear_window_heater
+          - name: Rear window heater
+          - icon: mdi:car-defrost-rear
+          - label: Comfort state
+  - type: grid
+    columns: 4
+    square: false
+    cards:
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: climate / driver_seat
+          - name: Driver seat
+          - icon: mdi:car-seat
+          - label: Combined seat state
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: climate / passenger_seat
+          - name: Passenger seat
+          - icon: mdi:car-seat
+          - label: Combined seat state
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: climate / rear_left_seat
+          - name: Rear left seat
+          - icon: mdi:car-seat
+          - label: Combined seat state
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: climate / rear_right_seat
+          - name: Rear right seat
+          - icon: mdi:car-seat
+          - label: Combined seat state
+  - type: grid
+    columns: 4
+    square: false
+    cards:
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: climate / driver_seat_heating
+          - name: Driver seat heating
+          - icon: mdi:car-seat-heater
+          - label: Seat comfort
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: climate / passenger_seat_heating
+          - name: Passenger seat heating
+          - icon: mdi:car-seat-heater
+          - label: Seat comfort
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: climate / driver_seat_ventilation
+          - name: Driver seat ventilation
+          - icon: mdi:car-seat-cooler
+          - label: Seat comfort
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: climate / passenger_seat_ventilation
+          - name: Passenger seat ventilation
+          - icon: mdi:car-seat-cooler
+          - label: Seat comfort

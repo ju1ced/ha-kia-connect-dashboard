@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added optional seat-heating, seat-ventilation, rear-window-heating, climate
+  schedule, and departure-time mappings to the Climate view.
+- Added combined per-seat status mappings and dual departure-program context
+  verified against the target EV6 through Home Assistant MCP.
+- Added safe direct toggles for supported comfort action entities and Home
+  Assistant detail dialogs for select or read-only mappings.
+
 - Synchronized the built-in card version shown in Settings with the latest stable
   release.
 - Refreshed the roadmap, milestones, task list, issue backlog, and README to
