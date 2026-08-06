@@ -20,17 +20,14 @@
 
 ### Stable releases
 
-- HACS packaging and stable public releases through v2.5.1.
+- HACS packaging and stable public releases through v2.7.0.
 
 ## Planned
 
-### Climate comfort
-
-- Seat comfort, rear-window heating, and scheduling support.
-
 ### Trips and analytics
 
-- Mapped trip context, regeneration, charts, and driving history.
+- Provider-backed route, destination, duration, and movement context beyond the
+  shipped Kia Connect daily driving analytics.
 
 ### Safe vehicle actions
 
