@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.6.0 - 2026-08-06
+
 - Added optional seat-heating, seat-ventilation, rear-window-heating, climate
   schedule, and departure-time mappings to the Climate view.
 - Added combined per-seat status mappings and dual departure-program context
