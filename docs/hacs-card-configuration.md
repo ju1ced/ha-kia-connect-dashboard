@@ -73,7 +73,11 @@ entities:
   outside_temperature: sensor.your_vehicle_outside_temperature
   defrost: binary_sensor.your_vehicle_defrost
   steering_wheel_heater: binary_sensor.your_vehicle_steering_wheel_heater
-  rear_window_heater: switch.your_vehicle_rear_window_heater
+  rear_window_heater: binary_sensor.your_vehicle_rear_window_heater
+  driver_seat: sensor.your_vehicle_driver_seat
+  passenger_seat: sensor.your_vehicle_passenger_seat
+  rear_left_seat: sensor.your_vehicle_rear_left_seat
+  rear_right_seat: sensor.your_vehicle_rear_right_seat
   driver_seat_heating: select.your_vehicle_driver_seat_heating
   passenger_seat_heating: select.your_vehicle_passenger_seat_heating
   rear_left_seat_heating: select.your_vehicle_rear_left_seat_heating
@@ -84,6 +88,12 @@ entities:
   rear_right_seat_ventilation: select.your_vehicle_rear_right_seat_ventilation
   climate_schedule: input_boolean.your_vehicle_climate_schedule
   climate_departure_time: input_datetime.your_vehicle_departure_time
+  climate_schedule_1: switch.your_vehicle_scheduled_departure_1
+  climate_departure_time_1: sensor.your_vehicle_first_departure_time
+  climate_departure_days_1: sensor.your_vehicle_first_departure_days
+  climate_schedule_2: switch.your_vehicle_scheduled_departure_2
+  climate_departure_time_2: sensor.your_vehicle_second_departure_time
+  climate_departure_days_2: sensor.your_vehicle_second_departure_days
 ```
 
 The VIN appears as a read-only quick-reference button in the Vehicle header.
@@ -93,7 +103,11 @@ comfort tiles only appear when mapped. `switch.*`, `input_boolean.*`, and
 `button.*` mappings are actionable with confirmation; other domains open the
 standard Home Assistant entity dialog. Climate schedule and departure mappings
 are intentionally context-only until an integration-independent service
-contract exists.
+contract exists. Use the four combined `*_seat` mappings when the integration
+reports one state per seat. Only use the separate heating and ventilation keys
+when the integration exposes those capabilities as distinct entities; a
+combined seat mapping takes precedence for that position. The numbered schedule
+keys support integrations that expose two independent departure programs.
 
 ## Optional Battery Diagnostics and Efficiency
 

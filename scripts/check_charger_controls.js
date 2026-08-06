@@ -492,14 +492,57 @@ async function run() {
     service: "turn_on",
     data: { entity_id: "switch.driver_seat_heating" },
   });
+  Object.assign(card._config.entities, {
+    rear_window_heater: "binary_sensor.back_window_heater",
+    driver_seat: "sensor.driver_seat",
+    passenger_seat: "sensor.passenger_seat",
+    rear_left_seat: "sensor.rear_left_seat",
+    rear_right_seat: "sensor.rear_right_seat",
+    climate_schedule_1: "switch.departure_schedule_1",
+    climate_departure_time_1: "sensor.departure_time_1",
+    climate_departure_days_1: "sensor.departure_days_1",
+    climate_schedule_2: "switch.departure_schedule_2",
+    climate_departure_time_2: "sensor.departure_time_2",
+  });
+  Object.assign(card._hass.states, {
+    "binary_sensor.back_window_heater": { state: "off", attributes: {} },
+    "sensor.driver_seat": { state: "Off", attributes: {} },
+    "sensor.passenger_seat": { state: "Heating 2", attributes: {} },
+    "sensor.rear_left_seat": { state: "Off", attributes: {} },
+    "sensor.rear_right_seat": { state: "Ventilation 1", attributes: {} },
+    "switch.departure_schedule_1": { state: "on", attributes: {} },
+    "sensor.departure_time_1": { state: "07:00:00", attributes: {} },
+    "sensor.departure_days_1": { state: "1, 2, 3, 4, 5", attributes: {} },
+    "switch.departure_schedule_2": { state: "off", attributes: {} },
+    "sensor.departure_time_2": { state: "12:00:00", attributes: {} },
+  });
+  const verifiedClimateControls = card._renderClimateTab();
+  assert.match(verifiedClimateControls, /Driver seat/);
+  assert.match(verifiedClimateControls, /Passenger seat/);
+  assert.match(verifiedClimateControls, /Heating 2/);
+  assert.match(verifiedClimateControls, /Ventilation 1/);
+  assert.doesNotMatch(verifiedClimateControls, /Driver seat heating/);
+  assert.doesNotMatch(verifiedClimateControls, /Driver seat ventilation/);
+  assert.match(verifiedClimateControls, /data-info="rear_window_heater"/);
+  assert.doesNotMatch(
+    verifiedClimateControls,
+    /data-entity-action="rear_window_heater"/,
+  );
+  assert.match(verifiedClimateControls, /Departure schedule 1/);
+  assert.match(verifiedClimateControls, /Departure schedule 2/);
+  assert.match(verifiedClimateControls, /07:00:00/);
+  assert.match(verifiedClimateControls, /12:00:00/);
+  assert.match(verifiedClimateControls, /1, 2, 3, 4, 5/);
   card._hass.locale.language = "nl";
   card._activeTab = "climate";
   card._render();
   const dutchClimateControls = card.shadowRoot.innerHTML;
   assert.match(dutchClimateControls, /Achterruitverwarming/);
-  assert.match(dutchClimateControls, /Bestuurderszetel verwarmen/);
+  assert.match(dutchClimateControls, /Bestuurderszetel/);
   assert.match(dutchClimateControls, /Klimaatschema/);
   assert.match(dutchClimateControls, /Volgend vertrek/);
+  assert.match(dutchClimateControls, /Vertrekprogramma 1/);
+  assert.match(dutchClimateControls, /Vertrektijd 2/);
 }
 
 run().catch((error) => {

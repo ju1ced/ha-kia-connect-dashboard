@@ -40,8 +40,13 @@ logical mapping names from these cards. Every comfort and schedule key is
 optional because entity coverage differs by region, vehicle, and integration
 version.
 
+The target EV6 inventory was verified through Home Assistant MCP. It exposes
+four combined seat-state sensors, a read-only rear-window-heater binary sensor,
+two scheduled-departure switches, two departure-time sensors, and a weekday
+sensor for the first schedule. The HACS card therefore prefers a combined seat
+mapping per position and falls back to separate heating and ventilation keys.
+
 ## Follow-up Work
 
-- Inventory the exact seat and rear-window entities available on the target EV6.
 - Add target-temperature or schedule editing only after a stable generic service
   contract is documented.

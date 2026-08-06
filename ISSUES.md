@@ -4,9 +4,10 @@
 
 - Trip route, destination, distance, duration, and movement data are placeholders
   until generic entity mappings are defined.
-- Seat comfort, rear-window heating, and departure context now support optional
-  mappings. Direct seat-level selection and schedule editing still depend on the
-  integration-specific entity or service contract.
+- Seat comfort, rear-window heating, and dual departure context now support
+  optional mappings verified against the target EV6. Direct seat-level selection
+  and schedule editing still depend on the integration-specific entity or
+  service contract.
 - Remote lock and light actions remain read-only pending action-safety review and
   reliable command-result entities.
 - Real Home Assistant screenshots do not yet cover every view, breakpoint, and

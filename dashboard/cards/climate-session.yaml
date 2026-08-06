@@ -17,3 +17,31 @@ cards:
       - name: Next departure
       - icon: mdi:clock-start
       - label: Departure context
+  - type: custom:decluttering-card
+    template: kia_visual_stat_tile
+    variables:
+      - entity: climate / schedule_1
+      - name: Departure schedule 1
+      - icon: mdi:calendar-clock
+      - label: Schedule context
+  - type: custom:decluttering-card
+    template: kia_visual_stat_tile
+    variables:
+      - entity: climate / departure_time_1
+      - name: Departure time 1
+      - icon: mdi:clock-start
+      - label: Departure context
+  - type: custom:decluttering-card
+    template: kia_visual_stat_tile
+    variables:
+      - entity: climate / schedule_2
+      - name: Departure schedule 2
+      - icon: mdi:calendar-clock
+      - label: Schedule context
+  - type: custom:decluttering-card
+    template: kia_visual_stat_tile
+    variables:
+      - entity: climate / departure_time_2
+      - name: Departure time 2
+      - icon: mdi:clock-start
+      - label: Departure context

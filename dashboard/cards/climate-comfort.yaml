@@ -40,6 +40,38 @@ cards:
       - type: custom:decluttering-card
         template: kia_visual_stat_tile
         variables:
+          - entity: climate / driver_seat
+          - name: Driver seat
+          - icon: mdi:car-seat
+          - label: Combined seat state
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: climate / passenger_seat
+          - name: Passenger seat
+          - icon: mdi:car-seat
+          - label: Combined seat state
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: climate / rear_left_seat
+          - name: Rear left seat
+          - icon: mdi:car-seat
+          - label: Combined seat state
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
+          - entity: climate / rear_right_seat
+          - name: Rear right seat
+          - icon: mdi:car-seat
+          - label: Combined seat state
+  - type: grid
+    columns: 4
+    square: false
+    cards:
+      - type: custom:decluttering-card
+        template: kia_visual_stat_tile
+        variables:
           - entity: climate / driver_seat_heating
           - name: Driver seat heating
           - icon: mdi:car-seat-heater

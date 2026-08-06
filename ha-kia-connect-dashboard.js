@@ -183,6 +183,10 @@ const KIA_DASHBOARD_NL = {
   "Steering wheel heat": "Stuurverwarming",
   "Rear window heat": "Achterruitverwarming",
   "Seat comfort": "Zetelcomfort",
+  "Driver seat": "Bestuurderszetel",
+  "Passenger seat": "Passagierszetel",
+  "Rear left seat": "Zetel linksachter",
+  "Rear right seat": "Zetel rechtsachter",
   "Driver seat heating": "Bestuurderszetel verwarmen",
   "Passenger seat heating": "Passagierszetel verwarmen",
   "Rear left seat heating": "Zetel linksachter verwarmen",
@@ -193,6 +197,12 @@ const KIA_DASHBOARD_NL = {
   "Rear right seat ventilation": "Zetel rechtsachter ventileren",
   "Climate schedule": "Klimaatschema",
   "Next departure": "Volgend vertrek",
+  "Departure schedule 1": "Vertrekprogramma 1",
+  "Departure schedule 2": "Vertrekprogramma 2",
+  "Departure time 1": "Vertrektijd 1",
+  "Departure time 2": "Vertrektijd 2",
+  "Departure days 1": "Vertrekdagen 1",
+  "Departure days 2": "Vertrekdagen 2",
   "Schedule and departure context": "Schema- en vertrekinformatie",
   "Open details": "Details openen",
   "Ready": "Gereed",
@@ -911,18 +921,26 @@ class KiaDashboardCard extends HTMLElement {
       return `<button class="climate-comfort-tile${active ? " active" : ""}${unavailable ? " unavailable" : ""}" ${interaction}><ha-icon icon="${icon}"></ha-icon><span>${label}</span><strong>${this._safe(value)}</strong><small>${actionable ? (active ? "Turn off" : "Turn on") : "Open details"}</small></button>`;
     };
     const seatComfort = [
-      ["driver_seat_heating", "mdi:car-seat-heater", "Driver seat heating"],
-      ["passenger_seat_heating", "mdi:car-seat-heater", "Passenger seat heating"],
-      ["rear_left_seat_heating", "mdi:car-seat-heater", "Rear left seat heating"],
-      ["rear_right_seat_heating", "mdi:car-seat-heater", "Rear right seat heating"],
-      ["driver_seat_ventilation", "mdi:car-seat-cooler", "Driver seat ventilation"],
-      ["passenger_seat_ventilation", "mdi:car-seat-cooler", "Passenger seat ventilation"],
-      ["rear_left_seat_ventilation", "mdi:car-seat-cooler", "Rear left seat ventilation"],
-      ["rear_right_seat_ventilation", "mdi:car-seat-cooler", "Rear right seat ventilation"],
-    ].map(([key, icon, label]) => comfortTile(key, icon, label)).filter(Boolean).join("");
+      ["driver_seat", "Driver seat", "driver_seat_heating", "Driver seat heating", "driver_seat_ventilation", "Driver seat ventilation"],
+      ["passenger_seat", "Passenger seat", "passenger_seat_heating", "Passenger seat heating", "passenger_seat_ventilation", "Passenger seat ventilation"],
+      ["rear_left_seat", "Rear left seat", "rear_left_seat_heating", "Rear left seat heating", "rear_left_seat_ventilation", "Rear left seat ventilation"],
+      ["rear_right_seat", "Rear right seat", "rear_right_seat_heating", "Rear right seat heating", "rear_right_seat_ventilation", "Rear right seat ventilation"],
+    ].flatMap(([combinedKey, combinedLabel, heatingKey, heatingLabel, ventilationKey, ventilationLabel]) => {
+      if (this._entity(combinedKey)) return [comfortTile(combinedKey, "mdi:car-seat", combinedLabel)];
+      return [
+        comfortTile(heatingKey, "mdi:car-seat-heater", heatingLabel),
+        comfortTile(ventilationKey, "mdi:car-seat-cooler", ventilationLabel),
+      ];
+    }).filter(Boolean).join("");
     const scheduleTiles = [
       ["climate_schedule", "Climate schedule"],
       ["climate_departure_time", "Next departure"],
+      ["climate_schedule_1", "Departure schedule 1"],
+      ["climate_departure_time_1", "Departure time 1"],
+      ["climate_departure_days_1", "Departure days 1"],
+      ["climate_schedule_2", "Departure schedule 2"],
+      ["climate_departure_time_2", "Departure time 2"],
+      ["climate_departure_days_2", "Departure days 2"],
     ].filter(([key]) => this._entity(key)).map(([key, label]) => `<button data-info="${key}"><span>${label}</span><strong>${this._safe(this._state(key, "Unavailable"))}</strong></button>`).join("");
     return `<main class="climate-detail" aria-label="Climate details">
       <section class="climate-intro card"><div><span class="climate-eyebrow">Cabin comfort</span><h2>Climate</h2><p>Review temperature, HVAC state, comfort features, and remote controls.</p></div><div class="climate-state ${on ? "is-on" : ""}"><ha-icon icon="${on ? "mdi:fan" : "mdi:fan-off"}"></ha-icon><span>Climate system</span><strong>${this._safe(on ? "On" : this._state("climate", "Unavailable"))}</strong></div></section>
