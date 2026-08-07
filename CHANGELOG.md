@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.8.0 - 2026-08-07
+
 - Expanded Location with up to 30 official Kia daily-driving records and period
   totals for distance, energy, consumption, regeneration, and climate use.
 - Added bounded, on-demand Home Assistant Recorder analysis that reconstructs
