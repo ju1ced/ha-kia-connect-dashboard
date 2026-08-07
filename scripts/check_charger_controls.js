@@ -318,6 +318,11 @@ async function run() {
     today_driving_stats: "sensor.today_driving_stats",
     total_energy_regeneration: "sensor.total_regeneration",
     drive_mode: "sensor.drive_mode",
+    engine: "binary_sensor.engine",
+    ignition: "binary_sensor.ignition",
+    odometer: "sensor.odometer",
+    location: "device_tracker.location",
+    battery_level: "sensor.ev_battery",
     smart_key_battery_warning: "binary_sensor.smart_key_warning",
     vent_windows: "button.vent_windows",
     rear_window_heater: "switch.rear_window_heater",
@@ -397,11 +402,13 @@ async function run() {
           distance: 10.5,
           total_consumed: 1235,
           regenerated_energy: 721,
+          climate_consumption: 89,
         },
         "2026-08-06": {
           distance: 46.3,
           total_consumed: 6856,
           regenerated_energy: 2623,
+          climate_consumption: 807,
         },
         unit_of_measurement: "d",
       },
@@ -413,6 +420,7 @@ async function run() {
         distance: 46.3,
         total_consumed: 6856,
         regenerated_energy: 2623,
+        climate_consumption: 807,
       },
     },
     "sensor.total_regeneration": {
@@ -420,6 +428,20 @@ async function run() {
       attributes: { unit_of_measurement: "Wh" },
     },
     "sensor.drive_mode": { state: "Normal", attributes: {} },
+    "binary_sensor.engine": { state: "off", attributes: {} },
+    "binary_sensor.ignition": { state: "off", attributes: {} },
+    "sensor.odometer": {
+      state: "112.4",
+      attributes: { unit_of_measurement: "km" },
+    },
+    "device_tracker.location": {
+      state: "Work",
+      attributes: { latitude: 50.9, longitude: 3.5 },
+    },
+    "sensor.ev_battery": {
+      state: "75",
+      attributes: { unit_of_measurement: "%" },
+    },
     "binary_sensor.smart_key_warning": { state: "on", attributes: {} },
     "button.vent_windows": { state: "unknown", attributes: {} },
     "switch.rear_window_heater": { state: "on", attributes: {} },
@@ -473,6 +495,92 @@ async function run() {
   assert.match(drivingEnergy, /14\.8/);
   assert.match(drivingEnergy, /293 kWh/);
   assert.equal((drivingEnergy.match(/class="driving-day"/g) || []).length, 2);
+  const historyState = (entityId, state, timestamp, attributes = {}) => ({
+    entity_id: entityId,
+    state,
+    attributes,
+    last_changed: timestamp,
+    last_updated: timestamp,
+  });
+  const recorderHistory = [
+    [
+      historyState("binary_sensor.engine", "off", "2026-08-06T08:00:00+02:00"),
+      historyState("binary_sensor.engine", "on", "2026-08-06T08:10:00+02:00"),
+      historyState("binary_sensor.engine", "off", "2026-08-06T08:40:00+02:00"),
+    ],
+    [
+      historyState("sensor.odometer", "100", "2026-08-06T08:00:00+02:00", {
+        unit_of_measurement: "km",
+      }),
+      historyState("sensor.odometer", "100.5", "2026-08-06T08:10:00+02:00", {
+        unit_of_measurement: "km",
+      }),
+      historyState("sensor.odometer", "112.4", "2026-08-06T08:40:00+02:00", {
+        unit_of_measurement: "km",
+      }),
+    ],
+    [
+      historyState(
+        "device_tracker.location",
+        "Home",
+        "2026-08-06T08:00:00+02:00",
+        { latitude: 50.8, longitude: 3.4 },
+      ),
+      historyState(
+        "device_tracker.location",
+        "not_home",
+        "2026-08-06T08:10:00+02:00",
+        { latitude: 50.82, longitude: 3.42 },
+      ),
+      historyState(
+        "device_tracker.location",
+        "Work",
+        "2026-08-06T08:40:00+02:00",
+        { latitude: 50.9, longitude: 3.5 },
+      ),
+    ],
+    [
+      historyState("sensor.ev_battery", "80", "2026-08-06T08:00:00+02:00", {
+        unit_of_measurement: "%",
+      }),
+      historyState("sensor.ev_battery", "79", "2026-08-06T08:10:00+02:00", {
+        unit_of_measurement: "%",
+      }),
+      historyState("sensor.ev_battery", "75", "2026-08-06T08:40:00+02:00", {
+        unit_of_measurement: "%",
+      }),
+    ],
+    [
+      historyState(
+        "sensor.battery_remaining",
+        "288000",
+        "2026-08-06T08:00:00+02:00",
+        { unit_of_measurement: "kJ" },
+      ),
+      historyState(
+        "sensor.battery_remaining",
+        "284400",
+        "2026-08-06T08:10:00+02:00",
+        { unit_of_measurement: "kJ" },
+      ),
+      historyState(
+        "sensor.battery_remaining",
+        "270000",
+        "2026-08-06T08:40:00+02:00",
+        { unit_of_measurement: "kJ" },
+      ),
+    ],
+  ];
+  const reconstructedTrips = card._deriveTripHistory(recorderHistory);
+  assert.equal(reconstructedTrips.length, 1);
+  assert.equal(reconstructedTrips[0].origin, "Home");
+  assert.equal(reconstructedTrips[0].destination, "Work");
+  assert.equal(reconstructedTrips[0].durationMinutes, 30);
+  assert.equal(reconstructedTrips[0].distance.toFixed(1), "12.4");
+  assert.equal(reconstructedTrips[0].usedEnergy.toFixed(1), "5.0");
+  assert.equal(reconstructedTrips[0].consumption.toFixed(1), "40.3");
+  card._tripHistory = reconstructedTrips;
+  card._tripHistoryState = "ready";
   const drivingLocation = card._renderLocationTab({
     lastUpdated: "now",
     mapTiles: null,
@@ -480,7 +588,31 @@ async function run() {
   });
   assert.match(drivingLocation, /Today&apos;s driving/);
   assert.match(drivingLocation, /Normal/);
+  assert.match(drivingLocation, /Daily driving data/);
+  assert.match(
+    drivingLocation,
+    /Official Kia totals for the latest 2 driving days/,
+  );
+  assert.match(drivingLocation, /Trip history/);
+  assert.match(drivingLocation, /Home/);
+  assert.match(drivingLocation, /Work/);
+  assert.match(drivingLocation, /12\.4 km/);
+  assert.match(drivingLocation, /40\.3 kWh\/100 km/);
   assert.doesNotMatch(drivingLocation, /Ready for future trip data/);
+  let historyRequest = null;
+  card._tripHistory = [];
+  card._tripHistoryState = "idle";
+  card._tripHistoryRequestKey = "";
+  card._hass.callApi = async (method, path) => {
+    historyRequest = { method, path };
+    return recorderHistory;
+  };
+  await card._loadTripHistory();
+  assert.equal(historyRequest.method, "GET");
+  assert.match(historyRequest.path, /^history\/period\//);
+  assert.match(historyRequest.path, /binary_sensor\.engine/);
+  assert.equal(card._tripHistoryState, "ready");
+  assert.equal(card._tripHistory.length, 1);
   const fallbackCard = new Card();
   fallbackCard._config = { entities: {} };
   fallbackCard._hass = { locale: { language: "en" }, states: {} };
@@ -611,6 +743,13 @@ async function run() {
   assert.match(dutchDrivingAnalytics, /Afstand vandaag/);
   assert.match(dutchDrivingAnalytics, /Teruggewonnen energie/);
   assert.match(dutchDrivingAnalytics, /Totale regeneratie/);
+  card._activeTab = "location";
+  card._render();
+  const dutchTripHistory = card.shadowRoot.innerHTML;
+  assert.match(dutchTripHistory, /Dagelijkse rijgegevens/);
+  assert.match(dutchTripHistory, /Ritgeschiedenis/);
+  assert.match(dutchTripHistory, /Recorder-analyse/);
+  assert.match(dutchTripHistory, /Gemiddelde snelheid/);
 }
 
 run().catch((error) => {

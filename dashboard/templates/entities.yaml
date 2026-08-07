@@ -36,6 +36,8 @@ driving:
   today_stats: sensor.kia_ev6_today_s_daily_driving_stats
   total_regeneration: sensor.kia_ev6_total_energy_regeneration
   mode: sensor.kia_ev6_drive_mode
+  engine: binary_sensor.kia_ev6_engine
+  ignition: binary_sensor.kia_ev6_ign3
 
 charger:
   online: binary_sensor.home_charger_connected

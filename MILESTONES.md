@@ -26,8 +26,8 @@
 
 ### Trips and analytics
 
-- Provider-backed route, destination, duration, and movement context beyond the
-  shipped Kia Connect daily driving analytics.
+- Validate and harden the shipped Recorder-derived trip history.
+- Optional Home Assistant-native persistence beyond Recorder retention.
 
 ### Safe vehicle actions
 

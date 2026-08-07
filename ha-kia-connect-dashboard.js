@@ -361,7 +361,33 @@ const KIA_DASHBOARD_NL = {
   "Open rear left window?": "Raam linksachter openen?",
   "Close rear left window?": "Raam linksachter sluiten?",
   "Open rear right window?": "Raam rechtsachter openen?",
-  "Close rear right window?": "Raam rechtsachter sluiten?"};
+  "Close rear right window?": "Raam rechtsachter sluiten?",
+  "Driving history": "Rijgeschiedenis",
+  "Daily driving data": "Dagelijkse rijgegevens",
+  "Official Kia totals for the latest": "Officiële Kia-totalen voor de laatste",
+  "driving days.": "rijdagen.",
+  "Distance": "Afstand",
+  "Energy used": "Verbruikte energie",
+  "Average consumption": "Gemiddeld verbruik",
+  "Day": "Dag",
+  "Consumption": "Verbruik",
+  "Recorder analysis": "Recorder-analyse",
+  "Trip history": "Ritgeschiedenis",
+  "Trip reconstruction not configured": "Ritreconstructie niet geconfigureerd",
+  "Map engine or ignition together with odometer to derive individual trips.": "Wijs motor of contact samen met de kilometerstand toe om afzonderlijke ritten af te leiden.",
+  "Loading trip history": "Ritgeschiedenis laden",
+  "Reading recent vehicle states from Home Assistant Recorder.": "Recente voertuigstatussen worden uit Home Assistant Recorder gelezen.",
+  "Trip history unavailable": "Ritgeschiedenis niet beschikbaar",
+  "No completed trips found": "Geen voltooide ritten gevonden",
+  "Trips appear after Kia reports an engine or ignition cycle with a higher odometer value.": "Ritten verschijnen nadat Kia een motor- of contactcyclus met een hogere kilometerstand meldt.",
+  "Duration": "Duur",
+  "Average speed": "Gemiddelde snelheid",
+  "Unknown location": "Onbekende locatie",
+  "Away": "Onderweg",
+  "Estimated from Kia engine, odometer, location, and battery updates over the latest": "Geschat op basis van Kia-updates voor motor, kilometerstand, locatie en batterij over de laatste",
+  "days.": "dagen.",
+  "Times, energy, and locations are estimates because Kia updates can arrive several minutes apart.": "Tijden, energie en locaties zijn schattingen omdat Kia-updates meerdere minuten uit elkaar kunnen liggen."
+};
 
 class KiaDashboardCard extends HTMLElement {
   constructor() {
@@ -371,18 +397,33 @@ class KiaDashboardCard extends HTMLElement {
     this._notice = "";
     this._activeTab = "overview";
     this._chargerModeBeforePause = "";
+    this._tripHistory = [];
+    this._tripHistoryState = "idle";
+    this._tripHistoryError = "";
+    this._tripHistoryRequestKey = "";
+    this._tripHistoryRequestToken = 0;
+    this._tripHistoryAttemptedAt = 0;
   }
 
   setConfig(config) {
     const previousModeEntity = this._entity("charger_mode");
+    const previousHistoryEntities = this._historyEntityIds().join("|");
     this._config = config || {};
     if (previousModeEntity !== this._entity("charger_mode")) this._chargerModeBeforePause = "";
+    if (previousHistoryEntities !== this._historyEntityIds().join("|")) {
+      this._tripHistoryRequestToken += 1;
+      this._tripHistoryRequestKey = "";
+      this._tripHistoryState = "idle";
+      this._tripHistory = [];
+    }
     this._render();
+    if (this._activeTab === "location") this._loadTripHistory();
   }
 
   set hass(hass) {
     this._hass = hass;
     this._render();
+    if (this._activeTab === "location") this._loadTripHistory();
   }
 
   getCardSize() {
@@ -423,6 +464,10 @@ class KiaDashboardCard extends HTMLElement {
         distance: Number.parseFloat(value.distance) || 0,
         consumed: Number.parseFloat(value.total_consumed) || 0,
         regenerated: Number.parseFloat(value.regenerated_energy) || 0,
+        engineConsumed: Number.parseFloat(value.engine_consumption) || 0,
+        climateConsumed: Number.parseFloat(value.climate_consumption) || 0,
+        electronicsConsumed: Number.parseFloat(value.onboard_electronics_consumption) || 0,
+        batteryCareConsumed: Number.parseFloat(value.battery_care_consumption) || 0,
       }))
       .sort((left, right) => left.date.localeCompare(right.date));
   }
@@ -436,9 +481,171 @@ class KiaDashboardCard extends HTMLElement {
         distance: Number.parseFloat(value.distance) || 0,
         consumed: Number.parseFloat(value.total_consumed) || 0,
         regenerated: Number.parseFloat(value.regenerated_energy) || 0,
+        engineConsumed: Number.parseFloat(value.engine_consumption) || 0,
+        climateConsumed: Number.parseFloat(value.climate_consumption) || 0,
+        electronicsConsumed: Number.parseFloat(value.onboard_electronics_consumption) || 0,
+        batteryCareConsumed: Number.parseFloat(value.battery_care_consumption) || 0,
       };
     }
     return this._drivingHistory().at(-1) || null;
+  }
+
+  _drivingDays() {
+    const history = this._drivingHistory();
+    const today = this._todayDriving();
+    if (!today?.date) return history;
+    const existing = history.findIndex((day) => day.date === today.date);
+    if (existing >= 0) history[existing] = { ...history[existing], ...today };
+    else history.push(today);
+    return history.sort((left, right) => left.date.localeCompare(right.date));
+  }
+
+  _tripHistoryDays() {
+    const configured = Number.parseInt(this._config.trip_history_days ?? 7, 10);
+    return Math.max(1, Math.min(14, Number.isFinite(configured) ? configured : 7));
+  }
+
+  _tripHistoryLimit() {
+    const configured = Number.parseInt(this._config.trip_history_limit ?? 12, 10);
+    return Math.max(1, Math.min(30, Number.isFinite(configured) ? configured : 12));
+  }
+
+  _historyEntityIds() {
+    return ["engine", "ignition", "odometer", "location", "battery_level", "battery_remaining_energy"]
+      .map((key) => this._entity(key))
+      .filter((entityId, index, values) => entityId && values.indexOf(entityId) === index);
+  }
+
+  _tripHistoryKey() {
+    const source = this._obj("engine") || this._obj("ignition");
+    const odometer = this._obj("odometer");
+    return [
+      this._tripHistoryDays(),
+      ...this._historyEntityIds(),
+      source?.last_changed || source?.last_updated || "",
+      odometer?.last_changed || odometer?.last_updated || "",
+    ].join("|");
+  }
+
+  async _loadTripHistory() {
+    if (!this._hass?.callApi || !this._entity("odometer") || (!this._entity("engine") && !this._entity("ignition"))) return;
+    const requestKey = this._tripHistoryKey();
+    if (this._tripHistoryState === "loading" || (this._tripHistoryState === "ready" && requestKey === this._tripHistoryRequestKey)) return;
+    if (this._tripHistoryState === "error" && requestKey === this._tripHistoryRequestKey && Date.now() - this._tripHistoryAttemptedAt < 300000) return;
+
+    const token = ++this._tripHistoryRequestToken;
+    this._tripHistoryRequestKey = requestKey;
+    this._tripHistoryAttemptedAt = Date.now();
+    this._tripHistoryState = "loading";
+    this._tripHistoryError = "";
+    this._render();
+
+    const end = new Date();
+    const start = new Date(end.getTime() - this._tripHistoryDays() * 86400000);
+    const entityIds = this._historyEntityIds();
+    const path = `history/period/${encodeURIComponent(start.toISOString())}?filter_entity_id=${encodeURIComponent(entityIds.join(","))}&end_time=${encodeURIComponent(end.toISOString())}`;
+
+    try {
+      const history = await this._hass.callApi("GET", path);
+      if (token !== this._tripHistoryRequestToken) return;
+      this._tripHistory = this._deriveTripHistory(history).slice(0, this._tripHistoryLimit());
+      this._tripHistoryState = "ready";
+    } catch (error) {
+      if (token !== this._tripHistoryRequestToken) return;
+      this._tripHistory = [];
+      this._tripHistoryState = "error";
+      this._tripHistoryError = error?.message || String(error || "History unavailable");
+    }
+    if (this._activeTab === "location") this._render();
+  }
+
+  _historySeries(history, entityId) {
+    if (!entityId || !Array.isArray(history)) return [];
+    const series = history.find((items) => Array.isArray(items) && items.some((item) => item?.entity_id === entityId)) || [];
+    return series
+      .filter((item) => item && !["unknown", "unavailable"].includes(String(item.state).toLowerCase()))
+      .map((item) => ({ ...item, timestamp: new Date(item.last_changed || item.last_updated).getTime() }))
+      .filter((item) => Number.isFinite(item.timestamp))
+      .sort((left, right) => left.timestamp - right.timestamp);
+  }
+
+  _historySample(series, timestamp, preferPrevious = false) {
+    if (!series.length) return null;
+    const before = series.filter((item) => item.timestamp <= timestamp - (preferPrevious ? 1000 : 0)).at(-1);
+    if (preferPrevious && before) return before;
+    const after = series.find((item) => item.timestamp >= timestamp && item.timestamp - timestamp <= 120000);
+    return after || series.filter((item) => item.timestamp <= timestamp + 120000).at(-1) || null;
+  }
+
+  _historyNumber(sample) {
+    const value = Number.parseFloat(sample?.state);
+    return Number.isFinite(value) ? value : null;
+  }
+
+  _historyEnergy(sample) {
+    const value = this._historyNumber(sample);
+    if (value === null) return null;
+    const unit = String(sample?.attributes?.unit_of_measurement || "kWh").toLowerCase();
+    if (unit === "kj") return value / 3600;
+    if (unit === "wh") return value / 1000;
+    return value;
+  }
+
+  _historyLocation(sample) {
+    if (!sample) return "Unknown location";
+    const state = String(sample.state || "").trim();
+    if (state && !["not_home", "unknown", "unavailable"].includes(state.toLowerCase())) return state;
+    const latitude = Number.parseFloat(sample.attributes?.latitude);
+    const longitude = Number.parseFloat(sample.attributes?.longitude);
+    return Number.isFinite(latitude) && Number.isFinite(longitude) ? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` : "Away";
+  }
+
+  _deriveTripHistory(history) {
+    const engineSeries = this._historySeries(history, this._entity("engine"));
+    const ignitionSeries = this._historySeries(history, this._entity("ignition"));
+    const engine = engineSeries.length ? engineSeries : ignitionSeries;
+    const odometer = this._historySeries(history, this._entity("odometer"));
+    const locations = this._historySeries(history, this._entity("location"));
+    const battery = this._historySeries(history, this._entity("battery_level"));
+    const remainingEnergy = this._historySeries(history, this._entity("battery_remaining_energy"));
+    const active = (state) => ["on", "running", "true", "1"].includes(String(state).toLowerCase());
+    const trips = [];
+    let started = null;
+    let wasActive = false;
+
+    for (const state of engine) {
+      const isActive = active(state.state);
+      if (isActive && !wasActive) started = state;
+      if (!isActive && wasActive && started) {
+        const startOdometer = this._historyNumber(this._historySample(odometer, started.timestamp, true));
+        const endOdometer = this._historyNumber(this._historySample(odometer, state.timestamp));
+        const distance = startOdometer !== null && endOdometer !== null ? endOdometer - startOdometer : null;
+        if (distance !== null && distance >= 0.2) {
+          const startBattery = this._historyNumber(this._historySample(battery, started.timestamp, true));
+          const endBattery = this._historyNumber(this._historySample(battery, state.timestamp));
+          const startEnergy = this._historyEnergy(this._historySample(remainingEnergy, started.timestamp, true));
+          const endEnergy = this._historyEnergy(this._historySample(remainingEnergy, state.timestamp));
+          const usedEnergy = startEnergy !== null && endEnergy !== null && startEnergy >= endEnergy ? startEnergy - endEnergy : null;
+          const durationMinutes = Math.max(1, Math.round((state.timestamp - started.timestamp) / 60000));
+          trips.push({
+            start: started.timestamp,
+            end: state.timestamp,
+            durationMinutes,
+            distance,
+            origin: this._historyLocation(this._historySample(locations, started.timestamp, true)),
+            destination: this._historyLocation(this._historySample(locations, state.timestamp)),
+            startBattery,
+            endBattery,
+            usedEnergy,
+            consumption: usedEnergy !== null && distance > 0 ? (usedEnergy / distance) * 100 : null,
+            averageSpeed: durationMinutes > 0 ? distance / (durationMinutes / 60) : null,
+          });
+        }
+        started = null;
+      }
+      wasActive = isActive;
+    }
+    return trips.sort((left, right) => right.start - left.start);
   }
 
   _safe(value) {
@@ -593,6 +800,7 @@ class KiaDashboardCard extends HTMLElement {
     if (!tabs.includes(section) || section === this._activeTab) return;
     this._activeTab = section;
     this._render();
+    if (section === "location") this._loadTripHistory();
   }
 
   _moreInfo(key) {
@@ -1109,6 +1317,95 @@ class KiaDashboardCard extends HTMLElement {
     </main>`;
   }
 
+  _formatHistoryDay(value) {
+    const date = new Date(`${value}T12:00:00`);
+    if (Number.isNaN(date.getTime())) return value;
+    return new Intl.DateTimeFormat(this._hass?.locale?.language || navigator.language || "nl-BE", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+    }).format(date);
+  }
+
+  _formatHistoryTime(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "--";
+    return new Intl.DateTimeFormat(this._hass?.locale?.language || navigator.language || "nl-BE", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+  }
+
+  _formatTripDuration(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const remainder = minutes % 60;
+    return hours ? `${hours} h ${remainder} min` : `${remainder} min`;
+  }
+
+  _renderLocationDailyHistory() {
+    const configured = Number.parseInt(this._config.daily_history_limit ?? 30, 10);
+    const limit = Math.max(7, Math.min(31, Number.isFinite(configured) ? configured : 30));
+    const days = this._drivingDays().filter((day) => day.distance > 0).slice(-limit).reverse();
+    if (!days.length) return "";
+    const totalDistance = days.reduce((sum, day) => sum + day.distance, 0);
+    const totalConsumed = days.reduce((sum, day) => sum + day.consumed, 0) / 1000;
+    const totalRegenerated = days.reduce((sum, day) => sum + day.regenerated, 0) / 1000;
+    const weightedConsumption = totalDistance > 0 ? (totalConsumed / totalDistance) * 100 : 0;
+    const rows = days.map((day) => {
+      const consumption = day.distance > 0 ? (day.consumed / 1000 / day.distance) * 100 : 0;
+      return `<div class="location-daily-row" role="row">
+        <strong role="cell">${this._safe(this._formatHistoryDay(day.date))}</strong>
+        <span role="cell">${this._safe(day.distance.toFixed(1))} km</span>
+        <span role="cell">${this._safe(consumption.toFixed(1))} kWh/100 km</span>
+        <span role="cell">${this._safe((day.consumed / 1000).toFixed(1))} kWh</span>
+        <span role="cell">${this._safe((day.regenerated / 1000).toFixed(1))} kWh</span>
+        <span role="cell">${this._safe((day.climateConsumed / 1000).toFixed(1))} kWh</span>
+      </div>`;
+    }).join("");
+    return `<section class="location-history-section location-daily card">
+      <div class="location-history-heading"><ha-icon icon="mdi:chart-timeline-variant"></ha-icon><div><span>Driving history</span><h2>Daily driving data</h2><p>Official Kia totals for the latest ${days.length} driving days.</p></div></div>
+      <div class="location-period-summary">
+        <div><span>Distance</span><strong>${this._safe(totalDistance.toFixed(1))} km</strong></div>
+        <div><span>Energy used</span><strong>${this._safe(totalConsumed.toFixed(1))} kWh</strong></div>
+        <div><span>Average consumption</span><strong>${this._safe(weightedConsumption.toFixed(1))} kWh/100 km</strong></div>
+        <div><span>Regenerated</span><strong>${this._safe(totalRegenerated.toFixed(1))} kWh</strong></div>
+      </div>
+      <div class="location-daily-table" role="table" aria-label="Daily driving data">
+        <div class="location-daily-row location-daily-header" role="row"><span role="columnheader">Day</span><span role="columnheader">Distance</span><span role="columnheader">Consumption</span><span role="columnheader">Energy</span><span role="columnheader">Regenerated</span><span role="columnheader">Climate</span></div>
+        ${rows}
+      </div>
+    </section>`;
+  }
+
+  _renderLocationTripHistory() {
+    const mapped = this._entity("odometer") && (this._entity("engine") || this._entity("ignition"));
+    let content = "";
+    if (!mapped) {
+      content = `<div class="location-history-empty"><ha-icon icon="mdi:map-marker-alert-outline"></ha-icon><div><strong>Trip reconstruction not configured</strong><span>Map engine or ignition together with odometer to derive individual trips.</span></div></div>`;
+    } else if (this._tripHistoryState === "loading" || this._tripHistoryState === "idle") {
+      content = `<div class="location-history-empty"><ha-icon icon="mdi:loading"></ha-icon><div><strong>Loading trip history</strong><span>Reading recent vehicle states from Home Assistant Recorder.</span></div></div>`;
+    } else if (this._tripHistoryState === "error") {
+      content = `<div class="location-history-empty warning"><ha-icon icon="mdi:alert-circle-outline"></ha-icon><div><strong>Trip history unavailable</strong><span>${this._safe(this._tripHistoryError)}</span></div></div>`;
+    } else if (!this._tripHistory.length) {
+      content = `<div class="location-history-empty"><ha-icon icon="mdi:road-variant"></ha-icon><div><strong>No completed trips found</strong><span>Trips appear after Kia reports an engine or ignition cycle with a higher odometer value.</span></div></div>`;
+    } else {
+      content = `<div class="location-trip-list">${this._tripHistory.map((trip) => {
+        const battery = trip.startBattery !== null && trip.endBattery !== null ? `${trip.startBattery.toFixed(1)}% → ${trip.endBattery.toFixed(1)}%` : "--";
+        const energy = trip.usedEnergy !== null ? `${trip.usedEnergy.toFixed(1)} kWh` : "--";
+        const consumption = trip.consumption !== null ? `${trip.consumption.toFixed(1)} kWh/100 km` : "--";
+        return `<article class="location-trip-item">
+          <div class="location-trip-route"><span>${this._safe(this._formatHistoryDay(new Date(trip.start).toISOString().slice(0, 10)))}</span><h3>${this._safe(trip.origin)} <ha-icon icon="mdi:arrow-right"></ha-icon> ${this._safe(trip.destination)}</h3><small>${this._safe(this._formatHistoryTime(trip.start))}–${this._safe(this._formatHistoryTime(trip.end))}</small></div>
+          <div class="location-trip-metrics"><span><small>Distance</small><strong>${this._safe(trip.distance.toFixed(1))} km</strong></span><span><small>Duration</small><strong>${this._safe(this._formatTripDuration(trip.durationMinutes))}</strong></span><span><small>Battery</small><strong>${this._safe(battery)}</strong></span><span><small>Energy used</small><strong>${this._safe(energy)}</strong></span><span><small>Consumption</small><strong>${this._safe(consumption)}</strong></span><span><small>Average speed</small><strong>${this._safe(trip.averageSpeed.toFixed(0))} km/h</strong></span></div>
+        </article>`;
+      }).join("")}</div>`;
+    }
+    return `<section class="location-history-section location-history card">
+      <div class="location-history-heading"><ha-icon icon="mdi:routes"></ha-icon><div><span>Recorder analysis</span><h2>Trip history</h2><p>Estimated from Kia engine, odometer, location, and battery updates over the latest ${this._tripHistoryDays()} days.</p></div></div>
+      ${content}
+      <p class="location-history-note"><ha-icon icon="mdi:information-outline"></ha-icon>Times, energy, and locations are estimates because Kia updates can arrive several minutes apart.</p>
+    </section>`;
+  }
+
   _renderLocationTab(context) {
     const { lastUpdated, mapTiles, markerImage } = context;
     const trackerState = this._state("location", "Location unavailable");
@@ -1158,6 +1455,9 @@ class KiaDashboardCard extends HTMLElement {
         </section>
 
         <section class="location-context-card location-trip card${drivingContextAvailable ? "" : " muted"}">${drivingContext}</section>
+
+        ${this._renderLocationDailyHistory()}
+        ${this._renderLocationTripHistory()}
 
         <button class="location-back card" data-nav="overview"><ha-icon icon="mdi:arrow-left"></ha-icon><span>Back to Overview</span></button>
       </main>`;
@@ -1243,11 +1543,12 @@ class KiaDashboardCard extends HTMLElement {
 
   _locationTabStyles() {
     return `
-      .location-detail { margin-top:12px; display:grid; grid-template-columns:minmax(0,1.45fr) minmax(300px,.75fr); grid-template-areas:"map summary" "map parking" "map trip" "map back"; gap:12px; align-items:stretch; }
+      .location-detail { margin-top:12px; display:grid; grid-template-columns:minmax(0,1.45fr) minmax(300px,.75fr); grid-template-areas:"map summary" "map parking" "map trip" "daily daily" "history history" "back back"; gap:12px; align-items:stretch; }
       .location-detail-map { grid-area:map; min-height:560px; padding:22px; display:grid; grid-template-rows:auto minmax(360px,1fr) auto; gap:16px; min-width:0; }
       .location-detail-summary { grid-area:summary; padding:22px; display:grid; gap:22px; }
       .location-context-card { padding:22px; display:grid; grid-template-columns:42px 1fr; gap:16px; align-items:start; }
       .location-parking { grid-area:parking; } .location-trip { grid-area:trip; }
+      .location-daily { grid-area:daily; } .location-history { grid-area:history; }
       .location-back { grid-area:back; min-height:52px; padding:0 20px; display:flex; align-items:center; justify-content:center; gap:10px; border-color:var(--blue); background:var(--kia-control); color:var(--kia-text); font-weight:800; }
       .location-back ha-icon { color:var(--blue); --mdc-icon-size:21px; }
       .location-detail-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; min-width:0; }
@@ -1266,8 +1567,12 @@ class KiaDashboardCard extends HTMLElement {
       .location-stat strong { align-self:end; font-size:clamp(15px,1vw,18px); line-height:1.25; overflow-wrap:anywhere; }
       .location-context-card p { margin-top:8px; color:var(--kia-muted); font-size:14px; line-height:1.45; } .location-context-card.muted>ha-icon { color:var(--kia-muted); }
       .location-trip-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}.location-trip-stats button{min-width:0;padding:10px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);color:var(--kia-text);text-align:left}.location-trip-stats button:hover,.location-trip-stats button:focus-visible{border-color:var(--blue)}.location-trip-stats span{display:block;font-size:11px}.location-trip-stats strong{display:block;margin-top:4px;font-size:13px;overflow-wrap:anywhere}
-      @media (max-width:980px) { .location-detail { grid-template-columns:1fr 1fr; grid-template-areas:"map map" "summary summary" "parking trip" "back back"; } .location-detail-map { min-height:500px; } }
-      @media (max-width:640px) { .location-detail { grid-template-columns:1fr; grid-template-areas:"map" "summary" "parking" "trip" "back"; } .location-detail-map { min-height:0; padding:16px; grid-template-rows:auto minmax(300px,52vh) auto; } .location-detail-summary,.location-context-card { padding:18px; } .location-stat-grid,.location-trip-stats { grid-template-columns:1fr; } }
+      .location-history-section{padding:22px;min-width:0}.location-history-heading{display:grid;grid-template-columns:38px minmax(0,1fr);gap:12px;align-items:start}.location-history-heading>ha-icon{color:var(--blue);--mdc-icon-size:30px}.location-history-heading span{color:var(--blue);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.location-history-heading h2{margin-top:3px;font-size:clamp(19px,1.5vw,24px)}.location-history-heading p{margin-top:5px;color:var(--kia-muted);font-size:13px;line-height:1.45}
+      .location-period-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:18px}.location-period-summary>div{min-height:78px;padding:13px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control)}.location-period-summary span,.location-period-summary strong{display:block}.location-period-summary span{color:var(--kia-muted);font-size:11px}.location-period-summary strong{margin-top:6px;font-size:clamp(15px,1.2vw,19px)}
+      .location-daily-table{margin-top:16px;border:1px solid var(--kia-line);border-radius:8px;overflow:hidden}.location-daily-row{display:grid;grid-template-columns:minmax(115px,1.15fr) repeat(5,minmax(105px,1fr));align-items:center}.location-daily-row>*{min-width:0;padding:11px 12px;border-top:1px solid var(--kia-line);overflow-wrap:anywhere}.location-daily-row:first-child>*{border-top:0}.location-daily-row strong{font-size:13px}.location-daily-row span{color:var(--kia-muted);font-size:12px}.location-daily-header{background:var(--kia-recessed)}.location-daily-header span{color:var(--kia-text);font-weight:800}
+      .location-trip-list{display:grid;gap:10px;margin-top:18px}.location-trip-item{padding:16px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);display:grid;grid-template-columns:minmax(220px,.85fr) minmax(0,1.65fr);gap:20px}.location-trip-route span,.location-trip-route small,.location-trip-metrics small{display:block;color:var(--kia-muted);font-size:11px}.location-trip-route h3{margin:5px 0;font-size:15px;line-height:1.35;overflow-wrap:anywhere}.location-trip-route h3 ha-icon{color:var(--blue);--mdc-icon-size:16px;vertical-align:middle}.location-trip-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.location-trip-metrics>span{min-width:0;padding:9px 10px;border-left:2px solid color-mix(in srgb,var(--blue) 45%,var(--kia-line))}.location-trip-metrics strong{display:block;margin-top:4px;font-size:13px;overflow-wrap:anywhere}.location-history-empty{min-height:100px;margin-top:18px;padding:18px;border:1px dashed var(--kia-line);border-radius:8px;background:var(--kia-recessed);display:flex;align-items:center;gap:14px}.location-history-empty>ha-icon{color:var(--blue);--mdc-icon-size:32px}.location-history-empty.warning>ha-icon{color:var(--amber)}.location-history-empty strong,.location-history-empty span{display:block}.location-history-empty span{margin-top:4px;color:var(--kia-muted);font-size:12px}.location-history-note{margin-top:14px;padding-top:13px;border-top:1px solid var(--kia-line);display:flex;align-items:flex-start;gap:8px;color:var(--kia-muted);font-size:12px;line-height:1.45}.location-history-note ha-icon{color:var(--blue);--mdc-icon-size:18px;flex:0 0 auto}
+      @media (max-width:980px) { .location-detail { grid-template-columns:1fr 1fr; grid-template-areas:"map map" "summary summary" "parking trip" "daily daily" "history history" "back back"; } .location-detail-map { min-height:500px; } .location-period-summary{grid-template-columns:1fr 1fr}.location-daily-table{overflow-x:auto}.location-daily-row{min-width:760px}.location-trip-item{grid-template-columns:1fr}.location-trip-metrics{grid-template-columns:repeat(3,minmax(0,1fr))} }
+      @media (max-width:640px) { .location-detail { grid-template-columns:1fr; grid-template-areas:"map" "summary" "parking" "trip" "daily" "history" "back"; } .location-detail-map { min-height:0; padding:16px; grid-template-rows:auto minmax(300px,52vh) auto; } .location-detail-summary,.location-context-card,.location-history-section { padding:18px; } .location-stat-grid,.location-trip-stats,.location-period-summary { grid-template-columns:1fr; } .location-trip-metrics{grid-template-columns:1fr 1fr}.location-trip-item{padding:14px} }
     `;
   }
 

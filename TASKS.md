@@ -20,10 +20,16 @@
 ## Trips and energy analytics
 
 - [x] Inventory trip, regeneration, and driving-history entities.
-- [ ] Define optional route, destination, distance, duration, and movement keys.
+- [x] Define optional engine, ignition, odometer, location, and battery inputs
+      for estimated individual trips.
 - [x] Replace the Location trip placeholder when usable mappings exist.
 - [x] Add consumption and regeneration charts backed by Home Assistant history or
       statistics.
+- [x] Add extended daily driving data and bounded Recorder-derived trip history
+      to Location.
+- [ ] Validate trip reconstruction against real journeys and delayed updates.
+- [ ] Add optional persistence beyond Recorder retention if live validation is
+      successful.
 
 ## Safe vehicle actions
 

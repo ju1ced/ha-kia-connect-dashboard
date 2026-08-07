@@ -2,8 +2,9 @@
 
 ## Current limitations
 
-- Trip route, destination, distance, duration, and movement data are placeholders
-  until generic entity mappings are defined.
+- Individual trips are inferred from cached Kia state changes. Their timestamps,
+  energy, and locations remain estimates, short trips can be missed, and history
+  is limited by Home Assistant Recorder retention.
 - Seat comfort, rear-window heating, and dual departure context now support
   optional mappings verified against the target EV6. Direct seat-level selection
   and schedule editing still depend on the integration-specific entity or

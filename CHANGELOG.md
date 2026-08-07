@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Expanded Location with up to 30 official Kia daily-driving records and period
+  totals for distance, energy, consumption, regeneration, and climate use.
+- Added bounded, on-demand Home Assistant Recorder analysis that reconstructs
+  recent individual trips from engine or ignition, odometer, tracker, and
+  battery history without a TRONITY dependency.
+- Added configurable daily-history, Recorder-window, and trip-count limits plus
+  English and Dutch trip-history presentation.
+
 ## 2.7.0 - 2026-08-06
 
 - Added optional daily-driving, today's-driving, total-regeneration, and
