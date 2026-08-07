@@ -593,6 +593,17 @@ async function run() {
     drivingLocation,
     /Official Kia totals for the latest 2 driving days/,
   );
+  assert.match(drivingLocation, /Show daily details/);
+  assert.match(drivingLocation, /aria-expanded="false"/);
+  assert.match(drivingLocation, /id="location-daily-details"[^>]*hidden/);
+  card._dailyHistoryExpanded = true;
+  const expandedDailyHistory = card._renderLocationDailyHistory();
+  assert.match(expandedDailyHistory, /Hide daily details/);
+  assert.match(expandedDailyHistory, /aria-expanded="true"/);
+  assert.doesNotMatch(
+    expandedDailyHistory,
+    /id="location-daily-details"[^>]*hidden/,
+  );
   assert.match(drivingLocation, /Trip history/);
   assert.match(drivingLocation, /Home/);
   assert.match(drivingLocation, /Work/);
@@ -810,6 +821,7 @@ async function run() {
   card._render();
   const dutchTripHistory = card.shadowRoot.innerHTML;
   assert.match(dutchTripHistory, /Dagelijkse rijgegevens/);
+  assert.match(dutchTripHistory, /Verberg dagelijkse details/);
   assert.match(dutchTripHistory, /Opgeslagen ritgeschiedenis/);
   assert.match(dutchTripHistory, /Permanente kalender/);
   assert.match(dutchTripHistory, /Volledige kalendergeschiedenis/);

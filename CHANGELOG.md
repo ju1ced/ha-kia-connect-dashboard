@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Made the per-day table in the official Kia daily-driving section collapsible,
+  while keeping the period totals visible.
+
 ## 2.9.0 - 2026-08-07
 
 - Added optional Local Calendar-backed trip persistence with a monthly day
