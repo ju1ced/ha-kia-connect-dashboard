@@ -42,5 +42,18 @@ these cards.
 
 When `today_driving_stats` or `daily_driving_stats` is mapped, the trip block
 shows today's distance and calculated consumption. `drive_mode` adds the current
-drive mode. The original placeholder remains when none of these mappings are
-available; route and destination are deliberately not inferred.
+drive mode. A full-width daily-history section below the current location cards
+uses up to 30 date-keyed Kia records and shows period totals plus per-day
+distance, consumption, energy, regeneration, and climate use.
+
+Mapping `engine` or `ignition` together with `odometer` enables the subsequent
+Trip History section. It requests a bounded history window from Home Assistant
+Recorder only while Location is active, pairs running and stopped transitions,
+and calculates completed trips. Tracker, battery-level, and remaining-energy
+history enrich the result when those mappings are present. These trip values
+are explicitly presented as estimates because cached Kia updates do not provide
+exact event timestamps or a GPS breadcrumb route.
+
+The original placeholder remains when no driving mappings are available. Trip
+reconstruction reports its missing mappings separately, so daily Kia history
+continues to work without Recorder-based trips.

@@ -1,5 +1,10 @@
 # TRONITY API integration research
 
+> **Status:** Optional and deferred. The dashboard now reconstructs recent trips
+> directly from Kia entities and Home Assistant Recorder. TRONITY remains a
+> possible future provider for exact server-side trip records, but it is no
+> longer required for the Location roadmap.
+
 ## Goal
 
 Use TRONITY trip data to enrich the dashboard with individual trip details that

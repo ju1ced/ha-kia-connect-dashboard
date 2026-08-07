@@ -138,6 +138,8 @@ entities:
   today_driving_stats: sensor.your_vehicle_today_s_daily_driving_stats
   total_energy_regeneration: sensor.your_vehicle_total_energy_regeneration
   drive_mode: sensor.your_vehicle_drive_mode
+  engine: binary_sensor.your_vehicle_engine
+  ignition: binary_sensor.your_vehicle_ignition
   smart_key_battery_warning: binary_sensor.your_vehicle_smart_key_battery_warning
   vent_windows: button.your_vehicle_vent_all_windows
   front_left_window_open: cover.your_vehicle_front_left_window
@@ -158,13 +160,34 @@ to the same `cover.*` entity. The card calls `cover.open_cover` and
 `button.press`. Confirmation remains enabled unless `confirm_actions: false`
 is configured.
 
-The four driving mappings are also optional. When available, the Energy view
+The driving mappings are also optional. When available, the Energy view
 renders the latest 14 driving days directly from the date-keyed attributes of
 `daily_driving_stats`, together with today's distance, efficiency, regenerated
-energy, and total regeneration. The Location view replaces its placeholder with
-today's driving context and the current drive mode. No helper entities are
-required, and route or destination data is not inferred when the integration
-does not expose it.
+energy, and total regeneration. The Location view adds up to 30 official Kia
+driving days with distance, energy, consumption, regeneration, and climate use.
+
+When `engine` or `ignition` is mapped together with `odometer`, the Location
+view also reads recent states from Home Assistant Recorder and reconstructs
+individual completed trips. Existing `location`, `battery_level`, and
+`battery_remaining_energy` mappings enrich those trips with origin,
+destination, state-of-charge change, energy use, consumption, and average
+speed. Recorder-derived values are estimates because Kia updates may arrive
+several minutes apart. The card does not force-refresh the vehicle.
+
+Recorder history defaults to 7 days and 12 trips. Both are configurable; the
+history window is deliberately capped at 14 days to keep browser queries
+bounded:
+
+```yaml
+type: custom:kia-dashboard-card
+trip_history_days: 7
+trip_history_limit: 12
+daily_history_limit: 30
+```
+
+No helper entities are required. The available history still depends on Home
+Assistant Recorder retention and on the Kia integration observing an engine or
+ignition transition.
 
 ## Optional Settings Entities
 

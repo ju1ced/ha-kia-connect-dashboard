@@ -19,17 +19,18 @@ are available in the current stable release.
 - Seat comfort, rear-window heating, and departure schedule context.
 - Daily driving distance, efficiency, regeneration summaries, and 14-day
   consumption and regeneration charts.
+- Extended Kia daily history and estimated individual trips reconstructed from
+  bounded Home Assistant Recorder data.
 - Confirmation and feedback patterns for enabled remote actions.
 
-## Next: Rich trip data
+## Next: Persistent trip data
 
-- Investigate Tronity or another provider for individual trip routes,
-  destinations, duration, and movement data not exposed by Kia Connect.
-- Define optional provider-neutral mappings without coupling the card to one API.
+- Validate Recorder-derived trips against real journeys and tune segmentation
+  for missed or delayed Kia updates.
+- Evaluate an optional Home Assistant-native persistence layer for individual
+  trips beyond Recorder retention.
+- Keep TRONITY research as an optional provider path rather than a dependency.
 - Add further long-term statistics where reliable entities are available.
-- Follow the server-side integration plan in
-  [`docs/tronity-api.md`](docs/tronity-api.md) once the authenticated endpoint
-  schema has been verified.
 
 ## Next: Safe vehicle actions
 
