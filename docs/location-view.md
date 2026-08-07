@@ -44,7 +44,9 @@ When `today_driving_stats` or `daily_driving_stats` is mapped, the trip block
 shows today's distance and calculated consumption. `drive_mode` adds the current
 drive mode. A full-width daily-history section below the current location cards
 uses up to 30 date-keyed Kia records and shows period totals plus per-day
-distance, consumption, energy, regeneration, and climate use.
+distance, consumption, energy, regeneration, and climate use. The period totals
+remain visible while the detailed per-day table starts collapsed and can be
+expanded on demand.
 
 Mapping `engine` or `ignition` together with `odometer` enables the subsequent
 Trip History section. It requests a bounded history window from Home Assistant

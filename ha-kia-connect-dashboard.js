@@ -369,6 +369,8 @@ const KIA_DASHBOARD_NL = {
   "Distance": "Afstand",
   "Energy used": "Verbruikte energie",
   "Average consumption": "Gemiddeld verbruik",
+  "Show daily details": "Toon dagelijkse details",
+  "Hide daily details": "Verberg dagelijkse details",
   "Day": "Dag",
   "Consumption": "Verbruik",
   "Recorder analysis": "Recorder-analyse",
@@ -433,6 +435,7 @@ class KiaDashboardCard extends HTMLElement {
     this._tripViewMode = "day";
     this._tripSelectedDate = this._dateKey(new Date());
     this._tripCalendarMonth = this._tripSelectedDate.slice(0, 7);
+    this._dailyHistoryExpanded = false;
   }
 
   setConfig(config) {
@@ -1529,6 +1532,11 @@ class KiaDashboardCard extends HTMLElement {
     return hours ? `${hours} h ${remainder} min` : `${remainder} min`;
   }
 
+  _toggleDailyHistory() {
+    this._dailyHistoryExpanded = !this._dailyHistoryExpanded;
+    this._render();
+  }
+
   _renderLocationDailyHistory() {
     const configured = Number.parseInt(this._config.daily_history_limit ?? 30, 10);
     const limit = Math.max(7, Math.min(31, Number.isFinite(configured) ? configured : 30));
@@ -1557,7 +1565,8 @@ class KiaDashboardCard extends HTMLElement {
         <div><span>Average consumption</span><strong>${this._safe(weightedConsumption.toFixed(1))} kWh/100 km</strong></div>
         <div><span>Regenerated</span><strong>${this._safe(totalRegenerated.toFixed(1))} kWh</strong></div>
       </div>
-      <div class="location-daily-table" role="table" aria-label="Daily driving data">
+      <button class="location-daily-toggle" data-daily-history-toggle aria-expanded="${this._dailyHistoryExpanded}" aria-controls="location-daily-details"><span>${this._dailyHistoryExpanded ? "Hide daily details" : "Show daily details"}</span><ha-icon icon="mdi:chevron-${this._dailyHistoryExpanded ? "up" : "down"}"></ha-icon></button>
+      <div id="location-daily-details" class="location-daily-table" role="table" aria-label="Daily driving data" ${this._dailyHistoryExpanded ? "" : "hidden"}>
         <div class="location-daily-row location-daily-header" role="row"><span role="columnheader">Day</span><span role="columnheader">Distance</span><span role="columnheader">Consumption</span><span role="columnheader">Energy</span><span role="columnheader">Regenerated</span><span role="columnheader">Climate</span></div>
         ${rows}
       </div>
@@ -1846,7 +1855,7 @@ class KiaDashboardCard extends HTMLElement {
       .location-trip-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}.location-trip-stats button{min-width:0;padding:10px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);color:var(--kia-text);text-align:left}.location-trip-stats button:hover,.location-trip-stats button:focus-visible{border-color:var(--blue)}.location-trip-stats span{display:block;font-size:11px}.location-trip-stats strong{display:block;margin-top:4px;font-size:13px;overflow-wrap:anywhere}
       .location-history-section{padding:22px;min-width:0}.location-history-heading{display:grid;grid-template-columns:38px minmax(0,1fr);gap:12px;align-items:start}.location-history-heading>ha-icon{color:var(--blue);--mdc-icon-size:30px}.location-history-heading span{color:var(--blue);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.location-history-heading h2{margin-top:3px;font-size:clamp(19px,1.5vw,24px)}.location-history-heading p{margin-top:5px;color:var(--kia-muted);font-size:13px;line-height:1.45}
       .location-period-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:18px}.location-period-summary>div{min-height:78px;padding:13px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control)}.location-period-summary span,.location-period-summary strong{display:block}.location-period-summary span{color:var(--kia-muted);font-size:11px}.location-period-summary strong{margin-top:6px;font-size:clamp(15px,1.2vw,19px)}
-      .location-daily-table{margin-top:16px;border:1px solid var(--kia-line);border-radius:8px;overflow:hidden}.location-daily-row{display:grid;grid-template-columns:minmax(115px,1.15fr) repeat(5,minmax(105px,1fr));align-items:center}.location-daily-row>*{min-width:0;padding:11px 12px;border-top:1px solid var(--kia-line);overflow-wrap:anywhere}.location-daily-row:first-child>*{border-top:0}.location-daily-row strong{font-size:13px}.location-daily-row span{color:var(--kia-muted);font-size:12px}.location-daily-header{background:var(--kia-recessed)}.location-daily-header span{color:var(--kia-text);font-weight:800}
+      .location-daily-toggle{width:100%;min-height:44px;margin-top:16px;padding:0 14px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);color:var(--kia-text);display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:800;cursor:pointer}.location-daily-toggle:hover,.location-daily-toggle:focus-visible{border-color:var(--blue)}.location-daily-toggle ha-icon{color:var(--blue);--mdc-icon-size:22px}.location-daily-table{margin-top:10px;border:1px solid var(--kia-line);border-radius:8px;overflow:hidden}.location-daily-table[hidden]{display:none}.location-daily-row{display:grid;grid-template-columns:minmax(115px,1.15fr) repeat(5,minmax(105px,1fr));align-items:center}.location-daily-row>*{min-width:0;padding:11px 12px;border-top:1px solid var(--kia-line);overflow-wrap:anywhere}.location-daily-row:first-child>*{border-top:0}.location-daily-row strong{font-size:13px}.location-daily-row span{color:var(--kia-muted);font-size:12px}.location-daily-header{background:var(--kia-recessed)}.location-daily-header span{color:var(--kia-text);font-weight:800}
       .location-trip-list{display:grid;gap:10px;margin-top:18px}.location-trip-item{padding:16px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);display:grid;grid-template-columns:minmax(220px,.85fr) minmax(0,1.65fr);gap:20px}.location-trip-route span,.location-trip-route small,.location-trip-metrics small{display:block;color:var(--kia-muted);font-size:11px}.location-trip-route h3{margin:5px 0;font-size:15px;line-height:1.35;overflow-wrap:anywhere}.location-trip-route h3 ha-icon{color:var(--blue);--mdc-icon-size:16px;vertical-align:middle}.location-trip-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.location-trip-metrics>span{min-width:0;padding:9px 10px;border-left:2px solid color-mix(in srgb,var(--blue) 45%,var(--kia-line))}.location-trip-metrics strong{display:block;margin-top:4px;font-size:13px;overflow-wrap:anywhere}.location-history-empty{min-height:100px;margin-top:18px;padding:18px;border:1px dashed var(--kia-line);border-radius:8px;background:var(--kia-recessed);display:flex;align-items:center;gap:14px}.location-history-empty>ha-icon{color:var(--blue);--mdc-icon-size:32px}.location-history-empty.warning>ha-icon{color:var(--amber)}.location-history-empty strong,.location-history-empty span{display:block}.location-history-empty span{margin-top:4px;color:var(--kia-muted);font-size:12px}.location-history-note{margin-top:14px;padding-top:13px;border-top:1px solid var(--kia-line);display:flex;align-items:flex-start;gap:8px;color:var(--kia-muted);font-size:12px;line-height:1.45}.location-history-note ha-icon{color:var(--blue);--mdc-icon-size:18px;flex:0 0 auto}
       .location-history-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.trip-calendar-refresh,.trip-calendar-toolbar button,.trip-calendar-today{border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);color:var(--kia-text);cursor:pointer}.trip-calendar-refresh{width:42px;height:42px;display:grid;place-items:center;flex:0 0 auto}.trip-calendar-refresh:hover,.trip-calendar-refresh:focus-visible,.trip-calendar-toolbar button:hover,.trip-calendar-toolbar button:focus-visible,.trip-calendar-today:hover,.trip-calendar-today:focus-visible{border-color:var(--blue)}
       .trip-view-toggle{width:min(360px,100%);margin:18px 0 0;display:grid;grid-template-columns:1fr 1fr;padding:4px;border:1px solid var(--kia-line);border-radius:10px;background:var(--kia-recessed)}.trip-view-toggle button{min-height:40px;border:0;border-radius:7px;background:transparent;color:var(--kia-text);font-weight:800;cursor:pointer}.trip-view-toggle button.active{background:color-mix(in srgb,var(--blue) 14%,var(--kia-control));color:var(--blue);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--blue) 55%,transparent)}
@@ -2030,6 +2039,7 @@ class KiaDashboardCard extends HTMLElement {
     this.shadowRoot.querySelectorAll("[data-entity-action]").forEach((el) => el.addEventListener("click", () => this._callEntity(el.dataset.entityAction, el.dataset.service || "turn_on", el.dataset.confirm || "")));
     this.shadowRoot.querySelectorAll("[data-number]").forEach((el) => el.addEventListener("change", () => this._setNumber(el.dataset.number, el.value, el.dataset.confirm || "")));
     this.shadowRoot.querySelectorAll("[data-select]").forEach((el) => el.addEventListener("click", () => this._setSelect(el.dataset.select, el.dataset.option)));
+    this.shadowRoot.querySelectorAll("[data-daily-history-toggle]").forEach((el) => el.addEventListener("click", () => this._toggleDailyHistory()));
     this.shadowRoot.querySelectorAll("[data-trip-view]").forEach((el) => el.addEventListener("click", () => this._setTripView(el.dataset.tripView)));
     this.shadowRoot.querySelectorAll("[data-trip-month]").forEach((el) => el.addEventListener("click", () => this._shiftTripMonth(Number.parseInt(el.dataset.tripMonth, 10) || 0)));
     this.shadowRoot.querySelectorAll("[data-trip-date]").forEach((el) => el.addEventListener("click", () => this._selectTripDate(el.dataset.tripDate)));
