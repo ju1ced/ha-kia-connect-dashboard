@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added optional Local Calendar-backed trip persistence with a monthly day
+  picker, per-day summaries, and a complete stored-trip overview on Location.
+- Added a ready-to-copy Home Assistant trip package that snapshots Kia values,
+  writes versioned calendar events, recovers an active trip after restart, and
+  avoids duplicate events.
+- Kept bounded Recorder reconstruction as the automatic fallback when no trip
+  calendar is mapped.
+
 ## 2.8.0 - 2026-08-07
 
 - Expanded Location with up to 30 official Kia daily-driving records and period

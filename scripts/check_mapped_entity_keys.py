@@ -12,7 +12,7 @@ GROUP_LINE = re.compile(r"^([a-z][a-z0-9_]*):\s*$")
 KEY_LINE = re.compile(r"^\s{2}([a-z][a-z0-9_]*):\s*.+$")
 LOGICAL_KEY = re.compile(r"^([a-z][a-z0-9_]*)\s*(?:\.|/)\s*([a-z][a-z0-9_]*)$")
 REAL_ENTITY = re.compile(
-    r"^(?:sensor|binary_sensor|switch|cover|lock|climate|device_tracker|button|"
+    r"^(?:sensor|binary_sensor|switch|cover|lock|climate|calendar|device_tracker|button|"
     r"number|select|input_boolean|input_datetime|input_number|input_select)\."
     r"[a-zA-Z0-9_]+$"
 )

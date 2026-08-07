@@ -386,7 +386,29 @@ const KIA_DASHBOARD_NL = {
   "Away": "Onderweg",
   "Estimated from Kia engine, odometer, location, and battery updates over the latest": "Geschat op basis van Kia-updates voor motor, kilometerstand, locatie en batterij over de laatste",
   "days.": "dagen.",
-  "Times, energy, and locations are estimates because Kia updates can arrive several minutes apart.": "Tijden, energie en locaties zijn schattingen omdat Kia-updates meerdere minuten uit elkaar kunnen liggen."
+  "Times, energy, and locations are estimates because Kia updates can arrive several minutes apart.": "Tijden, energie en locaties zijn schattingen omdat Kia-updates meerdere minuten uit elkaar kunnen liggen.",
+  "Persistent calendar": "Permanente kalender",
+  "Stored trip history": "Opgeslagen ritgeschiedenis",
+  "Trips are stored locally in Home Assistant and remain available beyond Recorder retention.": "Ritten worden lokaal in Home Assistant opgeslagen en blijven beschikbaar na de Recorder-bewaartermijn.",
+  "Day": "Dag",
+  "Overview": "Overzicht",
+  "Previous month": "Vorige maand",
+  "Next month": "Volgende maand",
+  "Today": "Vandaag",
+  "Refresh calendar": "Kalender vernieuwen",
+  "Loading calendar history": "Kalendergeschiedenis laden",
+  "Reading stored trips from the mapped Home Assistant calendar.": "Opgeslagen ritten worden uit de toegewezen Home Assistant-kalender gelezen.",
+  "Calendar history unavailable": "Kalendergeschiedenis niet beschikbaar",
+  "No stored trips for this day": "Geen opgeslagen ritten voor deze dag",
+  "Choose another date or switch to Overview.": "Kies een andere datum of schakel naar Overzicht.",
+  "No stored trips found": "Geen opgeslagen ritten gevonden",
+  "New trips appear after the Home Assistant trip package records a completed drive.": "Nieuwe ritten verschijnen nadat het Home Assistant-rittenpackage een voltooide rit opslaat.",
+  "Stored trips": "Opgeslagen ritten",
+  "Selected day": "Geselecteerde dag",
+  "All calendar history": "Volledige kalendergeschiedenis",
+  "Calendar events are the persistent source; Recorder analysis remains the fallback when no trip calendar is mapped.": "Kalenderitems zijn de permanente bron; Recorder-analyse blijft de fallback wanneer geen rittenkalender is toegewezen.",
+  "Showing the latest": "De laatste",
+  "trips. Increase trip_calendar_limit to show more.": "ritten worden getoond. Verhoog trip_calendar_limit om er meer te tonen."
 };
 
 class KiaDashboardCard extends HTMLElement {
@@ -403,11 +425,20 @@ class KiaDashboardCard extends HTMLElement {
     this._tripHistoryRequestKey = "";
     this._tripHistoryRequestToken = 0;
     this._tripHistoryAttemptedAt = 0;
+    this._calendarTrips = [];
+    this._tripCalendarState = "idle";
+    this._tripCalendarError = "";
+    this._tripCalendarRequestKey = "";
+    this._tripCalendarRequestToken = 0;
+    this._tripViewMode = "day";
+    this._tripSelectedDate = this._dateKey(new Date());
+    this._tripCalendarMonth = this._tripSelectedDate.slice(0, 7);
   }
 
   setConfig(config) {
     const previousModeEntity = this._entity("charger_mode");
     const previousHistoryEntities = this._historyEntityIds().join("|");
+    const previousTripCalendar = this._entity("trip_calendar");
     this._config = config || {};
     if (previousModeEntity !== this._entity("charger_mode")) this._chargerModeBeforePause = "";
     if (previousHistoryEntities !== this._historyEntityIds().join("|")) {
@@ -416,14 +447,20 @@ class KiaDashboardCard extends HTMLElement {
       this._tripHistoryState = "idle";
       this._tripHistory = [];
     }
+    if (previousTripCalendar !== this._entity("trip_calendar")) {
+      this._tripCalendarRequestToken += 1;
+      this._tripCalendarRequestKey = "";
+      this._tripCalendarState = "idle";
+      this._calendarTrips = [];
+    }
     this._render();
-    if (this._activeTab === "location") this._loadTripHistory();
+    if (this._activeTab === "location") this._loadLocationTrips();
   }
 
   set hass(hass) {
     this._hass = hass;
     this._render();
-    if (this._activeTab === "location") this._loadTripHistory();
+    if (this._activeTab === "location") this._loadLocationTrips();
   }
 
   getCardSize() {
@@ -510,6 +547,155 @@ class KiaDashboardCard extends HTMLElement {
     return Math.max(1, Math.min(30, Number.isFinite(configured) ? configured : 12));
   }
 
+  _dateKey(value) {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+
+  _tripCalendarLimit() {
+    const configured = Number.parseInt(this._config.trip_calendar_limit ?? 250, 10);
+    return Math.max(10, Math.min(1000, Number.isFinite(configured) ? configured : 250));
+  }
+
+  _tripCalendarRange() {
+    const now = new Date();
+    if (this._tripViewMode === "overview") {
+      const configured = String(this._config.trip_calendar_start || "");
+      const fallback = new Date(now.getFullYear() - 10, 0, 1);
+      const start = /^\d{4}-\d{2}-\d{2}$/.test(configured) ? new Date(`${configured}T00:00:00`) : fallback;
+      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      return { start, end };
+    }
+    const [year, month] = this._tripCalendarMonth.split("-").map(Number);
+    return {
+      start: new Date(year, month - 1, 1),
+      end: new Date(year, month, 1),
+    };
+  }
+
+  _tripCalendarKey() {
+    const range = this._tripCalendarRange();
+    const calendar = this._obj("trip_calendar");
+    return [
+      this._entity("trip_calendar") || "",
+      this._tripViewMode,
+      range.start.toISOString(),
+      range.end.toISOString(),
+      calendar?.last_changed || calendar?.last_updated || "",
+    ].join("|");
+  }
+
+  _calendarEventDate(value) {
+    const raw = value && typeof value === "object" ? value.dateTime || value.date : value;
+    const date = new Date(raw);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  _calendarNumber(value) {
+    const number = Number.parseFloat(value);
+    return Number.isFinite(number) ? number : null;
+  }
+
+  _calendarTrip(event) {
+    const startDate = this._calendarEventDate(event?.start);
+    const endDate = this._calendarEventDate(event?.end);
+    if (!startDate || !endDate) return null;
+    let data = {};
+    try {
+      data = JSON.parse(String(event.description || "{}"));
+    } catch (_error) {
+      return null;
+    }
+    if (data.schema !== "kia_trip_v1") return null;
+    const start = startDate.getTime();
+    const end = endDate.getTime();
+    const durationMinutes = this._calendarNumber(data.duration_minutes) ?? Math.max(1, Math.round((end - start) / 60000));
+    const distance = this._calendarNumber(data.distance_km);
+    const usedEnergy = this._calendarNumber(data.energy_kwh);
+    const averageSpeed = this._calendarNumber(data.average_speed_kmh) ?? (distance !== null && durationMinutes > 0 ? distance / (durationMinutes / 60) : null);
+    const consumption = this._calendarNumber(data.consumption_kwh_100km) ?? (distance > 0 && usedEnergy !== null ? (usedEnergy / distance) * 100 : null);
+    return {
+      source: "calendar",
+      id: String(data.trip_id || `${start}`),
+      start,
+      end,
+      durationMinutes,
+      distance,
+      origin: String(data.origin || "Unknown location"),
+      destination: String(data.destination || event.location || "Unknown location"),
+      startBattery: this._calendarNumber(data.soc_start),
+      endBattery: this._calendarNumber(data.soc_end),
+      usedEnergy,
+      consumption,
+      averageSpeed,
+    };
+  }
+
+  async _loadTripCalendar(force = false) {
+    const entityId = this._entity("trip_calendar");
+    if (!entityId || !this._hass?.callApi) return;
+    const requestKey = this._tripCalendarKey();
+    if (!force && (this._tripCalendarState === "loading" || (this._tripCalendarState === "ready" && requestKey === this._tripCalendarRequestKey))) return;
+
+    const token = ++this._tripCalendarRequestToken;
+    this._tripCalendarRequestKey = requestKey;
+    this._tripCalendarState = "loading";
+    this._tripCalendarError = "";
+    this._render();
+    const { start, end } = this._tripCalendarRange();
+    const path = `calendars/${encodeURIComponent(entityId)}?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`;
+    try {
+      const events = await this._hass.callApi("GET", path);
+      if (token !== this._tripCalendarRequestToken) return;
+      this._calendarTrips = (Array.isArray(events) ? events : [])
+        .map((event) => this._calendarTrip(event))
+        .filter(Boolean)
+        .sort((left, right) => right.start - left.start);
+      this._tripCalendarState = "ready";
+    } catch (error) {
+      if (token !== this._tripCalendarRequestToken) return;
+      this._calendarTrips = [];
+      this._tripCalendarState = "error";
+      this._tripCalendarError = error?.message || String(error || "Calendar unavailable");
+    }
+    if (this._activeTab === "location") this._render();
+  }
+
+  _loadLocationTrips(force = false) {
+    if (this._entity("trip_calendar")) return this._loadTripCalendar(force);
+    return this._loadTripHistory();
+  }
+
+  _setTripView(mode) {
+    if (!["day", "overview"].includes(mode) || mode === this._tripViewMode) return;
+    this._tripViewMode = mode;
+    this._tripCalendarRequestKey = "";
+    this._loadTripCalendar();
+  }
+
+  _shiftTripMonth(offset) {
+    const [year, month] = this._tripCalendarMonth.split("-").map(Number);
+    const date = new Date(year, month - 1 + offset, 1);
+    this._tripCalendarMonth = this._dateKey(date).slice(0, 7);
+    this._tripSelectedDate = this._dateKey(date);
+    this._tripCalendarRequestKey = "";
+    this._loadTripCalendar();
+  }
+
+  _selectTripDate(value) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return;
+    const month = value.slice(0, 7);
+    this._tripSelectedDate = value;
+    if (month !== this._tripCalendarMonth) {
+      this._tripCalendarMonth = month;
+      this._tripCalendarRequestKey = "";
+      this._loadTripCalendar();
+    } else {
+      this._render();
+    }
+  }
+
   _historyEntityIds() {
     return ["engine", "ignition", "odometer", "location", "battery_level", "battery_remaining_energy"]
       .map((key) => this._entity(key))
@@ -528,6 +714,7 @@ class KiaDashboardCard extends HTMLElement {
   }
 
   async _loadTripHistory() {
+    if (this._entity("trip_calendar")) return;
     if (!this._hass?.callApi || !this._entity("odometer") || (!this._entity("engine") && !this._entity("ignition"))) return;
     const requestKey = this._tripHistoryKey();
     if (this._tripHistoryState === "loading" || (this._tripHistoryState === "ready" && requestKey === this._tripHistoryRequestKey)) return;
@@ -800,7 +987,7 @@ class KiaDashboardCard extends HTMLElement {
     if (!tabs.includes(section) || section === this._activeTab) return;
     this._activeTab = section;
     this._render();
-    if (section === "location") this._loadTripHistory();
+    if (section === "location") this._loadLocationTrips(true);
   }
 
   _moreInfo(key) {
@@ -1377,7 +1564,97 @@ class KiaDashboardCard extends HTMLElement {
     </section>`;
   }
 
+  _tripTotals(trips) {
+    const totalDistance = trips.reduce((sum, trip) => sum + (trip.distance || 0), 0);
+    const totalEnergy = trips.reduce((sum, trip) => sum + (trip.usedEnergy || 0), 0);
+    const totalMinutes = trips.reduce((sum, trip) => sum + (trip.durationMinutes || 0), 0);
+    return {
+      count: trips.length,
+      distance: totalDistance,
+      energy: totalEnergy,
+      durationMinutes: totalMinutes,
+      consumption: totalDistance > 0 && totalEnergy > 0 ? (totalEnergy / totalDistance) * 100 : null,
+    };
+  }
+
+  _renderTripSummary(trips, label) {
+    const totals = this._tripTotals(trips);
+    return `<div class="location-trip-summary" aria-label="${this._safe(label)}">
+      <div><span>Stored trips</span><strong>${totals.count}</strong></div>
+      <div><span>Distance</span><strong>${totals.distance.toFixed(1)} km</strong></div>
+      <div><span>Energy used</span><strong>${totals.energy.toFixed(1)} kWh</strong></div>
+      <div><span>Average consumption</span><strong>${totals.consumption === null ? "--" : `${totals.consumption.toFixed(1)} kWh/100 km`}</strong></div>
+    </div>`;
+  }
+
+  _renderTripCards(trips) {
+    return `<div class="location-trip-list">${trips.map((trip) => {
+      const battery = trip.startBattery !== null && trip.endBattery !== null ? `${trip.startBattery.toFixed(1)}% → ${trip.endBattery.toFixed(1)}%` : "--";
+      const distance = trip.distance !== null ? `${trip.distance.toFixed(1)} km` : "--";
+      const energy = trip.usedEnergy !== null ? `${trip.usedEnergy.toFixed(1)} kWh` : "--";
+      const consumption = trip.consumption !== null ? `${trip.consumption.toFixed(1)} kWh/100 km` : "--";
+      const speed = trip.averageSpeed !== null ? `${trip.averageSpeed.toFixed(0)} km/h` : "--";
+      return `<article class="location-trip-item">
+        <div class="location-trip-route"><span>${this._safe(this._formatHistoryDay(this._dateKey(trip.start)))}</span><h3>${this._safe(trip.origin)} <ha-icon icon="mdi:arrow-right"></ha-icon> ${this._safe(trip.destination)}</h3><small>${this._safe(this._formatHistoryTime(trip.start))}–${this._safe(this._formatHistoryTime(trip.end))}</small></div>
+        <div class="location-trip-metrics"><span><small>Distance</small><strong>${this._safe(distance)}</strong></span><span><small>Duration</small><strong>${this._safe(this._formatTripDuration(trip.durationMinutes))}</strong></span><span><small>Battery</small><strong>${this._safe(battery)}</strong></span><span><small>Energy used</small><strong>${this._safe(energy)}</strong></span><span><small>Consumption</small><strong>${this._safe(consumption)}</strong></span><span><small>Average speed</small><strong>${this._safe(speed)}</strong></span></div>
+      </article>`;
+    }).join("")}</div>`;
+  }
+
+  _renderTripCalendar() {
+    const [year, month] = this._tripCalendarMonth.split("-").map(Number);
+    const first = new Date(year, month - 1, 1);
+    const offset = (first.getDay() + 6) % 7;
+    const gridStart = new Date(year, month - 1, 1 - offset);
+    const locale = this._hass?.locale?.language || navigator.language || "en";
+    const monthLabel = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(first);
+    const tripCounts = new Map();
+    this._calendarTrips.forEach((trip) => {
+      const key = this._dateKey(trip.start);
+      tripCounts.set(key, (tripCounts.get(key) || 0) + 1);
+    });
+    const weekdays = Array.from({ length: 7 }, (_, index) => new Intl.DateTimeFormat(locale, { weekday: "short" }).format(new Date(2024, 0, 1 + index)));
+    const cells = Array.from({ length: 42 }, (_, index) => {
+      const date = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + index);
+      const key = this._dateKey(date);
+      const count = tripCounts.get(key) || 0;
+      const classes = [date.getMonth() !== month - 1 ? "outside" : "", key === this._tripSelectedDate ? "selected" : "", key === this._dateKey(new Date()) ? "today" : "", count ? "has-trips" : ""].filter(Boolean).join(" ");
+      return `<button class="${classes}" data-trip-date="${key}" aria-label="${this._safe(this._formatHistoryDay(key))}${count ? `, ${count} trips` : ""}"><span>${date.getDate()}</span>${count ? `<small>${count}</small>` : ""}</button>`;
+    }).join("");
+    return `<div class="trip-calendar">
+      <div class="trip-calendar-toolbar"><button data-trip-month="-1" aria-label="Previous month"><ha-icon icon="mdi:chevron-left"></ha-icon></button><strong>${this._safe(monthLabel)}</strong><button data-trip-month="1" aria-label="Next month"><ha-icon icon="mdi:chevron-right"></ha-icon></button></div>
+      <div class="trip-calendar-weekdays">${weekdays.map((day) => `<span>${this._safe(day)}</span>`).join("")}</div>
+      <div class="trip-calendar-grid">${cells}</div>
+      <button class="trip-calendar-today" data-trip-date="${this._dateKey(new Date())}">Today</button>
+    </div>`;
+  }
+
+  _renderPersistentTripHistory() {
+    const isDay = this._tripViewMode === "day";
+    const selectedTrips = isDay ? this._calendarTrips.filter((trip) => this._dateKey(trip.start) === this._tripSelectedDate) : this._calendarTrips;
+    const renderLimit = this._tripCalendarLimit();
+    const shownTrips = selectedTrips.slice(0, renderLimit);
+    let content = "";
+    if (this._tripCalendarState === "loading" || this._tripCalendarState === "idle") {
+      content = `<div class="location-history-empty"><ha-icon icon="mdi:loading"></ha-icon><div><strong>Loading calendar history</strong><span>Reading stored trips from the mapped Home Assistant calendar.</span></div></div>`;
+    } else if (this._tripCalendarState === "error") {
+      content = `<div class="location-history-empty warning"><ha-icon icon="mdi:calendar-alert"></ha-icon><div><strong>Calendar history unavailable</strong><span>${this._safe(this._tripCalendarError)}</span></div></div>`;
+    } else if (!selectedTrips.length) {
+      content = `<div class="location-history-empty"><ha-icon icon="mdi:calendar-blank-outline"></ha-icon><div><strong>${isDay ? "No stored trips for this day" : "No stored trips found"}</strong><span>${isDay ? "Choose another date or switch to Overview." : "New trips appear after the Home Assistant trip package records a completed drive."}</span></div></div>`;
+    } else {
+      content = `${this._renderTripSummary(selectedTrips, isDay ? "Selected day" : "All calendar history")}${this._renderTripCards(shownTrips)}${selectedTrips.length > shownTrips.length ? `<p class="location-history-limit">Showing the latest ${shownTrips.length} of ${selectedTrips.length} trips. Increase trip_calendar_limit to show more.</p>` : ""}`;
+    }
+    return `<section class="location-history-section location-history card">
+      <div class="location-history-top"><div class="location-history-heading"><ha-icon icon="mdi:calendar-road"></ha-icon><div><span>Persistent calendar</span><h2>Stored trip history</h2><p>Trips are stored locally in Home Assistant and remain available beyond Recorder retention.</p></div></div><button class="trip-calendar-refresh" data-trip-refresh aria-label="Refresh calendar"><ha-icon icon="mdi:refresh"></ha-icon></button></div>
+      <div class="trip-view-toggle" role="group" aria-label="Trip history view"><button class="${isDay ? "active" : ""}" data-trip-view="day">Day</button><button class="${isDay ? "" : "active"}" data-trip-view="overview">Overview</button></div>
+      ${isDay ? this._renderTripCalendar() : ""}
+      <div class="trip-history-content"><h3>${isDay ? `${this._formatHistoryDay(this._tripSelectedDate)}` : "All calendar history"}</h3>${content}</div>
+      <p class="location-history-note"><ha-icon icon="mdi:information-outline"></ha-icon>Calendar events are the persistent source; Recorder analysis remains the fallback when no trip calendar is mapped.</p>
+    </section>`;
+  }
+
   _renderLocationTripHistory() {
+    if (this._entity("trip_calendar")) return this._renderPersistentTripHistory();
     const mapped = this._entity("odometer") && (this._entity("engine") || this._entity("ignition"));
     let content = "";
     if (!mapped) {
@@ -1571,8 +1848,12 @@ class KiaDashboardCard extends HTMLElement {
       .location-period-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:18px}.location-period-summary>div{min-height:78px;padding:13px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control)}.location-period-summary span,.location-period-summary strong{display:block}.location-period-summary span{color:var(--kia-muted);font-size:11px}.location-period-summary strong{margin-top:6px;font-size:clamp(15px,1.2vw,19px)}
       .location-daily-table{margin-top:16px;border:1px solid var(--kia-line);border-radius:8px;overflow:hidden}.location-daily-row{display:grid;grid-template-columns:minmax(115px,1.15fr) repeat(5,minmax(105px,1fr));align-items:center}.location-daily-row>*{min-width:0;padding:11px 12px;border-top:1px solid var(--kia-line);overflow-wrap:anywhere}.location-daily-row:first-child>*{border-top:0}.location-daily-row strong{font-size:13px}.location-daily-row span{color:var(--kia-muted);font-size:12px}.location-daily-header{background:var(--kia-recessed)}.location-daily-header span{color:var(--kia-text);font-weight:800}
       .location-trip-list{display:grid;gap:10px;margin-top:18px}.location-trip-item{padding:16px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);display:grid;grid-template-columns:minmax(220px,.85fr) minmax(0,1.65fr);gap:20px}.location-trip-route span,.location-trip-route small,.location-trip-metrics small{display:block;color:var(--kia-muted);font-size:11px}.location-trip-route h3{margin:5px 0;font-size:15px;line-height:1.35;overflow-wrap:anywhere}.location-trip-route h3 ha-icon{color:var(--blue);--mdc-icon-size:16px;vertical-align:middle}.location-trip-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.location-trip-metrics>span{min-width:0;padding:9px 10px;border-left:2px solid color-mix(in srgb,var(--blue) 45%,var(--kia-line))}.location-trip-metrics strong{display:block;margin-top:4px;font-size:13px;overflow-wrap:anywhere}.location-history-empty{min-height:100px;margin-top:18px;padding:18px;border:1px dashed var(--kia-line);border-radius:8px;background:var(--kia-recessed);display:flex;align-items:center;gap:14px}.location-history-empty>ha-icon{color:var(--blue);--mdc-icon-size:32px}.location-history-empty.warning>ha-icon{color:var(--amber)}.location-history-empty strong,.location-history-empty span{display:block}.location-history-empty span{margin-top:4px;color:var(--kia-muted);font-size:12px}.location-history-note{margin-top:14px;padding-top:13px;border-top:1px solid var(--kia-line);display:flex;align-items:flex-start;gap:8px;color:var(--kia-muted);font-size:12px;line-height:1.45}.location-history-note ha-icon{color:var(--blue);--mdc-icon-size:18px;flex:0 0 auto}
-      @media (max-width:980px) { .location-detail { grid-template-columns:1fr 1fr; grid-template-areas:"map map" "summary summary" "parking trip" "daily daily" "history history" "back back"; } .location-detail-map { min-height:500px; } .location-period-summary{grid-template-columns:1fr 1fr}.location-daily-table{overflow-x:auto}.location-daily-row{min-width:760px}.location-trip-item{grid-template-columns:1fr}.location-trip-metrics{grid-template-columns:repeat(3,minmax(0,1fr))} }
-      @media (max-width:640px) { .location-detail { grid-template-columns:1fr; grid-template-areas:"map" "summary" "parking" "trip" "daily" "history" "back"; } .location-detail-map { min-height:0; padding:16px; grid-template-rows:auto minmax(300px,52vh) auto; } .location-detail-summary,.location-context-card,.location-history-section { padding:18px; } .location-stat-grid,.location-trip-stats,.location-period-summary { grid-template-columns:1fr; } .location-trip-metrics{grid-template-columns:1fr 1fr}.location-trip-item{padding:14px} }
+      .location-history-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.trip-calendar-refresh,.trip-calendar-toolbar button,.trip-calendar-today{border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);color:var(--kia-text);cursor:pointer}.trip-calendar-refresh{width:42px;height:42px;display:grid;place-items:center;flex:0 0 auto}.trip-calendar-refresh:hover,.trip-calendar-refresh:focus-visible,.trip-calendar-toolbar button:hover,.trip-calendar-toolbar button:focus-visible,.trip-calendar-today:hover,.trip-calendar-today:focus-visible{border-color:var(--blue)}
+      .trip-view-toggle{width:min(360px,100%);margin:18px 0 0;display:grid;grid-template-columns:1fr 1fr;padding:4px;border:1px solid var(--kia-line);border-radius:10px;background:var(--kia-recessed)}.trip-view-toggle button{min-height:40px;border:0;border-radius:7px;background:transparent;color:var(--kia-text);font-weight:800;cursor:pointer}.trip-view-toggle button.active{background:color-mix(in srgb,var(--blue) 14%,var(--kia-control));color:var(--blue);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--blue) 55%,transparent)}
+      .trip-calendar{max-width:720px;margin-top:18px;padding:14px;border:1px solid var(--kia-line);border-radius:10px;background:var(--kia-recessed)}.trip-calendar-toolbar{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;gap:10px}.trip-calendar-toolbar strong{text-align:center;text-transform:capitalize}.trip-calendar-toolbar button{height:38px;display:grid;place-items:center}.trip-calendar-weekdays,.trip-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.trip-calendar-weekdays{margin-top:12px}.trip-calendar-weekdays span{text-align:center;color:var(--kia-muted);font-size:11px;font-weight:800;text-transform:uppercase}.trip-calendar-grid{margin-top:7px}.trip-calendar-grid button{position:relative;min-height:52px;padding:6px;border:1px solid transparent;border-radius:8px;background:var(--kia-control);color:var(--kia-text);cursor:pointer}.trip-calendar-grid button.outside{opacity:.4}.trip-calendar-grid button.today{border-color:color-mix(in srgb,var(--blue) 45%,var(--kia-line))}.trip-calendar-grid button.selected{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 15%,var(--kia-control));color:var(--blue)}.trip-calendar-grid button small{position:absolute;right:5px;bottom:4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--blue);color:var(--kia-card);font-size:10px;line-height:18px}.trip-calendar-today{margin-top:10px;min-height:34px;padding:0 13px;font-weight:700}
+      .trip-history-content{margin-top:20px}.trip-history-content>h3{font-size:16px}.location-trip-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:14px}.location-trip-summary>div{padding:12px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control)}.location-trip-summary span,.location-trip-summary strong{display:block}.location-trip-summary span{color:var(--kia-muted);font-size:11px}.location-trip-summary strong{margin-top:5px;font-size:16px}.location-history-limit{margin-top:12px;color:var(--kia-muted);font-size:12px}
+      @media (max-width:980px) { .location-detail { grid-template-columns:1fr 1fr; grid-template-areas:"map map" "summary summary" "parking trip" "daily daily" "history history" "back back"; } .location-detail-map { min-height:500px; } .location-period-summary,.location-trip-summary{grid-template-columns:1fr 1fr}.location-daily-table{overflow-x:auto}.location-daily-row{min-width:760px}.location-trip-item{grid-template-columns:1fr}.location-trip-metrics{grid-template-columns:repeat(3,minmax(0,1fr))} }
+      @media (max-width:640px) { .location-detail { grid-template-columns:1fr; grid-template-areas:"map" "summary" "parking" "trip" "daily" "history" "back"; } .location-detail-map { min-height:0; padding:16px; grid-template-rows:auto minmax(300px,52vh) auto; } .location-detail-summary,.location-context-card,.location-history-section { padding:18px; } .location-stat-grid,.location-trip-stats,.location-period-summary,.location-trip-summary { grid-template-columns:1fr; } .location-trip-metrics{grid-template-columns:1fr 1fr}.location-trip-item{padding:14px}.trip-calendar{padding:10px}.trip-calendar-grid button{min-height:44px;padding:4px}.trip-calendar-grid button small{right:3px;bottom:3px}.location-history-top{gap:8px} }
     `;
   }
 
@@ -1749,6 +2030,10 @@ class KiaDashboardCard extends HTMLElement {
     this.shadowRoot.querySelectorAll("[data-entity-action]").forEach((el) => el.addEventListener("click", () => this._callEntity(el.dataset.entityAction, el.dataset.service || "turn_on", el.dataset.confirm || "")));
     this.shadowRoot.querySelectorAll("[data-number]").forEach((el) => el.addEventListener("change", () => this._setNumber(el.dataset.number, el.value, el.dataset.confirm || "")));
     this.shadowRoot.querySelectorAll("[data-select]").forEach((el) => el.addEventListener("click", () => this._setSelect(el.dataset.select, el.dataset.option)));
+    this.shadowRoot.querySelectorAll("[data-trip-view]").forEach((el) => el.addEventListener("click", () => this._setTripView(el.dataset.tripView)));
+    this.shadowRoot.querySelectorAll("[data-trip-month]").forEach((el) => el.addEventListener("click", () => this._shiftTripMonth(Number.parseInt(el.dataset.tripMonth, 10) || 0)));
+    this.shadowRoot.querySelectorAll("[data-trip-date]").forEach((el) => el.addEventListener("click", () => this._selectTripDate(el.dataset.tripDate)));
+    this.shadowRoot.querySelectorAll("[data-trip-refresh]").forEach((el) => el.addEventListener("click", () => this._loadTripCalendar(true)));
   }
 
   _styles() {

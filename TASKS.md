@@ -28,8 +28,8 @@
 - [x] Add extended daily driving data and bounded Recorder-derived trip history
       to Location.
 - [ ] Validate trip reconstruction against real journeys and delayed updates.
-- [ ] Add optional persistence beyond Recorder retention if live validation is
-      successful.
+- [x] Add optional Local Calendar persistence beyond Recorder retention.
+- [ ] Validate calendar capture and restart recovery against real journeys.
 
 ## Safe vehicle actions
 

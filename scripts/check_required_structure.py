@@ -12,6 +12,7 @@ REQUIRED_PATHS = [
     "assets/images",
     "assets/icons",
     "docs/screenshots",
+    "examples/home-assistant-packages/trip_calendar.yaml",
     ".github/ISSUE_TEMPLATE/bug_report.md",
     ".github/ISSUE_TEMPLATE/feature_request.md",
     ".github/ISSUE_TEMPLATE/question.md",
