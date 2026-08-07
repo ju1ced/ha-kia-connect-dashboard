@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.9.1 - 2026-08-07
+
 - Made the per-day table in the official Kia daily-driving section collapsible,
   while keeping the period totals visible.
 
