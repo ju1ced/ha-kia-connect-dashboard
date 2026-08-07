@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.9.0 - 2026-08-07
+
 - Added optional Local Calendar-backed trip persistence with a monthly day
   picker, per-day summaries, and a complete stored-trip overview on Location.
 - Added a ready-to-copy Home Assistant trip package that snapshots Kia values,
