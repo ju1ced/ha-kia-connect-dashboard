@@ -1,0 +1,289 @@
+---
+# Persistent Kia trip logging with Home Assistant's Local Calendar integration.
+#
+# Before loading this package:
+# 1. Add a Local Calendar in Home Assistant.
+# 2. Replace every calendar.your_vehicle_trips and every source entity below.
+# 3. Copy this file to /config/packages/trip_calendar.yaml and restart HA.
+
+input_boolean:
+  kia_trip_active:
+    name: Kia trip active
+    icon: mdi:car-connected
+
+input_datetime:
+  kia_trip_started_at:
+    name: Kia trip started at
+    has_date: true
+    has_time: true
+
+input_number:
+  kia_trip_start_odometer:
+    name: Kia trip start odometer
+    min: 0
+    max: 2000000
+    step: 0.1
+    mode: box
+    unit_of_measurement: km
+  kia_trip_start_soc:
+    name: Kia trip start battery
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+    unit_of_measurement: "%"
+  kia_trip_start_energy:
+    name: Kia trip start energy
+    min: 0
+    max: 1000
+    step: 0.001
+    mode: box
+    unit_of_measurement: kWh
+
+input_text:
+  kia_trip_start_location:
+    name: Kia trip start location
+    max: 255
+  kia_trip_start_coordinates:
+    name: Kia trip start coordinates
+    max: 255
+
+automation:
+  - id: kia_trip_calendar_capture_start
+    alias: Kia trip calendar - capture start
+    description: Snapshot vehicle values when Kia reports the engine running.
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.your_vehicle_engine
+        to: "on"
+    conditions:
+      - condition: state
+        entity_id: input_boolean.kia_trip_active
+        state: "off"
+      - condition: template
+        value_template: >-
+          {{ has_value('sensor.your_vehicle_odometer') }}
+    actions:
+      - variables:
+          start_energy_raw: >-
+            {{ states('sensor.your_vehicle_remaining_energy') | float(0) }}
+          start_energy_unit: >-
+            {{ state_attr('sensor.your_vehicle_remaining_energy',
+                          'unit_of_measurement') | default('kWh', true) | lower }}
+          start_location: >-
+            {% set value = states('device_tracker.your_vehicle_location') %}
+            {% set lat = state_attr('device_tracker.your_vehicle_location', 'latitude') %}
+            {% set lon = state_attr('device_tracker.your_vehicle_location', 'longitude') %}
+            {% if value not in ['unknown', 'unavailable', 'not_home'] %}
+              {{ value | replace('_', ' ') | title }}
+            {% elif lat is number and lon is number %}
+              {{ lat | round(4) }}, {{ lon | round(4) }}
+            {% else %}
+              Away
+            {% endif %}
+          start_coordinates: >-
+            {% set lat = state_attr('device_tracker.your_vehicle_location', 'latitude') %}
+            {% set lon = state_attr('device_tracker.your_vehicle_location', 'longitude') %}
+            {{ (lat | round(6) ~ ',' ~ lon | round(6))
+               if lat is number and lon is number else '' }}
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.kia_trip_started_at
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.kia_trip_start_odometer
+        data:
+          value: "{{ states('sensor.your_vehicle_odometer') | float(0) }}"
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.kia_trip_start_soc
+        data:
+          value: "{{ states('sensor.your_vehicle_battery_level') | float(0) }}"
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.kia_trip_start_energy
+        data:
+          value: >-
+            {% if start_energy_unit == 'kj' %}
+              {{ start_energy_raw / 3600 }}
+            {% elif start_energy_unit == 'wh' %}
+              {{ start_energy_raw / 1000 }}
+            {% else %}
+              {{ start_energy_raw }}
+            {% endif %}
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.kia_trip_start_location
+        data:
+          value: "{{ start_location | trim }}"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.kia_trip_start_coordinates
+        data:
+          value: "{{ start_coordinates | trim }}"
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.kia_trip_active
+
+  - id: kia_trip_calendar_store_completed
+    alias: Kia trip calendar - store completed trip
+    description: Store a completed Kia trip as a versioned Local Calendar event.
+    mode: queued
+    max: 3
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.your_vehicle_engine
+        to: "off"
+        id: stopped
+      - trigger: homeassistant
+        event: start
+        id: recovery
+    conditions:
+      - condition: state
+        entity_id: input_boolean.kia_trip_active
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.your_vehicle_engine
+        state: "off"
+    actions:
+      - if:
+          - condition: trigger
+            id: recovery
+        then:
+          - delay: "00:01:00"
+      - condition: state
+        entity_id: binary_sensor.your_vehicle_engine
+        state: "off"
+      - wait_template: >-
+          {{ trigger.id == 'recovery' or
+             states.sensor.your_vehicle_odometer.last_updated >=
+             trigger.to_state.last_updated }}
+        timeout: "00:05:00"
+        continue_on_timeout: true
+      - variables:
+          trip_start_ts: >-
+            {{ as_timestamp(states('input_datetime.kia_trip_started_at'), 0) }}
+          trip_end_ts: >-
+            {{ as_timestamp(trigger.to_state.last_changed)
+               if trigger.id == 'stopped' else as_timestamp(now()) }}
+          start_odometer: >-
+            {{ states('input_number.kia_trip_start_odometer') | float(0) }}
+          end_odometer: >-
+            {{ states('sensor.your_vehicle_odometer') | float(0) }}
+          soc_start: >-
+            {{ states('input_number.kia_trip_start_soc') | float(0) }}
+          soc_end: >-
+            {{ states('sensor.your_vehicle_battery_level') | float(0) }}
+          energy_start: >-
+            {{ states('input_number.kia_trip_start_energy') | float(0) }}
+          energy_end_raw: >-
+            {{ states('sensor.your_vehicle_remaining_energy') | float(0) }}
+          energy_end_unit: >-
+            {{ state_attr('sensor.your_vehicle_remaining_energy',
+                          'unit_of_measurement') | default('kWh', true) | lower }}
+          origin: >-
+            {{ states('input_text.kia_trip_start_location') }}
+          origin_coordinates: >-
+            {{ states('input_text.kia_trip_start_coordinates') }}
+          destination: >-
+            {% set value = states('device_tracker.your_vehicle_location') %}
+            {% set lat = state_attr('device_tracker.your_vehicle_location', 'latitude') %}
+            {% set lon = state_attr('device_tracker.your_vehicle_location', 'longitude') %}
+            {% if value not in ['unknown', 'unavailable', 'not_home'] %}
+              {{ value | replace('_', ' ') | title }}
+            {% elif lat is number and lon is number %}
+              {{ lat | round(4) }}, {{ lon | round(4) }}
+            {% else %}
+              Away
+            {% endif %}
+          destination_coordinates: >-
+            {% set lat = state_attr('device_tracker.your_vehicle_location', 'latitude') %}
+            {% set lon = state_attr('device_tracker.your_vehicle_location', 'longitude') %}
+            {{ (lat | round(6) ~ ',' ~ lon | round(6))
+               if lat is number and lon is number else '' }}
+      - variables:
+          distance: "{{ [end_odometer - start_odometer, 0] | max }}"
+          duration_minutes: >-
+            {{ [((trip_end_ts - trip_start_ts) / 60) | round(0) | int, 1] | max }}
+          energy_end: >-
+            {% if energy_end_unit == 'kj' %}
+              {{ energy_end_raw / 3600 }}
+            {% elif energy_end_unit == 'wh' %}
+              {{ energy_end_raw / 1000 }}
+            {% else %}
+              {{ energy_end_raw }}
+            {% endif %}
+      - variables:
+          energy_used: "{{ [energy_start - energy_end, 0] | max }}"
+          consumption: >-
+            {{ ((energy_start - energy_end) / distance * 100)
+               if distance | float(0) > 0 and energy_start > energy_end else 0 }}
+          average_speed: >-
+            {{ (distance / (duration_minutes / 60))
+               if duration_minutes | float(0) > 0 else 0 }}
+          trip_id: "kia-{{ trip_start_ts | int }}"
+      - if:
+          - condition: template
+            value_template: "{{ distance | float(0) >= 0.2 }}"
+        then:
+          - action: calendar.get_events
+            target:
+              entity_id: calendar.your_vehicle_trips
+            data:
+              start_date_time: >-
+                {{ trip_start_ts | timestamp_custom('%Y-%m-%d %H:%M:%S', true) }}
+              end_date_time: >-
+                {{ (trip_end_ts + 1) |
+                   timestamp_custom('%Y-%m-%d %H:%M:%S', true) }}
+            response_variable: existing_trips
+          - variables:
+              duplicate_trip: >-
+                {% set ns = namespace(found=false) %}
+                {% set calendar_events =
+                   existing_trips.get('calendar.your_vehicle_trips', {}).get('events', []) %}
+                {% for event in calendar_events %}
+                  {% if trip_id in (event.description | default('')) %}
+                    {% set ns.found = true %}
+                  {% endif %}
+                {% endfor %}
+                {{ ns.found }}
+          - if:
+              - condition: template
+                value_template: "{{ not duplicate_trip }}"
+            then:
+              - action: calendar.create_event
+                target:
+                  entity_id: calendar.your_vehicle_trips
+                data:
+                  summary: >-
+                    {{ origin | trim }} to {{ destination | trim }} -
+                    {{ distance | float(0) | round(1) }} km
+                  start_date_time: >-
+                    {{ trip_start_ts |
+                       timestamp_custom('%Y-%m-%d %H:%M:%S', true) }}
+                  end_date_time: >-
+                    {{ trip_end_ts |
+                       timestamp_custom('%Y-%m-%d %H:%M:%S', true) }}
+                  location: "{{ destination | trim }}"
+                  description: >-
+                    {{ {
+                      'schema': 'kia_trip_v1',
+                      'trip_id': trip_id,
+                      'origin': origin | trim,
+                      'destination': destination | trim,
+                      'origin_coordinates': origin_coordinates,
+                      'destination_coordinates': destination_coordinates | trim,
+                      'distance_km': distance | float(0) | round(3),
+                      'duration_minutes': duration_minutes | int,
+                      'soc_start': soc_start | float(0) | round(1),
+                      'soc_end': soc_end | float(0) | round(1),
+                      'energy_kwh': energy_used | float(0) | round(3),
+                      'consumption_kwh_100km': consumption | float(0) | round(2),
+                      'average_speed_kmh': average_speed | float(0) | round(1)
+                    } | to_json }}
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.kia_trip_active

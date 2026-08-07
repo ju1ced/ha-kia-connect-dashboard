@@ -57,3 +57,16 @@ exact event timestamps or a GPS breadcrumb route.
 The original placeholder remains when no driving mappings are available. Trip
 reconstruction reports its missing mappings separately, so daily Kia history
 continues to work without Recorder-based trips.
+
+An optional `trip_calendar` mapping promotes a dedicated Local Calendar to the
+persistent trip source. Location then renders a month grid with trip counts,
+per-day selection, and a complete overview with aggregate distance, energy, and
+consumption. Only versioned `kia_trip_v1` JSON descriptions are parsed. Calendar
+queries remain lazy: the visible month is requested in Day mode and the
+configured historical range is requested only after switching to Overview.
+
+The example `trip_calendar.yaml` Home Assistant package captures start values,
+waits for the final Kia update when the engine stops, rejects movements below
+0.2 km, checks the calendar for the trip identifier, and writes one persistent
+event. Its active-trip helpers survive a Home Assistant restart. Cached Kia
+updates still make timestamps, locations, and energy estimates approximate.

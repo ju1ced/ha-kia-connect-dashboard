@@ -23,12 +23,13 @@ are available in the current stable release.
   bounded Home Assistant Recorder data.
 - Confirmation and feedback patterns for enabled remote actions.
 
-## Next: Persistent trip data
+## Next: Validate persistent trip data
 
 - Validate Recorder-derived trips against real journeys and tune segmentation
   for missed or delayed Kia updates.
-- Evaluate an optional Home Assistant-native persistence layer for individual
-  trips beyond Recorder retention.
+- Validate the shipped Local Calendar package, duplicate protection, and restart
+  recovery against real journeys.
+- Consider one-time import of recent Recorder trips into the persistent calendar.
 - Keep TRONITY research as an optional provider path rather than a dependency.
 - Add further long-term statistics where reliable entities are available.
 

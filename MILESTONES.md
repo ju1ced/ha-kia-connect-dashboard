@@ -27,7 +27,7 @@
 ### Trips and analytics
 
 - Validate and harden the shipped Recorder-derived trip history.
-- Optional Home Assistant-native persistence beyond Recorder retention.
+- Validate the shipped Local Calendar persistence package with real journeys.
 
 ### Safe vehicle actions
 

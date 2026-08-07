@@ -14,9 +14,10 @@ Climate, Energy, Location, and Settings views. It supports Dutch and English,
 battery diagnostics, cover-based window controls, generic home charger mappings,
 Smappee strategy controls, charging history helpers, tariff estimates, and
 repository-side validation tools. Climate comfort controls, daily driving
-analytics, and regeneration history are also available. Rich route and
-destination data, reviewed medium-risk vehicle actions, and complete screenshot
-documentation remain planned.
+analytics, regeneration history, Recorder-derived trips, and optional Local
+Calendar trip persistence are also available. GPS route breadcrumbs, reviewed
+medium-risk vehicle actions, and complete screenshot documentation remain
+planned.
 
 ## Mission
 
@@ -102,7 +103,7 @@ Reference renders are available in `docs/screenshots/` and documented in
 
 ## Planned Work
 
-- Rich trip routes, destinations, duration, and movement data.
+- Optional GPS route breadcrumbs beyond the stored start/end trip context.
 - Additional long-term energy statistics.
 - Reviewed lock, light, and other medium-risk vehicle actions.
 - Installation, customization, troubleshooting, FAQ, and current screenshots.

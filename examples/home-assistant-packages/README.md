@@ -45,3 +45,44 @@ For Smappee EV, the lifetime source normally follows this pattern:
 ```yaml
 source: sensor.smappee_ev_YOURSTATION_energy_import_kwh_1
 ```
+
+## Persistent trip calendar
+
+The `trip_calendar.yaml` package stores every completed drive as an event in a
+dedicated Home Assistant Local Calendar. This keeps trip history independent of
+Recorder retention.
+
+1. Go to **Settings > Devices & services > Add integration** and add **Local
+   Calendar**. Name it, for example, `Nebula trips`.
+2. Note its entity ID, for example `calendar.nebula_trips`.
+3. Copy `trip_calendar.yaml` to `/config/packages/trip_calendar.yaml`.
+4. Replace every occurrence of these placeholders:
+
+   ```text
+   binary_sensor.your_vehicle_engine
+   sensor.your_vehicle_odometer
+   sensor.your_vehicle_battery_level
+   sensor.your_vehicle_remaining_energy
+   device_tracker.your_vehicle_location
+   calendar.your_vehicle_trips
+   ```
+
+5. Run **Developer tools > YAML > Check configuration**, then restart Home
+   Assistant.
+6. Map the calendar in the card:
+
+   ```yaml
+   entities:
+     trip_calendar: calendar.nebula_trips
+   ```
+
+The start automation snapshots odometer, state of charge, remaining energy, and
+location. The stop automation waits for Kia's final coordinator update, ignores
+movements below 0.2 km, checks for an existing trip identifier, and creates a
+versioned `kia_trip_v1` calendar event. If Home Assistant restarts during a trip,
+the persisted active-trip helper allows the stop automation to recover it.
+
+The package expects the remaining-energy sensor in `kJ`, `Wh`, or `kWh` and
+normalizes it to `kWh`. The card treats the resulting values as estimates because
+Kia updates can arrive several minutes apart. Test the first few trips before
+relying on long-term totals.

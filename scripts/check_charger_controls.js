@@ -613,6 +613,69 @@ async function run() {
   assert.match(historyRequest.path, /binary_sensor\.engine/);
   assert.equal(card._tripHistoryState, "ready");
   assert.equal(card._tripHistory.length, 1);
+  const calendarEvents = [
+    {
+      summary: "Home → Work · 12.4 km",
+      start: { dateTime: "2026-08-06T08:10:00+02:00" },
+      end: { dateTime: "2026-08-06T08:40:00+02:00" },
+      location: "Work",
+      description: JSON.stringify({
+        schema: "kia_trip_v1",
+        trip_id: "kia-1785996600",
+        origin: "Home",
+        destination: "Work",
+        distance_km: 12.4,
+        duration_minutes: 30,
+        soc_start: 80,
+        soc_end: 75,
+        energy_kwh: 5,
+        consumption_kwh_100km: 40.3,
+        average_speed_kmh: 24.8,
+      }),
+    },
+    {
+      summary: "Unrelated calendar event",
+      start: "2026-08-06T12:00:00+02:00",
+      end: "2026-08-06T13:00:00+02:00",
+      description: "Lunch",
+    },
+  ];
+  card._config.entities.trip_calendar = "calendar.vehicle_trips";
+  card._hass.states["calendar.vehicle_trips"] = {
+    state: "off",
+    attributes: {},
+    last_updated: "2026-08-06T09:00:00+02:00",
+  };
+  card._tripViewMode = "day";
+  card._tripSelectedDate = "2026-08-06";
+  card._tripCalendarMonth = "2026-08";
+  card._tripCalendarState = "idle";
+  card._tripCalendarRequestKey = "";
+  let calendarRequest = null;
+  card._hass.callApi = async (method, path) => {
+    calendarRequest = { method, path };
+    return calendarEvents;
+  };
+  await card._loadTripCalendar();
+  assert.equal(calendarRequest.method, "GET");
+  assert.match(calendarRequest.path, /^calendars\/calendar\.vehicle_trips\?/);
+  assert.equal(card._tripCalendarState, "ready");
+  assert.equal(card._calendarTrips.length, 1);
+  assert.equal(card._calendarTrips[0].id, "kia-1785996600");
+  assert.equal(card._calendarTrips[0].distance, 12.4);
+  const calendarDayView = card._renderLocationTripHistory();
+  assert.match(calendarDayView, /Persistent calendar/);
+  assert.match(calendarDayView, /Stored trip history/);
+  assert.match(calendarDayView, /data-trip-view="day"/);
+  assert.match(calendarDayView, /data-trip-date="2026-08-06"/);
+  assert.match(calendarDayView, /Home/);
+  assert.match(calendarDayView, /Work/);
+  assert.doesNotMatch(calendarDayView, /<span>Recorder analysis<\/span>/);
+  card._tripViewMode = "overview";
+  const calendarOverview = card._renderLocationTripHistory();
+  assert.match(calendarOverview, /All calendar history/);
+  assert.match(calendarOverview, /Stored trips/);
+  assert.match(calendarOverview, /40\.3 kWh\/100 km/);
   const fallbackCard = new Card();
   fallbackCard._config = { entities: {} };
   fallbackCard._hass = { locale: { language: "en" }, states: {} };
@@ -747,8 +810,9 @@ async function run() {
   card._render();
   const dutchTripHistory = card.shadowRoot.innerHTML;
   assert.match(dutchTripHistory, /Dagelijkse rijgegevens/);
-  assert.match(dutchTripHistory, /Ritgeschiedenis/);
-  assert.match(dutchTripHistory, /Recorder-analyse/);
+  assert.match(dutchTripHistory, /Opgeslagen ritgeschiedenis/);
+  assert.match(dutchTripHistory, /Permanente kalender/);
+  assert.match(dutchTripHistory, /Volledige kalendergeschiedenis/);
   assert.match(dutchTripHistory, /Gemiddelde snelheid/);
 }
 

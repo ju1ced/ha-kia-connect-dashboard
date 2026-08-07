@@ -140,6 +140,7 @@ entities:
   drive_mode: sensor.your_vehicle_drive_mode
   engine: binary_sensor.your_vehicle_engine
   ignition: binary_sensor.your_vehicle_ignition
+  trip_calendar: calendar.your_vehicle_trips
   smart_key_battery_warning: binary_sensor.your_vehicle_smart_key_battery_warning
   vent_windows: button.your_vehicle_vent_all_windows
   front_left_window_open: cover.your_vehicle_front_left_window
@@ -188,6 +189,34 @@ daily_history_limit: 30
 No helper entities are required. The available history still depends on Home
 Assistant Recorder retention and on the Kia integration observing an engine or
 ignition transition.
+
+### Persistent trip calendar
+
+Map a dedicated Home Assistant Local Calendar to retain completed trips beyond
+Recorder retention:
+
+```yaml
+type: custom:kia-dashboard-card
+entities:
+  trip_calendar: calendar.your_vehicle_trips
+trip_calendar_start: "2020-01-01"
+trip_calendar_limit: 250
+```
+
+With this mapping, Location uses the calendar as its primary trip source and
+shows a monthly date picker with `Day` and `Overview` modes. `Day` fetches only
+the visible month. `Overview` requests events from `trip_calendar_start`; when
+that option is omitted, the card uses January 1 ten years ago. The rendered trip
+list defaults to 250 and is capped at 1000, while its period summary still uses
+all returned events. Recorder reconstruction remains the fallback when
+`trip_calendar` is omitted.
+
+The card only accepts calendar events whose JSON description has schema
+`kia_trip_v1`, so unrelated calendar appointments are ignored. Install the
+companion package from
+`examples/home-assistant-packages/trip_calendar.yaml` to create those events.
+The package setup and required source-entity replacements are documented in the
+adjacent package README.
 
 ## Optional Settings Entities
 
