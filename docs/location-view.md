@@ -72,3 +72,6 @@ waits for the final Kia update when the engine stops, rejects movements below
 0.2 km, checks the calendar for the trip identifier, and writes one persistent
 event. Its active-trip helpers survive a Home Assistant restart. Cached Kia
 updates still make timestamps, locations, and energy estimates approximate.
+Unnamed tracker positions are forced to text before calendar serialization, and
+a calendar service failure no longer leaves the active-trip helper permanently
+blocking later journeys.

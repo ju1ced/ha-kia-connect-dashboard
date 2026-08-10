@@ -58,9 +58,6 @@ automation:
         entity_id: binary_sensor.your_vehicle_engine
         to: "on"
     conditions:
-      - condition: state
-        entity_id: input_boolean.kia_trip_active
-        state: "off"
       - condition: template
         value_template: >-
           {{ has_value('sensor.your_vehicle_odometer') }}
@@ -78,7 +75,8 @@ automation:
             {% if value not in ['unknown', 'unavailable', 'not_home'] %}
               {{ value | replace('_', ' ') | title }}
             {% elif lat is number and lon is number %}
-              {{ lat | round(4) }}, {{ lon | round(4) }}
+              {{ 'GPS ' ~ (lat | round(4) | string) ~ ', ' ~
+                 (lon | round(4) | string) }}
             {% else %}
               Away
             {% endif %}
@@ -154,15 +152,15 @@ automation:
             id: recovery
         then:
           - delay: "00:01:00"
+        else:
+          - wait_for_trigger:
+              - trigger: state
+                entity_id: sensor.your_vehicle_odometer
+            timeout: "00:05:00"
+            continue_on_timeout: true
       - condition: state
         entity_id: binary_sensor.your_vehicle_engine
         state: "off"
-      - wait_template: >-
-          {{ trigger.id == 'recovery' or
-             states.sensor.your_vehicle_odometer.last_updated >=
-             trigger.to_state.last_updated }}
-        timeout: "00:05:00"
-        continue_on_timeout: true
       - variables:
           trip_start_ts: >-
             {{ as_timestamp(states('input_datetime.kia_trip_started_at'), 0) }}
@@ -184,10 +182,6 @@ automation:
           energy_end_unit: >-
             {{ state_attr('sensor.your_vehicle_remaining_energy',
                           'unit_of_measurement') | default('kWh', true) | lower }}
-          origin: >-
-            {{ states('input_text.kia_trip_start_location') }}
-          origin_coordinates: >-
-            {{ states('input_text.kia_trip_start_coordinates') }}
           destination: >-
             {% set value = states('device_tracker.your_vehicle_location') %}
             {% set lat = state_attr('device_tracker.your_vehicle_location', 'latitude') %}
@@ -195,15 +189,11 @@ automation:
             {% if value not in ['unknown', 'unavailable', 'not_home'] %}
               {{ value | replace('_', ' ') | title }}
             {% elif lat is number and lon is number %}
-              {{ lat | round(4) }}, {{ lon | round(4) }}
+              {{ 'GPS ' ~ (lat | round(4) | string) ~ ', ' ~
+                 (lon | round(4) | string) }}
             {% else %}
               Away
             {% endif %}
-          destination_coordinates: >-
-            {% set lat = state_attr('device_tracker.your_vehicle_location', 'latitude') %}
-            {% set lon = state_attr('device_tracker.your_vehicle_location', 'longitude') %}
-            {{ (lat | round(6) ~ ',' ~ lon | round(6))
-               if lat is number and lon is number else '' }}
       - variables:
           distance: "{{ [end_odometer - start_odometer, 0] | max }}"
           duration_minutes: >-
@@ -230,6 +220,7 @@ automation:
             value_template: "{{ distance | float(0) >= 0.2 }}"
         then:
           - action: calendar.get_events
+            continue_on_error: true
             target:
               entity_id: calendar.your_vehicle_trips
             data:
@@ -242,8 +233,9 @@ automation:
           - variables:
               duplicate_trip: >-
                 {% set ns = namespace(found=false) %}
+                {% set response = existing_trips | default({}) %}
                 {% set calendar_events =
-                   existing_trips.get('calendar.your_vehicle_trips', {}).get('events', []) %}
+                   response.get('calendar.your_vehicle_trips', {}).get('events', []) %}
                 {% for event in calendar_events %}
                   {% if trip_id in (event.description | default('')) %}
                     {% set ns.found = true %}
@@ -255,11 +247,13 @@ automation:
                 value_template: "{{ not duplicate_trip }}"
             then:
               - action: calendar.create_event
+                continue_on_error: true
                 target:
                   entity_id: calendar.your_vehicle_trips
                 data:
                   summary: >-
-                    {{ origin | trim }} to {{ destination | trim }} -
+                    {{ states('input_text.kia_trip_start_location') | trim }}
+                    to {{ destination | string | trim }} -
                     {{ distance | float(0) | round(1) }} km
                   start_date_time: >-
                     {{ trip_start_ts |
@@ -267,15 +261,24 @@ automation:
                   end_date_time: >-
                     {{ trip_end_ts |
                        timestamp_custom('%Y-%m-%d %H:%M:%S', true) }}
-                  location: "{{ destination | trim }}"
+                  location: "{{ destination | string | trim }}"
                   description: >-
+                    {% set destination_lat =
+                       state_attr('device_tracker.your_vehicle_location', 'latitude') %}
+                    {% set destination_lon =
+                       state_attr('device_tracker.your_vehicle_location', 'longitude') %}
                     {{ {
                       'schema': 'kia_trip_v1',
                       'trip_id': trip_id,
-                      'origin': origin | trim,
-                      'destination': destination | trim,
-                      'origin_coordinates': origin_coordinates,
-                      'destination_coordinates': destination_coordinates | trim,
+                      'origin': states('input_text.kia_trip_start_location') | trim,
+                      'destination': destination | string | trim,
+                      'origin_coordinates':
+                        states('input_text.kia_trip_start_coordinates') | trim,
+                      'destination_coordinates':
+                        ((destination_lat | string) ~ ',' ~
+                         (destination_lon | string))
+                        if destination_lat is number and destination_lon is number
+                        else '',
                       'distance_km': distance | float(0) | round(3),
                       'duration_minutes': duration_minutes | int,
                       'soc_start': soc_start | float(0) | round(1),
