@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Fixed Local Calendar trip storage for raw GPS coordinate values that Home
+  Assistant interpreted as non-serializable native tuples.
+- Prevented a failed calendar write from blocking every later trip and added a
+  package regression check for the persistent-session recovery path.
+
 ## 2.9.1 - 2026-08-07
 
 - Made the per-day table in the official Kia daily-driving section collapsible,

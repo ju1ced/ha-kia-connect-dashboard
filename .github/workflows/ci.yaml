@@ -28,6 +28,8 @@ jobs:
         run: node scripts/check_charger_controls.js
       - name: Validate required structure
         run: python scripts/check_required_structure.py
+      - name: Validate persistent trip package
+        run: python scripts/check_trip_calendar_package.py
       - name: Lint YAML
         run: yamllint .
       - name: Install Node validators
