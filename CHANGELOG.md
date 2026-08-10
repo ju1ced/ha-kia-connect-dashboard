@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.9.2 - 2026-08-10
+
 - Fixed Local Calendar trip storage for raw GPS coordinate values that Home
   Assistant interpreted as non-serializable native tuples.
 - Prevented a failed calendar write from blocking every later trip and added a
