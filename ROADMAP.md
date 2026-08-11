@@ -23,6 +23,8 @@ are available in the current stable release.
   bounded Home Assistant Recorder data.
 - Persistent Local Calendar trips with a date picker, approximate route map,
   expandable trip table, odometer context, and per-system energy breakdown.
+- Separate Kia data-freshness and home-charger connection diagnostics, with a
+  dynamic Overview connection status and configurable freshness thresholds.
 - Confirmation and feedback patterns for enabled remote actions.
 
 ## Next: Validate persistent trip data

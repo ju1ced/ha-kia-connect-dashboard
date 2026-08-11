@@ -34,6 +34,7 @@ const KIA_DASHBOARD_NL = {
   "Charge port": "Laadpoort",
   "Charger control": "Laadpuntbediening",
   "Charger power": "Laadpuntvermogen",
+  "Charger status": "Laadpuntstatus",
   "Charging": "Bezig met laden",
   "Charging current": "Laadstroom",
   "Charging finished": "Laden voltooid",
@@ -55,6 +56,8 @@ const KIA_DASHBOARD_NL = {
   "Connected": "Verbonden",
   "Consumed": "Verbruikt",
   "Connection": "Verbinding",
+  "Connection health": "Verbindingsstatus",
+  "Connection diagnostics": "Verbindingsdiagnose",
   "Connector current": "Aansluitstroom",
   "Coordinates unavailable": "Coördinaten niet beschikbaar",
   "Current driving estimate": "Huidige rijbereikschatting",
@@ -67,6 +70,9 @@ const KIA_DASHBOARD_NL = {
   "Dashboard actions": "Dashboardacties",
   "Dashboard administration": "Dashboardbeheer",
   "Dashboard version": "Dashboardversie",
+  "Data current": "Gegevens actueel",
+  "Data delayed": "Gegevens vertraagd",
+  "Data stale": "Gegevens verouderd",
   "Dark mode": "Donkere modus",
   "Data provided by Kia Connect": "Gegevens geleverd door Kia Connect",
   "DC charging limit": "DC-laadlimiet",
@@ -91,6 +97,7 @@ const KIA_DASHBOARD_NL = {
   "For unavailable data, verify the entity in Home Assistant and this card's entity mapping before troubleshooting the layout.": "Controleer bij niet-beschikbare gegevens eerst de entiteit in Home Assistant en de entiteitstoewijzing van deze kaart voordat je de lay-out onderzoekt.",
   "Front left": "Linksvoor",
   "Front right": "Rechtsvoor",
+  "Freshness": "Actualiteit",
   "From mapped session cost": "Uit toegewezen sessiekosten",
   "Grid power": "Netvermogen",
   "Grid support": "Netondersteuning",
@@ -98,6 +105,7 @@ const KIA_DASHBOARD_NL = {
   "History helpers ready": "Geschiedenishulpen gereed",
   "Home Assistant theme": "Home Assistant-thema",
   "Home charger": "Thuislaadpunt",
+  "Home charger connection": "Verbinding thuislaadpunt",
   "Home charging": "Thuisladen",
   "Home consumption": "Thuisverbruik",
   "Home energy": "Thuisenergie",
@@ -109,6 +117,7 @@ const KIA_DASHBOARD_NL = {
   "Last known location": "Laatst bekende locatie",
   "Last parked": "Laatst geparkeerd",
   "Last updated": "Laatst bijgewerkt",
+  "Last vehicle update": "Laatste voertuigupdate",
   "Latest scan": "Laatste controle",
   "Latest session": "Laatste sessie",
   "Latest session and totals": "Laatste sessie en totalen",
@@ -245,12 +254,27 @@ const KIA_DASHBOARD_NL = {
   "Unavailable": "Niet beschikbaar",
   "Unlocked": "Ontgrendeld",
   "Updated": "Bijgewerkt",
+  "Vehicle connection": "Voertuigverbinding",
   "Vehicle": "Voertuig",
   "Vehicle charging power": "Laadvermogen voertuig",
   "Vehicle charging state": "Laadstatus voertuig",
   "Vehicle checks normal": "Voertuigcontroles normaal",
   "Vehicle data details": "Details voertuiggegevens",
   "Vehicle data incomplete": "Voertuiggegevens onvolledig",
+  "Vehicle data updated within the expected interval.": "Voertuiggegevens zijn binnen het verwachte interval bijgewerkt.",
+  "Vehicle data is arriving later than expected; wait for the next Kia scan.": "Voertuiggegevens komen later dan verwacht; wacht op de volgende Kia-controle.",
+  "No recent Kia data. Check Kia Connect authentication, integration repairs, or a Kia cloud outage.": "Geen recente Kia-gegevens. Controleer Kia Connect-authenticatie, integratiereparaties of een Kia-cloudstoring.",
+  "The last-updated entity is unavailable. Check the Kia integration and card mapping.": "De entiteit voor de laatste update is niet beschikbaar. Controleer de Kia-integratie en kaarttoewijzing.",
+  "Map last_updated to monitor Kia data freshness.": "Wijs last_updated toe om de actualiteit van Kia-gegevens te bewaken.",
+  "Home charger reports an active connection.": "Het thuislaadpunt meldt een actieve verbinding.",
+  "Home charger reports that it is offline.": "Het thuislaadpunt meldt dat het offline is.",
+  "The charger connection entity is unavailable.": "De verbindingsentiteit van het laadpunt is niet beschikbaar.",
+  "Map charger_online to monitor the home charger separately.": "Wijs charger_online toe om het thuislaadpunt afzonderlijk te bewaken.",
+  "Kia authentication state is not exposed to dashboard cards. Stale data can indicate reauthentication or a Kia cloud outage.": "De Kia-authenticatiestatus is niet beschikbaar voor dashboardkaarten. Verouderde gegevens kunnen wijzen op herauthenticatie of een Kia-cloudstoring.",
+  "Just now": "Zojuist",
+  "min ago": "min geleden",
+  "h ago": "u geleden",
+  "d ago": "d geleden",
   "Vehicle detail": "Voertuigdetails",
   "Vehicle energy": "Voertuigenergie",
   "Vehicle plug": "Voertuigstekker",
@@ -931,6 +955,94 @@ class KiaDashboardCard extends HTMLElement {
       hour: "2-digit",
       minute: "2-digit",
     }).format(date);
+  }
+
+  _connectionThreshold(key, fallback) {
+    const value = Number(this._config?.[key]);
+    return Number.isFinite(value) && value > 0 ? value : fallback;
+  }
+
+  _connectionAgeLabel(ageMinutes) {
+    if (!Number.isFinite(ageMinutes)) return "No timestamp available";
+    if (ageMinutes < 1) return "Just now";
+    if (ageMinutes < 60) return `${Math.round(ageMinutes)} min ago`;
+    if (ageMinutes < 1440) return `${Math.round(ageMinutes / 60)} h ago`;
+    return `${Math.round(ageMinutes / 1440)} d ago`;
+  }
+
+  _vehicleConnectionHealth(now = Date.now()) {
+    if (!this._entity("last_updated")) {
+      return {
+        state: "not-configured",
+        label: "Not configured",
+        tone: "muted",
+        icon: "mdi:link-variant-off",
+        ageLabel: "No timestamp available",
+        updatedLabel: "--",
+        message: "Map last_updated to monitor Kia data freshness.",
+      };
+    }
+
+    const entity = this._obj("last_updated");
+    const rawState = String(entity?.state || "").toLowerCase();
+    if (!entity || ["unknown", "unavailable", ""].includes(rawState)) {
+      return {
+        state: "unavailable",
+        label: "Unavailable",
+        tone: "critical",
+        icon: "mdi:cloud-alert-outline",
+        ageLabel: "No timestamp available",
+        updatedLabel: "--",
+        message: "The last-updated entity is unavailable. Check the Kia integration and card mapping.",
+      };
+    }
+
+    const timestamp = new Date(entity.state).getTime();
+    if (!Number.isFinite(timestamp)) {
+      return {
+        state: "unavailable",
+        label: "Unavailable",
+        tone: "critical",
+        icon: "mdi:clock-alert-outline",
+        ageLabel: "No timestamp available",
+        updatedLabel: this._formatDate(entity.state),
+        message: "The last-updated entity is unavailable. Check the Kia integration and card mapping.",
+      };
+    }
+
+    const ageMinutes = Math.max(0, (now - timestamp) / 60000);
+    const freshMinutes = this._connectionThreshold("vehicle_fresh_minutes", 30);
+    const staleMinutes = Math.max(freshMinutes, this._connectionThreshold("vehicle_stale_minutes", 180));
+    const common = {
+      ageMinutes,
+      ageLabel: this._connectionAgeLabel(ageMinutes),
+      updatedLabel: this._formatDate(entity.state),
+    };
+    if (ageMinutes <= freshMinutes) {
+      return { ...common, state: "current", label: "Data current", tone: "healthy", icon: "mdi:cloud-check-outline", message: "Vehicle data updated within the expected interval." };
+    }
+    if (ageMinutes <= staleMinutes) {
+      return { ...common, state: "delayed", label: "Data delayed", tone: "attention", icon: "mdi:cloud-clock-outline", message: "Vehicle data is arriving later than expected; wait for the next Kia scan." };
+    }
+    return { ...common, state: "stale", label: "Data stale", tone: "critical", icon: "mdi:cloud-alert-outline", message: "No recent Kia data. Check Kia Connect authentication, integration repairs, or a Kia cloud outage." };
+  }
+
+  _chargerConnectionHealth() {
+    if (!this._entity("charger_online")) {
+      return { state: "not-configured", label: "Not configured", tone: "muted", icon: "mdi:ev-station-off", message: "Map charger_online to monitor the home charger separately." };
+    }
+    const entity = this._obj("charger_online");
+    const state = String(entity?.state || "").toLowerCase();
+    if (!entity || ["unknown", "unavailable", ""].includes(state)) {
+      return { state: "unavailable", label: "Unavailable", tone: "critical", icon: "mdi:ev-station-off", message: "The charger connection entity is unavailable." };
+    }
+    if (["on", "online", "connected", "true", "1"].includes(state)) {
+      return { state: "online", label: "Online", tone: "healthy", icon: "mdi:ev-station", message: "Home charger reports an active connection." };
+    }
+    if (["off", "offline", "disconnected", "false", "0"].includes(state)) {
+      return { state: "offline", label: "Offline", tone: "critical", icon: "mdi:ev-station-off", message: "Home charger reports that it is offline." };
+    }
+    return { state: "unavailable", label: "Unavailable", tone: "attention", icon: "mdi:ev-station-off", message: "The charger connection entity is unavailable." };
   }
 
   _tireStatus(key) {
@@ -1865,6 +1977,12 @@ class KiaDashboardCard extends HTMLElement {
     const lastUpdated = this._formatDate(this._state("last_updated", "--"));
     const climateResult = this._state("last_climate_result", "Not configured");
     const chargingResult = this._state("last_charging_result", "Not configured");
+    const vehicleConnection = this._vehicleConnectionHealth();
+    const chargerConnection = this._chargerConnectionHealth();
+    const chargerStatus = this._entity("charger_status") ? this._chargerStatusLabel(this._state("charger_status", "Unavailable")) : "Not mapped";
+    const connectionTones = [vehicleConnection.tone, chargerConnection.tone];
+    const connectionTone = connectionTones.includes("critical") ? "critical" : connectionTones.includes("attention") ? "attention" : connectionTones.includes("healthy") ? "healthy" : "muted";
+    const connectionLabel = connectionTone === "critical" ? "Attention" : connectionTone === "attention" ? "Data delayed" : connectionTone === "healthy" ? "Data current" : "Not configured";
     const dashboardVersionEntity = this._obj("dashboard_version");
     const dashboardVersion = this._entity("dashboard_version")
       ? dashboardVersionEntity?.attributes?.installed_version ?? dashboardVersionEntity?.attributes?.version ?? this._state("dashboard_version", "Unavailable")
@@ -1873,6 +1991,10 @@ class KiaDashboardCard extends HTMLElement {
     return `<main class="settings-detail" aria-label="Settings detail">
       <section class="settings-heading card"><div class="settings-heading-icon"><ha-icon icon="mdi:tune-variant"></ha-icon></div><div><span class="settings-eyebrow">Dashboard administration</span><h2>Settings</h2><p>Review entity mapping, theme context, safe actions, and integration feedback for this card.</p></div><span class="settings-health ${mappingOk ? "healthy" : "attention"}"><ha-icon icon="${mappingOk ? "mdi:check-circle-outline" : "mdi:alert-circle-outline"}"></ha-icon>${mappingOk ? "Mapping healthy" : "Mapping needs attention"}</span></section>
       <div class="settings-grid">
+        <section class="settings-panel card settings-connectivity"><div class="settings-panel-title"><ha-icon icon="mdi:access-point-network"></ha-icon><div><span>Connection diagnostics</span><h2>Connection health</h2></div><strong class="${connectionTone}-text">${connectionLabel}</strong></div><div class="settings-connection-grid">
+          <article class="settings-connection ${vehicleConnection.tone}"><ha-icon icon="${vehicleConnection.icon}"></ha-icon><div><span>Vehicle connection</span><h3>${vehicleConnection.label}</h3><dl><div><dt>Last vehicle update</dt><dd>${this._safe(vehicleConnection.updatedLabel)}</dd></div><div><dt>Freshness</dt><dd>${this._safe(vehicleConnection.ageLabel)}</dd></div></dl><p>${vehicleConnection.message}</p></div></article>
+          <article class="settings-connection ${chargerConnection.tone}"><ha-icon icon="${chargerConnection.icon}"></ha-icon><div><span>Home charger connection</span><h3>${chargerConnection.label}</h3><dl><div><dt>Charger status</dt><dd>${this._safe(chargerStatus)}</dd></div></dl><p>${chargerConnection.message}</p></div></article>
+        </div><p class="settings-note"><ha-icon icon="mdi:information-outline"></ha-icon><span>Kia authentication state is not exposed to dashboard cards. Stale data can indicate reauthentication or a Kia cloud outage.</span></p></section>
         <section class="settings-panel card settings-mapping"><div class="settings-panel-title"><ha-icon icon="mdi:transit-connection-variant"></ha-icon><div><span>Configuration</span><h2>Entity mapping</h2></div><strong class="${mappingOk ? "healthy-text" : "attention-text"}">${mappingState}</strong></div><p>Entity IDs stay in this card's <code>entities</code> configuration. Missing or unavailable mappings are listed here before card changes are considered.</p><div class="settings-diagnostic ${mappingOk ? "healthy" : "attention"}"><ha-icon icon="${mappingOk ? "mdi:shield-check-outline" : "mdi:alert-outline"}"></ha-icon><div><strong>${mappingOk ? "No mapping issues detected" : "Check configured entities"}</strong><span>${this._safe(unavailableText)}</span></div></div></section>
         <section class="settings-panel card settings-theme"><div class="settings-panel-title"><ha-icon icon="mdi:palette-outline"></ha-icon><div><span>Appearance</span><h2>Theme</h2></div></div><div class="settings-theme-preview"><span class="theme-swatch brand"></span><span class="theme-swatch success"></span><span class="theme-swatch warning"></span><span class="theme-swatch surface"></span></div><dl><div><dt>Active theme</dt><dd>${this._safe(themeName)}</dd></div><div><dt>Color mode</dt><dd>${themeMode}</dd></div><div><dt>Card styling</dt><dd>Semantic Home Assistant tokens</dd></div></dl></section>
         <section class="settings-panel card settings-actions-panel"><div class="settings-panel-title"><ha-icon icon="mdi:gesture-tap-button"></ha-icon><div><span>Low risk</span><h2>Dashboard actions</h2></div></div><p>Refresh requests use the configured refresh entity. Vehicle details remain a local, read-only Home Assistant surface.</p><div class="settings-actions"><button data-action="refresh"><ha-icon icon="mdi:refresh"></ha-icon><span><strong>Refresh vehicle</strong><small>Request current Kia data</small></span></button><button data-info="vehicle_data" ${this._entity("vehicle_data") ? "" : "disabled"}><ha-icon icon="mdi:database-eye-outline"></ha-icon><span><strong>Vehicle data details</strong><small>Open the mapped raw-data entity</small></span></button></div>${this._notice ? `<p class="settings-notice">${this._safe(this._notice)}</p>` : ""}</section>
@@ -1976,12 +2098,13 @@ class KiaDashboardCard extends HTMLElement {
       .settings-heading h2 { margin:2px 0 5px; font-size:clamp(23px,2vw,31px); } .settings-heading p,.settings-panel>p { color:var(--kia-muted); line-height:1.5; }
       .settings-health { min-height:36px; padding:0 12px; border:1px solid; border-radius:999px; display:flex; align-items:center; gap:7px; font-size:12px; font-weight:800; white-space:nowrap; } .settings-health ha-icon { --mdc-icon-size:18px; } .settings-health.healthy { color:var(--green); background:color-mix(in srgb,var(--green) 10%,var(--kia-card)); border-color:color-mix(in srgb,var(--green) 45%,var(--kia-line)); } .settings-health.attention { color:var(--amber); background:color-mix(in srgb,var(--amber) 10%,var(--kia-card)); border-color:color-mix(in srgb,var(--amber) 45%,var(--kia-line)); }
       .settings-grid { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr); gap:10px; } .settings-panel { padding:22px; min-width:0; }
-      .settings-panel-title { display:grid; grid-template-columns:38px minmax(0,1fr) auto; align-items:center; gap:11px; margin-bottom:16px; } .settings-panel-title>ha-icon { color:var(--blue); --mdc-icon-size:28px; } .settings-panel-title h2 { margin-top:2px; font-size:19px; } .settings-panel-title>strong { color:var(--kia-muted); font-size:12px; } .settings-panel-title>strong.healthy-text { color:var(--green); } .settings-panel-title>strong.attention-text { color:var(--amber); }
+      .settings-panel-title { display:grid; grid-template-columns:38px minmax(0,1fr) auto; align-items:center; gap:11px; margin-bottom:16px; } .settings-panel-title>ha-icon { color:var(--blue); --mdc-icon-size:28px; } .settings-panel-title h2 { margin-top:2px; font-size:19px; } .settings-panel-title>strong { color:var(--kia-muted); font-size:12px; } .settings-panel-title>strong.healthy-text { color:var(--green); } .settings-panel-title>strong.attention-text { color:var(--amber); } .settings-panel-title>strong.critical-text { color:var(--red); } .settings-panel-title>strong.muted-text { color:var(--kia-muted); }
+      .settings-connectivity { grid-column:1/-1; } .settings-connection-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; } .settings-connection { min-width:0; padding:15px; border:1px solid var(--kia-line); border-left:4px solid var(--kia-muted); border-radius:8px; background:var(--kia-control); display:grid; grid-template-columns:34px minmax(0,1fr); gap:12px; } .settings-connection>ha-icon { color:var(--kia-muted); --mdc-icon-size:29px; } .settings-connection>div>span { color:var(--kia-muted); font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; } .settings-connection h3 { margin-top:3px; font-size:18px; } .settings-connection dl { margin:12px 0 0; display:grid; gap:7px; } .settings-connection dl div { display:flex; justify-content:space-between; gap:16px; } .settings-connection dt { color:var(--kia-muted); } .settings-connection dd { margin:0; font-weight:700; text-align:right; } .settings-connection p { margin-top:12px; color:var(--kia-muted); font-size:12px; line-height:1.45; } .settings-connection.healthy { border-left-color:var(--green); } .settings-connection.healthy>ha-icon,.settings-connection.healthy h3 { color:var(--green); } .settings-connection.attention { border-left-color:var(--amber); } .settings-connection.attention>ha-icon,.settings-connection.attention h3 { color:var(--amber); } .settings-connection.critical { border-left-color:var(--red); } .settings-connection.critical>ha-icon,.settings-connection.critical h3 { color:var(--red); }
       .settings-diagnostic { margin-top:18px; padding:14px; border:1px solid var(--kia-line); border-radius:8px; display:grid; grid-template-columns:28px minmax(0,1fr); gap:11px; align-items:start; background:var(--kia-control); } .settings-diagnostic ha-icon { --mdc-icon-size:24px; } .settings-diagnostic.healthy ha-icon { color:var(--green); } .settings-diagnostic.attention ha-icon { color:var(--amber); } .settings-diagnostic strong,.settings-diagnostic span { display:block; } .settings-diagnostic span { margin-top:4px; color:var(--kia-muted); font-size:12px; line-height:1.45; text-transform:capitalize; } .settings-mapping code { color:var(--blue); font:inherit; font-weight:700; }
       .settings-theme-preview { height:72px; display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px; } .theme-swatch { border-radius:8px; border:1px solid var(--kia-line); } .theme-swatch.brand { background:var(--blue); } .theme-swatch.success { background:var(--green); } .theme-swatch.warning { background:var(--amber); } .theme-swatch.surface { background:var(--kia-recessed); } .settings-theme dl { margin:0; } .settings-theme dl div { padding:10px 0; border-top:1px solid var(--kia-line); display:flex; justify-content:space-between; gap:20px; } .settings-theme dt { color:var(--kia-muted); } .settings-theme dd { margin:0; font-weight:700; text-align:right; }
       .settings-actions { margin-top:17px; display:grid; grid-template-columns:1fr 1fr; gap:10px; } .settings-actions button { min-height:76px; padding:12px 14px; border:1px solid var(--kia-line); border-radius:8px; background:var(--kia-control); display:grid; grid-template-columns:32px 1fr; gap:11px; align-items:center; text-align:left; } .settings-actions button:hover { border-color:var(--blue); } .settings-actions button:disabled { cursor:not-allowed; opacity:.48; } .settings-actions button ha-icon { color:var(--blue); --mdc-icon-size:27px; } .settings-actions button strong,.settings-actions button small { display:block; } .settings-actions button small { margin-top:3px; color:var(--kia-muted); }
       .settings-notice { margin-top:12px !important; padding:9px 11px; border-radius:8px; color:var(--blue) !important; background:color-mix(in srgb,var(--blue) 10%,var(--kia-card)); border:1px solid color-mix(in srgb,var(--blue) 35%,var(--kia-line)); font-size:12px; } .settings-feedback { display:grid; gap:8px; } .settings-feedback .status-row { min-height:47px; } .settings-note { margin-top:14px !important; padding-top:14px; border-top:1px solid var(--kia-line); display:grid; grid-template-columns:22px 1fr; gap:9px; color:var(--kia-muted); font-size:12px; line-height:1.45; } .settings-note ha-icon { color:var(--blue); --mdc-icon-size:19px; }
-      @media (max-width:900px) { .settings-grid { grid-template-columns:1fr; } .settings-heading { grid-template-columns:auto 1fr; } .settings-health { grid-column:1/-1; justify-self:start; } } @media (max-width:560px) { .settings-heading,.settings-panel { padding:17px; } .settings-heading-icon { width:48px; height:48px; } .settings-actions { grid-template-columns:1fr; } .settings-panel-title { grid-template-columns:32px minmax(0,1fr); } .settings-panel-title>strong { grid-column:2; } .settings-theme dl div { display:block; } .settings-theme dd { margin-top:3px; text-align:left; } }
+      @media (max-width:900px) { .settings-grid,.settings-connection-grid { grid-template-columns:1fr; } .settings-heading { grid-template-columns:auto 1fr; } .settings-health { grid-column:1/-1; justify-self:start; } } @media (max-width:560px) { .settings-heading,.settings-panel { padding:17px; } .settings-heading-icon { width:48px; height:48px; } .settings-actions { grid-template-columns:1fr; } .settings-panel-title { grid-template-columns:32px minmax(0,1fr); } .settings-panel-title>strong { grid-column:2; } .settings-theme dl div,.settings-connection dl div { display:block; } .settings-theme dd,.settings-connection dd { margin-top:3px; text-align:left; } }
     `;
   }
 
@@ -2096,6 +2219,8 @@ class KiaDashboardCard extends HTMLElement {
       ? `<div class="wide"><span>DC charging limit</span>${this._numberControl("dc_charging_limit", dcChargeLimitValue, dcChargeLimitUnit)}</div>`
       : "";
     const lockedText = this._locked() ? "Locked" : "Unlocked";
+    const vehicleConnection = this._vehicleConnectionHealth();
+    const vehicleConnectionClass = vehicleConnection.tone === "healthy" ? "online" : vehicleConnection.tone;
     const mapTiles = this._mapTileGrid();
     const markerImage = this._asset(this._config.images?.map_marker || "ev6_top.png");
 
@@ -2113,7 +2238,7 @@ class KiaDashboardCard extends HTMLElement {
           </div>
           <div class="status-stack">
             <button class="chip" data-info="door_lock"><ha-icon icon="mdi:lock"></ha-icon><span>Lock</span><strong>${lockedText}</strong></button>
-            ${this._chip("mdi:wifi", "Connection", "Online", "online")}
+            ${this._chip(vehicleConnection.icon, "Connection", vehicleConnection.label, vehicleConnectionClass)}
             ${this._chip("mdi:battery", "Battery", `${battery} %`)}
           </div>
         </section>
@@ -2172,7 +2297,7 @@ class KiaDashboardCard extends HTMLElement {
       .divider { height:70%; background:var(--kia-line); opacity:.72; } .hero-data { justify-self:start; width:min(640px,100%); display:grid; grid-template-columns:1fr 1fr; gap:30px 48px; } .metric { display:grid; grid-template-columns:42px 1fr; gap:12px; align-items:center; min-width:0; } .metric ha-icon { color:var(--kia-muted); --mdc-icon-size:34px; } .metric span,.battery-facts span,.location-layout span,.tire-side span { color:var(--kia-muted); font-size:14px; line-height:1.2; } .metric strong { display:block; font-size:clamp(16px,1.1vw,20px); line-height:1.16; overflow-wrap:anywhere; }
       .section-nav { margin-top:10px; padding:10px 18px 16px; border-bottom:3px solid var(--blue); } .nav-items { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:14px; } .status-stack { display:grid; grid-template-columns:1fr; gap:8px; align-self:center; justify-self:end; width:100%; }
       .nav-tile,.actions button { min-height:84px; border-radius:8px; border:1px solid var(--kia-line); background:var(--kia-control); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; font-weight:700; } .nav-tile ha-icon { color:var(--blue); --mdc-icon-size:32px; } .nav-tile.active { border-color:var(--blue); background:color-mix(in srgb,var(--blue) 18%,var(--kia-card)); box-shadow:inset 0 -3px 0 var(--blue); } .nav-tile.active span { color:var(--blue); }
-      .chip { min-height:40px; padding:0 12px; border-radius:8px; border:1px solid var(--kia-line); background:color-mix(in srgb,var(--blue) 14%,var(--kia-card)); display:grid; grid-template-columns:22px 1fr auto; align-items:center; gap:8px; font-weight:700; font-size:13px; text-align:left; } .chip ha-icon { color:var(--blue); --mdc-icon-size:18px; } .chip span { color:var(--kia-muted); } .chip.online { background:color-mix(in srgb,var(--green) 18%,var(--kia-card)); } .chip.online strong { color:var(--green); }
+      .chip { min-height:40px; padding:0 12px; border-radius:8px; border:1px solid var(--kia-line); background:color-mix(in srgb,var(--blue) 14%,var(--kia-card)); display:grid; grid-template-columns:22px 1fr auto; align-items:center; gap:8px; font-weight:700; font-size:13px; text-align:left; } .chip ha-icon { color:var(--blue); --mdc-icon-size:18px; } .chip span { color:var(--kia-muted); } .chip.online { background:color-mix(in srgb,var(--green) 18%,var(--kia-card)); } .chip.online ha-icon,.chip.online strong { color:var(--green); } .chip.attention { background:color-mix(in srgb,var(--amber) 14%,var(--kia-card)); } .chip.attention ha-icon,.chip.attention strong { color:var(--amber); } .chip.critical { background:color-mix(in srgb,var(--red) 12%,var(--kia-card)); } .chip.critical ha-icon,.chip.critical strong { color:var(--red); } .chip.muted ha-icon,.chip.muted strong { color:var(--kia-muted); }
       .grid { margin-top:12px; display:grid; grid-template-columns:1fr 1fr 1.28fr; grid-template-areas:"battery actions vehicle" "location location tires" "location location health"; gap:12px; align-items:stretch; } .panel { min-height:160px; padding:18px 22px; position:relative; overflow:hidden; } .battery-panel{grid-area:battery}.actions-panel{grid-area:actions}.vehicle-panel{grid-area:vehicle}.location-panel{grid-area:location;min-height:340px}.tire-panel{grid-area:tires}.health-panel{grid-area:health}
       .panel-title { display:flex; align-items:center; gap:12px; margin-bottom:12px; } .panel-title h2 { flex:1; font-size:20px; } .panel-title ha-icon { color:var(--blue); } .panel-title button,.footer button { border:0; background:transparent; padding:0; color:var(--kia-muted); }
       .battery-gauge { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:18px; margin:4px 0 18px; } .battery-gauge strong { font-size:clamp(28px,2.25vw,40px); line-height:1; white-space:nowrap; } .battery-gauge small { font-size:.48em; margin-left:4px; } .battery-bar { height:34px; border-radius:8px; padding:5px; background:var(--kia-recessed); border:1px solid var(--kia-line); overflow:hidden; } .battery-bar span { display:block; height:100%; border-radius:6px; background:linear-gradient(90deg,var(--red) 0 30%,var(--amber) 30% 55%,var(--green) 55% 100%); }

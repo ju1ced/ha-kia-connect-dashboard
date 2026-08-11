@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added connection-health diagnostics to Settings, with separate Kia vehicle
+  data freshness and home-charger connectivity states.
+- Replaced the hardcoded Overview connection value with current, delayed,
+  stale, unavailable, or unconfigured status derived from `last_updated`.
+- Added configurable vehicle freshness thresholds and regression coverage for
+  stale Kia data and online/offline charger states.
+
 ## 2.10.0 - 2026-08-11
 
 - Added an approximate OpenStreetMap route view and expandable TRONITY-style

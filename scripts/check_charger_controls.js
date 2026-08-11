@@ -52,6 +52,7 @@ card._config = {
     charger_energy_month: "sensor.home_charger_energy_month",
     charger_energy_price: "sensor.home_energy_price",
     vin: "sensor.vehicle_vin",
+    last_updated: "sensor.vehicle_last_updated",
   },
 };
 card._hass = {
@@ -81,6 +82,10 @@ card._hass = {
     "sensor.vehicle_vin": {
       state: "KNAC481A1T5253159",
       attributes: { friendly_name: "Vehicle identification number" },
+    },
+    "sensor.vehicle_last_updated": {
+      state: new Date().toISOString(),
+      attributes: { device_class: "timestamp" },
     },
     "sensor.home_charger_energy_today": {
       state: "4.2",
@@ -223,7 +228,7 @@ async function run() {
   }
   card._activeTab = "overview";
   card._render();
-  assert.match(card.shadowRoot.innerHTML, />Online</);
+  assert.match(card.shadowRoot.innerHTML, />Gegevens actueel</);
   assert.equal(card._localize("Online"), "Online");
   assert.doesNotMatch(card.shadowRoot.innerHTML, /Aanline/);
 
@@ -238,10 +243,41 @@ async function run() {
   assert.match(card.shadowRoot.innerHTML, />Settings</);
 
   const settings = card._renderSettingsTab();
-  assert.match(settings, /11 of 11 available/);
+  assert.match(settings, /12 of 12 available/);
+  assert.match(settings, /Connection health/);
+  assert.match(settings, /Vehicle connection/);
+  assert.match(settings, /Data current/);
+  assert.match(settings, /Vehicle data updated within the expected interval/);
   assert.match(settings, /Dashboard version/);
   assert.match(settings, /2.10.0/);
   assert.equal(window.customCards[0].version, "2.10.0");
+
+  card._hass.states["sensor.vehicle_last_updated"].state = new Date(
+    Date.now() - 4 * 60 * 60 * 1000,
+  ).toISOString();
+  const staleSettings = card._renderSettingsTab();
+  assert.match(staleSettings, /Data stale/);
+  assert.match(staleSettings, /Check Kia Connect authentication/);
+  card._render();
+  assert.match(card.shadowRoot.innerHTML, /class="chip critical"/);
+  assert.match(card.shadowRoot.innerHTML, />Data stale</);
+  card._hass.states["sensor.vehicle_last_updated"].state =
+    new Date().toISOString();
+
+  card._config.entities.charger_online = "binary_sensor.home_charger_online";
+  card._hass.states["binary_sensor.home_charger_online"] = {
+    state: "on",
+    attributes: {},
+  };
+  assert.match(
+    card._renderSettingsTab(),
+    /Home charger reports an active connection/,
+  );
+  card._hass.states["binary_sensor.home_charger_online"].state = "off";
+  const offlineSettings = card._renderSettingsTab();
+  assert.match(offlineSettings, /Home charger reports that it is offline/);
+  assert.match(offlineSettings, /class="settings-connection critical"/);
+  card._hass.states["binary_sensor.home_charger_online"].state = "on";
 
   Object.assign(card._config.entities, {
     door_lock: "lock.vehicle",

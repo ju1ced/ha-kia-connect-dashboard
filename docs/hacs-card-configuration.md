@@ -50,6 +50,35 @@ entities:
   stop_charging: switch.your_vehicle_ev_charging
 ```
 
+## Connection Health
+
+The Overview connection chip and the Settings diagnostics use `last_updated`
+to report whether Kia vehicle data is current, delayed, or stale. The defaults
+are current for the first 30 minutes, delayed until 180 minutes, and stale
+after that. Both thresholds can be adjusted at card level:
+
+```yaml
+type: custom:kia-dashboard-card
+vehicle_fresh_minutes: 30
+vehicle_stale_minutes: 180
+entities:
+  last_updated: sensor.your_vehicle_last_refresh
+```
+
+`last_updated` must contain a timestamp Home Assistant can parse. Missing,
+unknown, or unavailable values are reported explicitly instead of showing a
+false Online state.
+
+The home charger is diagnosed separately through the optional
+`charger_online` mapping described below. A stale Kia timestamp does not imply
+that the charger is offline, and an online charger does not imply that Kia
+Connect authentication is healthy.
+
+Lovelace cards cannot read the Kia integration's config-entry authentication
+state directly. Stale vehicle data is therefore a practical warning that can
+indicate expired authentication, an integration repair, or a Kia cloud outage;
+it is not a direct authentication check.
+
 ## Optional Vehicle and Climate Details
 
 Vehicle identity, individual openings, windows, and climate comfort signals use
@@ -254,7 +283,8 @@ layout_options:
 
 The Energy tab accepts a brand-independent charger mapping. Read-only entities
 work immediately; charger commands remain disabled until `charger_controls` is
-explicitly set to `true`.
+explicitly set to `true`. When `charger_online` is mapped, Settings reports its
+connection independently from Kia vehicle-data freshness.
 
 ```yaml
 type: custom:kia-dashboard-card
