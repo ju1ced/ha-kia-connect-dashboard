@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.12.0 - 2026-08-11
+
 - Added CI validation that keeps the built-in dashboard version aligned with
   the latest changelog release and verifies `v*` tag builds against both.
 
