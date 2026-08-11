@@ -12,3 +12,16 @@ Thank you for helping build HA Kia Connect Dashboard.
 ## Quality Bar
 
 A contribution must preserve modular YAML, responsive layouts, documented templates, and the Kia Connect inspired design language.
+
+## Release Version Validation
+
+Release preparation must update `KIA_DASHBOARD_CARD_VERSION` and add the newest
+dated release heading to `CHANGELOG.md`. Run the repository check before opening
+the release pull request:
+
+```shell
+python scripts/check_version_consistency.py
+```
+
+CI also runs the check for pull requests, `main`, and `v*` tags. During a tag
+build, the tag must equal `v` followed by the dashboard and changelog version.

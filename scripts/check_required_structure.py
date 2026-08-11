@@ -13,6 +13,8 @@ REQUIRED_PATHS = [
     "assets/icons",
     "docs/screenshots",
     "examples/home-assistant-packages/trip_calendar.yaml",
+    "scripts/check_version_consistency.py",
+    "scripts/test_version_consistency.py",
     ".github/ISSUE_TEMPLATE/bug_report.md",
     ".github/ISSUE_TEMPLATE/feature_request.md",
     ".github/ISSUE_TEMPLATE/question.md",

@@ -5,7 +5,7 @@
 - [x] Synchronize the built-in card version with v2.5.1.
 - [x] Replace the pre-HACS roadmap with the current product roadmap.
 - [x] Reconcile milestones, tasks, and issue backlog with shipped functionality.
-- [ ] Automate built-in version validation against release metadata.
+- [x] Automate built-in version validation against release metadata.
 - [ ] Decide whether legacy modular YAML views remain a supported install path.
 - [ ] Move released development notes out of the Unreleased changelog section as
       part of each release.

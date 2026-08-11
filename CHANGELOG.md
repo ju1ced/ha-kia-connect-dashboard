@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added CI validation that keeps the built-in dashboard version aligned with
+  the latest changelog release and verifies `v*` tag builds against both.
+
 ## 2.11.0 - 2026-08-11
 
 - Added connection-health diagnostics to Settings, with separate Kia vehicle
