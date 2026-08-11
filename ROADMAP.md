@@ -21,6 +21,8 @@ are available in the current stable release.
   consumption and regeneration charts.
 - Extended Kia daily history and estimated individual trips reconstructed from
   bounded Home Assistant Recorder data.
+- Persistent Local Calendar trips with a date picker, approximate route map,
+  expandable trip table, odometer context, and per-system energy breakdown.
 - Confirmation and feedback patterns for enabled remote actions.
 
 ## Next: Validate persistent trip data

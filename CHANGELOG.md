@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added an approximate OpenStreetMap route view and expandable TRONITY-style
+  trip table with start, end, duration, energy, consumption, speed, and
+  odometer details.
+- Extended persistent trips to the backward-compatible `kia_trip_v2` schema
+  with route breadcrumbs, odometer values, Kia energy breakdown, regeneration,
+  and optional five-minute active sampling.
+
 ## 2.9.2 - 2026-08-10
 
 - Fixed Local Calendar trip storage for raw GPS coordinate values that Home

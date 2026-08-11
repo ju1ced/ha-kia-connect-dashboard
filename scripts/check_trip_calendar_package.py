@@ -12,6 +12,7 @@ _, capture_separator, automations = content.partition(
 capture, store_separator, store = automations.partition(
     "  - id: kia_trip_calendar_store_completed"
 )
+capture = capture.partition("  - id: kia_trip_calendar_capture_route")[0]
 
 errors: list[str] = []
 
@@ -43,6 +44,28 @@ if (
     not in store
 ):
     errors.append("calendar JSON must read persisted coordinates as text")
+if "'schema': 'kia_trip_v2'" not in store:
+    errors.append("completed trips must use the extended v2 schema")
+for field in (
+    "'route_points'",
+    "'odometer_start'",
+    "'odometer_end'",
+    "'drive_energy_kwh'",
+    "'climate_energy_kwh'",
+    "'electronics_energy_kwh'",
+    "'regenerated_energy_kwh'",
+):
+    if field not in store:
+        errors.append(f"calendar JSON is missing {field}")
+if "  - id: kia_trip_calendar_capture_route" not in content:
+    errors.append("route point capture automation is missing")
+if "  - id: kia_trip_calendar_detailed_sampling" not in content:
+    errors.append("optional detailed sampling automation is missing")
+if (
+    "entity_id: input_boolean.kia_trip_detailed_sampling" not in content
+    or "entity_id: button.your_vehicle_force_refresh" not in content
+):
+    errors.append("detailed sampling must be explicitly gated and use the refresh button")
 
 if errors:
     print("Trip calendar package validation failed:")
