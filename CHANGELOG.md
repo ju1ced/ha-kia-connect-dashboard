@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.10.0 - 2026-08-11
+
 - Added an approximate OpenStreetMap route view and expandable TRONITY-style
   trip table with start, end, duration, energy, consumption, speed, and
   odometer details.

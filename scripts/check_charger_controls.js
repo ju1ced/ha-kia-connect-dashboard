@@ -240,8 +240,8 @@ async function run() {
   const settings = card._renderSettingsTab();
   assert.match(settings, /11 of 11 available/);
   assert.match(settings, /Dashboard version/);
-  assert.match(settings, /2.9.2/);
-  assert.equal(window.customCards[0].version, "2.9.2");
+  assert.match(settings, /2.10.0/);
+  assert.equal(window.customCards[0].version, "2.10.0");
 
   Object.assign(card._config.entities, {
     door_lock: "lock.vehicle",
