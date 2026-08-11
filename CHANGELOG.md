@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.11.0 - 2026-08-11
+
 - Added connection-health diagnostics to Settings, with separate Kia vehicle
   data freshness and home-charger connectivity states.
 - Replaced the hardcoded Overview connection value with current, delayed,
