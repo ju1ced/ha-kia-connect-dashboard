@@ -25,6 +25,7 @@ are available in the current stable release.
   expandable trip table, odometer context, and per-system energy breakdown.
 - Separate Kia data-freshness and home-charger connection diagnostics, with a
   dynamic Overview connection status and configurable freshness thresholds.
+- CI-enforced dashboard, changelog, and release-tag version consistency.
 - Confirmation and feedback patterns for enabled remote actions.
 
 ## Next: Validate persistent trip data
