@@ -10,6 +10,9 @@ input_boolean:
   kia_trip_active:
     name: Kia trip active
     icon: mdi:car-connected
+  kia_trip_detailed_sampling:
+    name: Kia trip detailed sampling
+    icon: mdi:car-clock
 
 input_datetime:
   kia_trip_started_at:
@@ -46,6 +49,12 @@ input_text:
     max: 255
   kia_trip_start_coordinates:
     name: Kia trip start coordinates
+    max: 255
+  kia_trip_route_points:
+    name: Kia trip route points
+    max: 255
+  kia_trip_start_driving_stats:
+    name: Kia trip start driving stats
     max: 255
 
 automation:
@@ -85,6 +94,19 @@ automation:
             {% set lon = state_attr('device_tracker.your_vehicle_location', 'longitude') %}
             {{ (lat | round(6) ~ ',' ~ lon | round(6))
                if lat is number and lon is number else '' }}
+          start_driving_stats: >-
+            {{ {
+              'engine': state_attr('sensor.your_vehicle_today_driving_stats',
+                                   'engine_consumption') | float(0),
+              'climate': state_attr('sensor.your_vehicle_today_driving_stats',
+                                    'climate_consumption') | float(0),
+              'electronics': state_attr('sensor.your_vehicle_today_driving_stats',
+                                        'onboard_electronics_consumption') | float(0),
+              'battery_care': state_attr('sensor.your_vehicle_today_driving_stats',
+                                         'battery_care_consumption') | float(0),
+              'regenerated': state_attr('sensor.your_vehicle_today_driving_stats',
+                                        'regenerated_energy') | float(0)
+            } | to_json }}
       - action: input_datetime.set_datetime
         target:
           entity_id: input_datetime.kia_trip_started_at
@@ -122,9 +144,73 @@ automation:
           entity_id: input_text.kia_trip_start_coordinates
         data:
           value: "{{ start_coordinates | trim }}"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.kia_trip_route_points
+        data:
+          value: "{{ start_coordinates | trim }}"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.kia_trip_start_driving_stats
+        data:
+          value: "{{ start_driving_stats }}"
       - action: input_boolean.turn_on
         target:
           entity_id: input_boolean.kia_trip_active
+
+  - id: kia_trip_calendar_capture_route
+    alias: Kia trip calendar - capture route points
+    description: Preserve available Kia tracker points while a trip is active.
+    mode: queued
+    max: 3
+    triggers:
+      - trigger: state
+        entity_id: device_tracker.your_vehicle_location
+    conditions:
+      - condition: state
+        entity_id: input_boolean.kia_trip_active
+        state: "on"
+    actions:
+      - variables:
+          route_point: >-
+            {% set lat = state_attr('device_tracker.your_vehicle_location', 'latitude') %}
+            {% set lon = state_attr('device_tracker.your_vehicle_location', 'longitude') %}
+            {{ (lat | round(5) ~ ',' ~ lon | round(5))
+               if lat is number and lon is number else '' }}
+          route_points: "{{ states('input_text.kia_trip_route_points') }}"
+      - condition: template
+        value_template: >-
+          {{ route_point | length > 0 and
+             route_point not in route_points.split(';') and
+             (route_points | length + route_point | length + 1) <= 255 }}
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.kia_trip_route_points
+        data:
+          value: >-
+            {{ route_points ~ (';' if route_points | length > 0 else '') ~ route_point }}
+
+  - id: kia_trip_calendar_detailed_sampling
+    alias: Kia trip calendar - detailed active sampling
+    description: Optionally refresh Kia every five minutes during an active trip.
+    mode: single
+    triggers:
+      - trigger: time_pattern
+        minutes: "/5"
+    conditions:
+      - condition: state
+        entity_id: input_boolean.kia_trip_detailed_sampling
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.kia_trip_active
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.your_vehicle_engine
+        state: "on"
+    actions:
+      - action: button.press
+        target:
+          entity_id: button.your_vehicle_force_refresh
 
   - id: kia_trip_calendar_store_completed
     alias: Kia trip calendar - store completed trip
@@ -182,6 +268,11 @@ automation:
           energy_end_unit: >-
             {{ state_attr('sensor.your_vehicle_remaining_energy',
                           'unit_of_measurement') | default('kWh', true) | lower }}
+          start_driving_stats: >-
+            {{ states('input_text.kia_trip_start_driving_stats') | from_json({}) }}
+          same_driving_day: >-
+            {{ trip_start_ts | timestamp_custom('%Y-%m-%d', true) ==
+               trip_end_ts | timestamp_custom('%Y-%m-%d', true) }}
           destination: >-
             {% set value = states('device_tracker.your_vehicle_location') %}
             {% set lat = state_attr('device_tracker.your_vehicle_location', 'latitude') %}
@@ -215,6 +306,31 @@ automation:
             {{ (distance / (duration_minutes / 60))
                if duration_minutes | float(0) > 0 else 0 }}
           trip_id: "kia-{{ trip_start_ts | int }}"
+          drive_energy: >-
+            {{ ([state_attr('sensor.your_vehicle_today_driving_stats',
+                            'engine_consumption') | float(0) -
+                   start_driving_stats.get('engine', 0) | float(0), 0] | max / 1000)
+               if same_driving_day else none }}
+          climate_energy: >-
+            {{ ([state_attr('sensor.your_vehicle_today_driving_stats',
+                            'climate_consumption') | float(0) -
+                   start_driving_stats.get('climate', 0) | float(0), 0] | max / 1000)
+               if same_driving_day else none }}
+          electronics_energy: >-
+            {{ ([state_attr('sensor.your_vehicle_today_driving_stats',
+                            'onboard_electronics_consumption') | float(0) -
+                   start_driving_stats.get('electronics', 0) | float(0), 0] | max / 1000)
+               if same_driving_day else none }}
+          battery_care_energy: >-
+            {{ ([state_attr('sensor.your_vehicle_today_driving_stats',
+                            'battery_care_consumption') | float(0) -
+                   start_driving_stats.get('battery_care', 0) | float(0), 0] | max / 1000)
+               if same_driving_day else none }}
+          regenerated_energy: >-
+            {{ ([state_attr('sensor.your_vehicle_today_driving_stats',
+                            'regenerated_energy') | float(0) -
+                   start_driving_stats.get('regenerated', 0) | float(0), 0] | max / 1000)
+               if same_driving_day else none }}
       - if:
           - condition: template
             value_template: "{{ distance | float(0) >= 0.2 }}"
@@ -268,7 +384,7 @@ automation:
                     {% set destination_lon =
                        state_attr('device_tracker.your_vehicle_location', 'longitude') %}
                     {{ {
-                      'schema': 'kia_trip_v1',
+                      'schema': 'kia_trip_v2',
                       'trip_id': trip_id,
                       'origin': states('input_text.kia_trip_start_location') | trim,
                       'destination': destination | string | trim,
@@ -279,13 +395,28 @@ automation:
                          (destination_lon | string))
                         if destination_lat is number and destination_lon is number
                         else '',
+                      'route_points':
+                        states('input_text.kia_trip_route_points').split(';') |
+                        reject('equalto', '') | list,
+                      'odometer_start': start_odometer | float(0) | round(1),
+                      'odometer_end': end_odometer | float(0) | round(1),
                       'distance_km': distance | float(0) | round(3),
                       'duration_minutes': duration_minutes | int,
                       'soc_start': soc_start | float(0) | round(1),
                       'soc_end': soc_end | float(0) | round(1),
                       'energy_kwh': energy_used | float(0) | round(3),
                       'consumption_kwh_100km': consumption | float(0) | round(2),
-                      'average_speed_kmh': average_speed | float(0) | round(1)
+                      'average_speed_kmh': average_speed | float(0) | round(1),
+                      'drive_energy_kwh': drive_energy | round(3)
+                        if drive_energy is number else none,
+                      'climate_energy_kwh': climate_energy | round(3)
+                        if climate_energy is number else none,
+                      'electronics_energy_kwh': electronics_energy | round(3)
+                        if electronics_energy is number else none,
+                      'battery_care_energy_kwh': battery_care_energy | round(3)
+                        if battery_care_energy is number else none,
+                      'regenerated_energy_kwh': regenerated_energy | round(3)
+                        if regenerated_energy is number else none
                     } | to_json }}
       - action: input_boolean.turn_off
         target:

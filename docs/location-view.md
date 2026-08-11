@@ -62,8 +62,11 @@ continues to work without Recorder-based trips.
 
 An optional `trip_calendar` mapping promotes a dedicated Local Calendar to the
 persistent trip source. Location then renders a month grid with trip counts,
-per-day selection, and a complete overview with aggregate distance, energy, and
-consumption. Only versioned `kia_trip_v1` JSON descriptions are parsed. Calendar
+per-day selection, a route map from the available Kia tracker points, and a
+TRONITY-style expandable trip table. New `kia_trip_v2` events add end odometer,
+energy breakdown, regeneration, and route breadcrumbs. Existing `kia_trip_v1`
+events remain supported and use their start and end coordinates as a coarse
+route. Calendar
 queries remain lazy: the visible month is requested in Day mode and the
 configured historical range is requested only after switching to Overview.
 
@@ -74,4 +77,6 @@ event. Its active-trip helpers survive a Home Assistant restart. Cached Kia
 updates still make timestamps, locations, and energy estimates approximate.
 Unnamed tracker positions are forced to text before calendar serialization, and
 a calendar service failure no longer leaves the active-trip helper permanently
-blocking later journeys.
+blocking later journeys. An explicitly enabled five-minute sampling automation
+can request fresher Kia data while a trip is active, improving short-stop
+detection at the cost of additional Kia API requests.

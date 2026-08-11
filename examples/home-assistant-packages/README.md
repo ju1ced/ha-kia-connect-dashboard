@@ -63,7 +63,9 @@ Recorder retention.
    sensor.your_vehicle_odometer
    sensor.your_vehicle_battery_level
    sensor.your_vehicle_remaining_energy
+   sensor.your_vehicle_today_driving_stats
    device_tracker.your_vehicle_location
+   button.your_vehicle_force_refresh
    calendar.your_vehicle_trips
    ```
 
@@ -76,11 +78,20 @@ Recorder retention.
      trip_calendar: calendar.nebula_trips
    ```
 
-The start automation snapshots odometer, state of charge, remaining energy, and
-location. The stop automation waits for Kia's final coordinator update, ignores
-movements below 0.2 km, checks for an existing trip identifier, and creates a
-versioned `kia_trip_v1` calendar event. If Home Assistant restarts during a trip,
-the persisted active-trip helper allows the stop automation to recover it.
+The start automation snapshots odometer, state of charge, remaining energy,
+daily energy counters, and location. Tracker updates are retained as a compact
+breadcrumb route. The stop automation waits for Kia's final coordinator update,
+ignores movements below 0.2 km, checks for an existing trip identifier, and
+creates a versioned `kia_trip_v2` calendar event. If Home Assistant restarts
+during a trip, the persisted active-trip helper allows the stop automation to
+recover it.
+
+`input_boolean.kia_trip_detailed_sampling` starts disabled. Enable it only after
+confirming that `button.your_vehicle_force_refresh` works reliably for your Kia
+integration. While a trip is active, it requests one refresh every five minutes.
+This can expose stops that fall between the integration's normal updates, but it
+adds Kia API traffic and cannot guarantee detection of stops shorter than five
+minutes.
 
 The package expects the remaining-energy sensor in `kJ`, `Wh`, or `kWh` and
 normalizes it to `kWh`. The card treats the resulting values as estimates because

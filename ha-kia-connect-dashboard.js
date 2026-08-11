@@ -406,6 +406,24 @@ const KIA_DASHBOARD_NL = {
   "No stored trips found": "Geen opgeslagen ritten gevonden",
   "New trips appear after the Home Assistant trip package records a completed drive.": "Nieuwe ritten verschijnen nadat het Home Assistant-rittenpackage een voltooide rit opslaat.",
   "Stored trips": "Opgeslagen ritten",
+  "Route overview": "Routeoverzicht",
+  "Available Kia location points": "Beschikbare Kia-locatiepunten",
+  "Approximate routes": "Benaderde routes",
+  "Approximate trip route": "Benaderde ritroute",
+  "Approximate route": "Benaderde route",
+  "points": "punten",
+  "Start": "Start",
+  "End": "Einde",
+  "Used": "Verbruikt",
+  "Avg speed": "Gem. snelheid",
+  "Odometer": "Kilometerstand",
+  "Route": "Route",
+  "Drive": "Aandrijving",
+  "Electronics": "Boordelektronica",
+  "Battery care": "Batterijbeheer",
+  "Recovered": "Teruggewonnen",
+  "recovered": "teruggewonnen",
+  "Detailed energy breakdown is available for newly recorded trips.": "De gedetailleerde energie-uitsplitsing is beschikbaar voor nieuw opgeslagen ritten.",
   "Selected day": "Geselecteerde dag",
   "All calendar history": "Volledige kalendergeschiedenis",
   "Calendar events are the persistent source; Recorder analysis remains the fallback when no trip calendar is mapped.": "Kalenderitems zijn de permanente bron; Recorder-analyse blijft de fallback wanneer geen rittenkalender is toegewezen.",
@@ -610,7 +628,7 @@ class KiaDashboardCard extends HTMLElement {
     } catch (_error) {
       return null;
     }
-    if (data.schema !== "kia_trip_v1") return null;
+    if (!["kia_trip_v1", "kia_trip_v2"].includes(data.schema)) return null;
     const start = startDate.getTime();
     const end = endDate.getTime();
     const durationMinutes = this._calendarNumber(data.duration_minutes) ?? Math.max(1, Math.round((end - start) / 60000));
@@ -618,6 +636,19 @@ class KiaDashboardCard extends HTMLElement {
     const usedEnergy = this._calendarNumber(data.energy_kwh);
     const averageSpeed = this._calendarNumber(data.average_speed_kmh) ?? (distance !== null && durationMinutes > 0 ? distance / (durationMinutes / 60) : null);
     const consumption = this._calendarNumber(data.consumption_kwh_100km) ?? (distance > 0 && usedEnergy !== null ? (usedEnergy / distance) * 100 : null);
+    const coordinate = (value) => {
+      const [latRaw, lonRaw] = String(value || "").split(",");
+      const lat = this._calendarNumber(latRaw);
+      const lon = this._calendarNumber(lonRaw);
+      return lat !== null && lon !== null && Math.abs(lat) <= 90 && Math.abs(lon) <= 180 ? { lat, lon } : null;
+    };
+    const routePoints = (Array.isArray(data.route_points) ? data.route_points : [])
+      .map((point) => Array.isArray(point) ? coordinate(`${point[0]},${point[1]}`) : coordinate(point))
+      .filter(Boolean);
+    const originCoordinates = coordinate(data.origin_coordinates);
+    const destinationCoordinates = coordinate(data.destination_coordinates);
+    if (originCoordinates && !routePoints.length) routePoints.push(originCoordinates);
+    if (destinationCoordinates && (!routePoints.length || routePoints.at(-1).lat !== destinationCoordinates.lat || routePoints.at(-1).lon !== destinationCoordinates.lon)) routePoints.push(destinationCoordinates);
     return {
       source: "calendar",
       id: String(data.trip_id || `${start}`),
@@ -632,6 +663,14 @@ class KiaDashboardCard extends HTMLElement {
       usedEnergy,
       consumption,
       averageSpeed,
+      startOdometer: this._calendarNumber(data.odometer_start),
+      endOdometer: this._calendarNumber(data.odometer_end),
+      driveEnergy: this._calendarNumber(data.drive_energy_kwh),
+      climateEnergy: this._calendarNumber(data.climate_energy_kwh),
+      electronicsEnergy: this._calendarNumber(data.electronics_energy_kwh),
+      batteryCareEnergy: this._calendarNumber(data.battery_care_energy_kwh),
+      regeneratedEnergy: this._calendarNumber(data.regenerated_energy_kwh),
+      routePoints,
     };
   }
 
@@ -1576,11 +1615,13 @@ class KiaDashboardCard extends HTMLElement {
   _tripTotals(trips) {
     const totalDistance = trips.reduce((sum, trip) => sum + (trip.distance || 0), 0);
     const totalEnergy = trips.reduce((sum, trip) => sum + (trip.usedEnergy || 0), 0);
+    const regeneratedEnergy = trips.reduce((sum, trip) => sum + (trip.regeneratedEnergy || 0), 0);
     const totalMinutes = trips.reduce((sum, trip) => sum + (trip.durationMinutes || 0), 0);
     return {
       count: trips.length,
       distance: totalDistance,
       energy: totalEnergy,
+      regeneratedEnergy,
       durationMinutes: totalMinutes,
       consumption: totalDistance > 0 && totalEnergy > 0 ? (totalEnergy / totalDistance) * 100 : null,
     };
@@ -1591,23 +1632,81 @@ class KiaDashboardCard extends HTMLElement {
     return `<div class="location-trip-summary" aria-label="${this._safe(label)}">
       <div><span>Stored trips</span><strong>${totals.count}</strong></div>
       <div><span>Distance</span><strong>${totals.distance.toFixed(1)} km</strong></div>
-      <div><span>Energy used</span><strong>${totals.energy.toFixed(1)} kWh</strong></div>
+      <div><span>Energy used</span><strong>${totals.energy.toFixed(1)} kWh</strong>${totals.regeneratedEnergy > 0 ? `<small>${totals.regeneratedEnergy.toFixed(1)} kWh recovered</small>` : ""}</div>
       <div><span>Average consumption</span><strong>${totals.consumption === null ? "--" : `${totals.consumption.toFixed(1)} kWh/100 km`}</strong></div>
     </div>`;
   }
 
+  _renderTripRouteMap(trips) {
+    const routes = trips.map((trip) => Array.isArray(trip.routePoints) ? trip.routePoints.filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lon)) : []).filter((route) => route.length >= 2);
+    if (!routes.length) return "";
+    const width = 1200;
+    const height = 430;
+    const padding = 48;
+    const project = (point, zoom) => {
+      const scale = 256 * (2 ** zoom);
+      const latitude = Math.max(-85.05112878, Math.min(85.05112878, point.lat));
+      const sine = Math.sin((latitude * Math.PI) / 180);
+      return {
+        x: ((point.lon + 180) / 360) * scale,
+        y: (0.5 - Math.log((1 + sine) / (1 - sine)) / (4 * Math.PI)) * scale,
+      };
+    };
+    const allPoints = routes.flat();
+    let zoom = 16;
+    for (let candidate = 17; candidate >= 3; candidate -= 1) {
+      const candidatePoints = allPoints.map((point) => project(point, candidate));
+      const xs = candidatePoints.map((point) => point.x);
+      const ys = candidatePoints.map((point) => point.y);
+      if (Math.max(...xs) - Math.min(...xs) <= width - padding * 2 && Math.max(...ys) - Math.min(...ys) <= height - padding * 2) {
+        zoom = candidate;
+        break;
+      }
+    }
+    const projected = allPoints.map((point) => project(point, zoom));
+    const xs = projected.map((point) => point.x);
+    const ys = projected.map((point) => point.y);
+    const center = { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 };
+    const left = center.x - width / 2;
+    const top = center.y - height / 2;
+    const scale = 2 ** zoom;
+    const firstTileX = Math.floor(left / 256);
+    const lastTileX = Math.floor((left + width) / 256);
+    const firstTileY = Math.floor(top / 256);
+    const lastTileY = Math.floor((top + height) / 256);
+    const tiles = [];
+    for (let tileY = firstTileY; tileY <= lastTileY; tileY += 1) {
+      if (tileY < 0 || tileY >= scale) continue;
+      for (let tileX = firstTileX; tileX <= lastTileX; tileX += 1) {
+        const wrappedX = ((tileX % scale) + scale) % scale;
+        tiles.push(`<image href="https://tile.openstreetmap.org/${zoom}/${wrappedX}/${tileY}.png" x="${tileX * 256 - left}" y="${tileY * 256 - top}" width="256" height="256"></image>`);
+      }
+    }
+    const lines = routes.map((route, index) => {
+      const points = route.map((point) => {
+        const value = project(point, zoom);
+        return `${(value.x - left).toFixed(1)},${(value.y - top).toFixed(1)}`;
+      }).join(" ");
+      const start = project(route[0], zoom);
+      const end = project(route.at(-1), zoom);
+      return `<polyline class="trip-route-line route-${index % 4}" points="${points}"></polyline><circle class="trip-route-point start" cx="${(start.x - left).toFixed(1)}" cy="${(start.y - top).toFixed(1)}" r="8"></circle><circle class="trip-route-point end" cx="${(end.x - left).toFixed(1)}" cy="${(end.y - top).toFixed(1)}" r="8"></circle>`;
+    }).join("");
+    const pointCount = routes.reduce((sum, route) => sum + route.length, 0);
+    return `<section class="trip-route-map" aria-label="Approximate routes"><div class="trip-route-map-heading"><div><span>Route overview</span><strong>Available Kia location points</strong></div><small>${pointCount} points</small></div><div class="trip-route-map-canvas"><svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Approximate trip route">${tiles.join("")}<g>${lines}</g></svg><span class="trip-route-quality">Approximate route</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a></div></section>`;
+  }
+
   _renderTripCards(trips) {
-    return `<div class="location-trip-list">${trips.map((trip) => {
+    const rows = trips.map((trip) => {
       const battery = trip.startBattery !== null && trip.endBattery !== null ? `${trip.startBattery.toFixed(1)}% → ${trip.endBattery.toFixed(1)}%` : "--";
       const distance = trip.distance !== null ? `${trip.distance.toFixed(1)} km` : "--";
       const energy = trip.usedEnergy !== null ? `${trip.usedEnergy.toFixed(1)} kWh` : "--";
       const consumption = trip.consumption !== null ? `${trip.consumption.toFixed(1)} kWh/100 km` : "--";
       const speed = trip.averageSpeed !== null ? `${trip.averageSpeed.toFixed(0)} km/h` : "--";
-      return `<article class="location-trip-item">
-        <div class="location-trip-route"><span>${this._safe(this._formatHistoryDay(this._dateKey(trip.start)))}</span><h3>${this._safe(trip.origin)} <ha-icon icon="mdi:arrow-right"></ha-icon> ${this._safe(trip.destination)}</h3><small>${this._safe(this._formatHistoryTime(trip.start))}–${this._safe(this._formatHistoryTime(trip.end))}</small></div>
-        <div class="location-trip-metrics"><span><small>Distance</small><strong>${this._safe(distance)}</strong></span><span><small>Duration</small><strong>${this._safe(this._formatTripDuration(trip.durationMinutes))}</strong></span><span><small>Battery</small><strong>${this._safe(battery)}</strong></span><span><small>Energy used</small><strong>${this._safe(energy)}</strong></span><span><small>Consumption</small><strong>${this._safe(consumption)}</strong></span><span><small>Average speed</small><strong>${this._safe(speed)}</strong></span></div>
-      </article>`;
-    }).join("")}</div>`;
+      const odometer = trip.endOdometer !== null ? `${trip.endOdometer.toFixed(1)} km` : "--";
+      const breakdown = [["Drive", trip.driveEnergy], ["Climate", trip.climateEnergy], ["Electronics", trip.electronicsEnergy], ["Battery care", trip.batteryCareEnergy], ["Recovered", trip.regeneratedEnergy]].filter(([, value]) => value !== null);
+      return `<details class="location-trip-row"><summary><span class="trip-cell trip-start"><small>${this._safe(this._formatHistoryDay(this._dateKey(trip.start)))}</small><strong>${this._safe(this._formatHistoryTime(trip.start))}</strong></span><span class="trip-cell"><small>End</small><strong>${this._safe(this._formatHistoryTime(trip.end))}</strong></span><span class="trip-cell"><small>Duration</small><strong>${this._safe(this._formatTripDuration(trip.durationMinutes))}</strong></span><span class="trip-cell"><small>Distance</small><strong>${this._safe(distance)}</strong></span><span class="trip-cell"><small>Used</small><strong>${this._safe(energy)}</strong></span><span class="trip-cell"><small>Consumption</small><strong>${this._safe(consumption)}</strong></span><span class="trip-cell"><small>Average speed</small><strong>${this._safe(speed)}</strong></span><span class="trip-cell trip-odometer"><small>Odometer</small><strong>${this._safe(odometer)}</strong></span><ha-icon icon="mdi:chevron-down"></ha-icon></summary><div class="location-trip-detail"><div class="location-trip-route"><span>Route</span><h3>${this._safe(trip.origin)} <ha-icon icon="mdi:arrow-right"></ha-icon> ${this._safe(trip.destination)}</h3><small>${this._safe(battery)}</small></div>${breakdown.length ? `<div class="trip-energy-breakdown">${breakdown.map(([label, value]) => `<span><small>${label}</small><strong>${value.toFixed(2)} kWh</strong></span>`).join("")}</div>` : `<p>Detailed energy breakdown is available for newly recorded trips.</p>`}</div></details>`;
+    }).join("");
+    return `<div class="location-trip-table"><div class="location-trip-table-head"><span>Start</span><span>End</span><span>Duration</span><span>Distance</span><span>Used</span><span>Consumption</span><span>Average speed</span><span>Odometer</span><span></span></div>${rows}</div>`;
   }
 
   _renderTripCalendar() {
@@ -1651,7 +1750,7 @@ class KiaDashboardCard extends HTMLElement {
     } else if (!selectedTrips.length) {
       content = `<div class="location-history-empty"><ha-icon icon="mdi:calendar-blank-outline"></ha-icon><div><strong>${isDay ? "No stored trips for this day" : "No stored trips found"}</strong><span>${isDay ? "Choose another date or switch to Overview." : "New trips appear after the Home Assistant trip package records a completed drive."}</span></div></div>`;
     } else {
-      content = `${this._renderTripSummary(selectedTrips, isDay ? "Selected day" : "All calendar history")}${this._renderTripCards(shownTrips)}${selectedTrips.length > shownTrips.length ? `<p class="location-history-limit">Showing the latest ${shownTrips.length} of ${selectedTrips.length} trips. Increase trip_calendar_limit to show more.</p>` : ""}`;
+      content = `${this._renderTripSummary(selectedTrips, isDay ? "Selected day" : "All calendar history")}${this._renderTripRouteMap(shownTrips)}${this._renderTripCards(shownTrips)}${selectedTrips.length > shownTrips.length ? `<p class="location-history-limit">Showing the latest ${shownTrips.length} of ${selectedTrips.length} trips. Increase trip_calendar_limit to show more.</p>` : ""}`;
     }
     return `<section class="location-history-section location-history card">
       <div class="location-history-top"><div class="location-history-heading"><ha-icon icon="mdi:calendar-road"></ha-icon><div><span>Persistent calendar</span><h2>Stored trip history</h2><p>Trips are stored locally in Home Assistant and remain available beyond Recorder retention.</p></div></div><button class="trip-calendar-refresh" data-trip-refresh aria-label="Refresh calendar"><ha-icon icon="mdi:refresh"></ha-icon></button></div>
@@ -1861,8 +1960,9 @@ class KiaDashboardCard extends HTMLElement {
       .trip-view-toggle{width:min(360px,100%);margin:18px 0 0;display:grid;grid-template-columns:1fr 1fr;padding:4px;border:1px solid var(--kia-line);border-radius:10px;background:var(--kia-recessed)}.trip-view-toggle button{min-height:40px;border:0;border-radius:7px;background:transparent;color:var(--kia-text);font-weight:800;cursor:pointer}.trip-view-toggle button.active{background:color-mix(in srgb,var(--blue) 14%,var(--kia-control));color:var(--blue);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--blue) 55%,transparent)}
       .trip-calendar{max-width:720px;margin-top:18px;padding:14px;border:1px solid var(--kia-line);border-radius:10px;background:var(--kia-recessed)}.trip-calendar-toolbar{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;gap:10px}.trip-calendar-toolbar strong{text-align:center;text-transform:capitalize}.trip-calendar-toolbar button{height:38px;display:grid;place-items:center}.trip-calendar-weekdays,.trip-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.trip-calendar-weekdays{margin-top:12px}.trip-calendar-weekdays span{text-align:center;color:var(--kia-muted);font-size:11px;font-weight:800;text-transform:uppercase}.trip-calendar-grid{margin-top:7px}.trip-calendar-grid button{position:relative;min-height:52px;padding:6px;border:1px solid transparent;border-radius:8px;background:var(--kia-control);color:var(--kia-text);cursor:pointer}.trip-calendar-grid button.outside{opacity:.4}.trip-calendar-grid button.today{border-color:color-mix(in srgb,var(--blue) 45%,var(--kia-line))}.trip-calendar-grid button.selected{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 15%,var(--kia-control));color:var(--blue)}.trip-calendar-grid button small{position:absolute;right:5px;bottom:4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--blue);color:var(--kia-card);font-size:10px;line-height:18px}.trip-calendar-today{margin-top:10px;min-height:34px;padding:0 13px;font-weight:700}
       .trip-history-content{margin-top:20px}.trip-history-content>h3{font-size:16px}.location-trip-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:14px}.location-trip-summary>div{padding:12px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control)}.location-trip-summary span,.location-trip-summary strong{display:block}.location-trip-summary span{color:var(--kia-muted);font-size:11px}.location-trip-summary strong{margin-top:5px;font-size:16px}.location-history-limit{margin-top:12px;color:var(--kia-muted);font-size:12px}
+      .location-trip-summary small{display:block;margin-top:3px;color:var(--blue);font-size:10px;font-weight:700}.trip-route-map{margin-top:14px;border:1px solid var(--kia-line);border-radius:10px;overflow:hidden;background:var(--kia-control)}.trip-route-map-heading{padding:11px 13px;display:flex;align-items:center;justify-content:space-between;gap:12px}.trip-route-map-heading span,.trip-route-map-heading strong{display:block}.trip-route-map-heading span,.trip-route-map-heading small{color:var(--kia-muted);font-size:11px}.trip-route-map-heading strong{margin-top:3px;font-size:14px}.trip-route-map-canvas{position:relative;aspect-ratio:1200/430;min-height:240px;overflow:hidden;background:var(--kia-recessed)}.trip-route-map-canvas svg{display:block;width:100%;height:100%}.trip-route-line{fill:none;stroke:var(--blue);stroke-width:7;stroke-linecap:round;stroke-linejoin:round;paint-order:stroke;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}.trip-route-line.route-1{stroke:#7e57c2}.trip-route-line.route-2{stroke:#f59e0b}.trip-route-line.route-3{stroke:#ef5350}.trip-route-point{stroke:white;stroke-width:4}.trip-route-point.start{fill:var(--blue)}.trip-route-point.end{fill:#ef5350}.trip-route-quality,.trip-route-map-canvas>a{position:absolute;bottom:7px;padding:4px 7px;border-radius:5px;background:color-mix(in srgb,var(--kia-card) 88%,transparent);font-size:10px;color:var(--kia-text);z-index:2}.trip-route-quality{left:8px}.trip-route-map-canvas>a{right:8px;text-decoration:none}.location-trip-table{margin-top:14px;border:1px solid var(--kia-line);border-radius:10px;overflow-x:auto;background:var(--kia-control)}.location-trip-table-head,.location-trip-row>summary{min-width:1040px;display:grid;grid-template-columns:1.05fr .8fr .8fr .85fr .85fr 1.2fr .9fr .95fr 28px;align-items:center}.location-trip-table-head{background:var(--kia-recessed)}.location-trip-table-head>span{padding:10px 11px;font-size:11px;font-weight:800}.location-trip-row{border-top:1px solid var(--kia-line)}.location-trip-row>summary{list-style:none;cursor:pointer}.location-trip-row>summary::-webkit-details-marker{display:none}.location-trip-row>summary:hover,.location-trip-row>summary:focus-visible{background:color-mix(in srgb,var(--blue) 7%,var(--kia-control))}.location-trip-row>summary>ha-icon{color:var(--blue);transition:transform .2s}.location-trip-row[open]>summary>ha-icon{transform:rotate(180deg)}.trip-cell{min-width:0;padding:11px}.trip-cell small,.trip-cell strong{display:block}.trip-cell small{color:var(--kia-muted);font-size:10px}.trip-cell strong{margin-top:3px;font-size:12px;overflow-wrap:anywhere}.location-trip-detail{min-width:760px;padding:14px;border-top:1px solid var(--kia-line);background:var(--kia-recessed);display:grid;grid-template-columns:minmax(220px,.8fr) minmax(0,1.8fr);gap:18px}.location-trip-detail p{color:var(--kia-muted);font-size:12px}.trip-energy-breakdown{display:grid;grid-template-columns:repeat(5,minmax(100px,1fr));gap:8px}.trip-energy-breakdown>span{padding:9px 10px;border-left:2px solid color-mix(in srgb,var(--blue) 48%,var(--kia-line));background:var(--kia-control)}.trip-energy-breakdown small,.trip-energy-breakdown strong{display:block}.trip-energy-breakdown small{color:var(--kia-muted);font-size:10px}.trip-energy-breakdown strong{margin-top:4px;font-size:12px}
       @media (max-width:980px) { .location-detail { grid-template-columns:1fr 1fr; grid-template-areas:"map map" "summary summary" "parking trip" "daily daily" "history history" "back back"; } .location-detail-map { min-height:500px; } .location-period-summary,.location-trip-summary{grid-template-columns:1fr 1fr}.location-daily-table{overflow-x:auto}.location-daily-row{min-width:760px}.location-trip-item{grid-template-columns:1fr}.location-trip-metrics{grid-template-columns:repeat(3,minmax(0,1fr))} }
-      @media (max-width:640px) { .location-detail { grid-template-columns:1fr; grid-template-areas:"map" "summary" "parking" "trip" "daily" "history" "back"; } .location-detail-map { min-height:0; padding:16px; grid-template-rows:auto minmax(300px,52vh) auto; } .location-detail-summary,.location-context-card,.location-history-section { padding:18px; } .location-stat-grid,.location-trip-stats,.location-period-summary,.location-trip-summary { grid-template-columns:1fr; } .location-trip-metrics{grid-template-columns:1fr 1fr}.location-trip-item{padding:14px}.trip-calendar{padding:10px}.trip-calendar-grid button{min-height:44px;padding:4px}.trip-calendar-grid button small{right:3px;bottom:3px}.location-history-top{gap:8px} }
+      @media (max-width:640px) { .location-detail { grid-template-columns:1fr; grid-template-areas:"map" "summary" "parking" "trip" "daily" "history" "back"; } .location-detail-map { min-height:0; padding:16px; grid-template-rows:auto minmax(300px,52vh) auto; } .location-detail-summary,.location-context-card,.location-history-section { padding:18px; } .location-stat-grid,.location-trip-stats,.location-period-summary,.location-trip-summary { grid-template-columns:1fr; } .location-trip-metrics{grid-template-columns:1fr 1fr}.location-trip-item{padding:14px}.trip-calendar{padding:10px}.trip-calendar-grid button{min-height:44px;padding:4px}.trip-calendar-grid button small{right:3px;bottom:3px}.location-history-top{gap:8px}.trip-route-map-canvas{min-height:210px}.location-trip-detail{grid-template-columns:1fr}.trip-energy-breakdown{grid-template-columns:1fr 1fr} }
     `;
   }
 

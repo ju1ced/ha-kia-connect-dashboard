@@ -631,7 +631,7 @@ async function run() {
       end: { dateTime: "2026-08-06T08:40:00+02:00" },
       location: "Work",
       description: JSON.stringify({
-        schema: "kia_trip_v1",
+        schema: "kia_trip_v2",
         trip_id: "kia-1785996600",
         origin: "Home",
         destination: "Work",
@@ -642,6 +642,20 @@ async function run() {
         energy_kwh: 5,
         consumption_kwh_100km: 40.3,
         average_speed_kmh: 24.8,
+        origin_coordinates: "50.83683,3.41416",
+        destination_coordinates: "51.07469,3.73395",
+        route_points: [
+          "50.83683,3.41416",
+          "50.98780,3.70164",
+          "51.07469,3.73395",
+        ],
+        odometer_start: 6329,
+        odometer_end: 6341.4,
+        drive_energy_kwh: 4.4,
+        climate_energy_kwh: 0.2,
+        electronics_energy_kwh: 0.1,
+        battery_care_energy_kwh: 0,
+        regenerated_energy_kwh: 1.3,
       }),
     },
     {
@@ -674,6 +688,22 @@ async function run() {
   assert.equal(card._calendarTrips.length, 1);
   assert.equal(card._calendarTrips[0].id, "kia-1785996600");
   assert.equal(card._calendarTrips[0].distance, 12.4);
+  assert.equal(card._calendarTrips[0].endOdometer, 6341.4);
+  assert.equal(card._calendarTrips[0].routePoints.length, 3);
+  assert.equal(card._calendarTrips[0].regeneratedEnergy, 1.3);
+  const legacyTrip = card._calendarTrip({
+    ...calendarEvents[0],
+    description: JSON.stringify({
+      schema: "kia_trip_v1",
+      trip_id: "legacy-trip",
+      origin_coordinates: "50.8,3.4",
+      destination_coordinates: "50.9,3.5",
+      distance_km: 10,
+      energy_kwh: 2,
+    }),
+  });
+  assert.equal(legacyTrip.id, "legacy-trip");
+  assert.equal(legacyTrip.routePoints.length, 2);
   const calendarDayView = card._renderLocationTripHistory();
   assert.match(calendarDayView, /Persistent calendar/);
   assert.match(calendarDayView, /Stored trip history/);
@@ -681,6 +711,11 @@ async function run() {
   assert.match(calendarDayView, /data-trip-date="2026-08-06"/);
   assert.match(calendarDayView, /Home/);
   assert.match(calendarDayView, /Work/);
+  assert.match(calendarDayView, /Approximate routes/);
+  assert.match(calendarDayView, /OpenStreetMap/);
+  assert.match(calendarDayView, /location-trip-table/);
+  assert.match(calendarDayView, /6341\.4 km/);
+  assert.match(calendarDayView, /1\.30 kWh/);
   assert.doesNotMatch(calendarDayView, /<span>Recorder analysis<\/span>/);
   card._tripViewMode = "overview";
   const calendarOverview = card._renderLocationTripHistory();

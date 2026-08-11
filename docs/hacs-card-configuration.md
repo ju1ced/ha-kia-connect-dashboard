@@ -211,8 +211,10 @@ list defaults to 250 and is capped at 1000, while its period summary still uses
 all returned events. Recorder reconstruction remains the fallback when
 `trip_calendar` is omitted.
 
-The card only accepts calendar events whose JSON description has schema
-`kia_trip_v1`, so unrelated calendar appointments are ignored. Install the
+The card accepts versioned `kia_trip_v1` and `kia_trip_v2` JSON descriptions, so
+unrelated calendar appointments are ignored. Version 2 adds a route map,
+odometer values, regeneration, and per-system energy details while preserving
+older trips. Install the
 companion package from
 `examples/home-assistant-packages/trip_calendar.yaml` to create those events.
 The package setup and required source-entity replacements are documented in the
