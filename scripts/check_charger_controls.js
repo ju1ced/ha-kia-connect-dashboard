@@ -317,6 +317,17 @@ async function run() {
   delete card._config.entities.dashboard_version;
 
   const energy = card._renderEnergyTab({});
+  assert.match(energy, /class="energy-section vehicle-energy card"/);
+  assert.match(energy, /class="energy-section charger-flow card"/);
+  const energyStyles = card._energyTabStyles();
+  assert.match(
+    energyStyles,
+    /\.vehicle-energy,\.charger-flow\{grid-column:1\/-1\}/,
+  );
+  assert.match(
+    energyStyles,
+    /\.vehicle-energy \.energy-stats,\.charger-flow \.energy-stats\.compact\{grid-template-columns:repeat\(4,minmax\(0,1fr\)\)\}/,
+  );
   assert.match(energy, /Paused by charger/);
   assert.match(energy, /Today/);
   assert.match(energy, /Energy price/);
