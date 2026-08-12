@@ -59,6 +59,17 @@ for field in (
         errors.append(f"calendar JSON is missing {field}")
 if "  - id: kia_trip_calendar_capture_route" not in content:
     errors.append("route point capture automation is missing")
+for helper in range(2, 7):
+    if f"kia_trip_route_points_{helper}:" not in content:
+        errors.append(f"route helper segment {helper} is missing")
+if (
+    "is_state('input_boolean.kia_trip_use_driver_tracker', 'on')" not in content
+    or "device_tracker.your_driver_phone" not in content
+    or "minutes: \"/1\"" not in content
+):
+    errors.append("driver-phone route sampling must be opt-in and sampled once per minute")
+if "'route_source': 'phone' if use_phone else 'kia'" not in store:
+    errors.append("calendar JSON must identify the route source")
 if "  - id: kia_trip_calendar_detailed_sampling" not in content:
     errors.append("optional detailed sampling automation is missing")
 if (

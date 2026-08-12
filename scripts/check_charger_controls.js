@@ -680,6 +680,7 @@ async function run() {
         average_speed_kmh: 24.8,
         origin_coordinates: "50.83683,3.41416",
         destination_coordinates: "51.07469,3.73395",
+        route_source: "phone",
         route_points: [
           "50.83683,3.41416",
           "50.98780,3.70164",
@@ -713,7 +714,9 @@ async function run() {
   card._tripCalendarState = "idle";
   card._tripCalendarRequestKey = "";
   let calendarRequest = null;
+  let calendarRequestCount = 0;
   card._hass.callApi = async (method, path) => {
+    calendarRequestCount += 1;
     calendarRequest = { method, path };
     return calendarEvents;
   };
@@ -726,6 +729,7 @@ async function run() {
   assert.equal(card._calendarTrips[0].distance, 12.4);
   assert.equal(card._calendarTrips[0].endOdometer, 6341.4);
   assert.equal(card._calendarTrips[0].routePoints.length, 3);
+  assert.equal(card._calendarTrips[0].routeSource, "phone");
   assert.equal(card._calendarTrips[0].regeneratedEnergy, 1.3);
   const legacyTrip = card._calendarTrip({
     ...calendarEvents[0],
@@ -748,11 +752,16 @@ async function run() {
   assert.match(calendarDayView, /Home/);
   assert.match(calendarDayView, /Work/);
   assert.match(calendarDayView, /Approximate routes/);
+  assert.match(calendarDayView, /trip-calendar-layout/);
+  assert.match(calendarDayView, /Phone-assisted route points/);
   assert.match(calendarDayView, /OpenStreetMap/);
   assert.match(calendarDayView, /location-trip-table/);
   assert.match(calendarDayView, /6341\.4 km/);
   assert.match(calendarDayView, /1\.30 kWh/);
   assert.doesNotMatch(calendarDayView, /<span>Recorder analysis<\/span>/);
+  card._tripCalendarRequestKey = "";
+  await card._loadTripCalendar();
+  assert.equal(calendarRequestCount, 1, "the visible month should be served from the calendar cache");
   card._tripViewMode = "overview";
   const calendarOverview = card._renderLocationTripHistory();
   assert.match(calendarOverview, /All calendar history/);

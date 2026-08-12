@@ -234,7 +234,10 @@ trip_calendar_limit: 250
 
 With this mapping, Location uses the calendar as its primary trip source and
 shows a monthly date picker with `Day` and `Overview` modes. `Day` fetches only
-the visible month. `Overview` requests events from `trip_calendar_start`; when
+the visible month and places its route preview beside the calendar on wide
+screens. Previously loaded calendar ranges are kept in a small in-memory cache,
+so returning to a month or switching views does not repeat the same API request.
+`Overview` requests events from `trip_calendar_start`; when
 that option is omitted, the card uses January 1 ten years ago. The rendered trip
 list defaults to 250 and is capped at 1000, while its period summary still uses
 all returned events. Recorder reconstruction remains the fallback when
@@ -248,6 +251,11 @@ companion package from
 `examples/home-assistant-packages/trip_calendar.yaml` to create those events.
 The package setup and required source-entity replacements are documented in the
 adjacent package README.
+
+The package can optionally sample a designated driver phone once per minute
+during an engine-confirmed trip. This produces a much closer breadcrumb route
+than the relatively sparse Kia tracker without sending coordinates to a route
+service. It does not perform road snapping.
 
 ## Optional Settings Entities
 
