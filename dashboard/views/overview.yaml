@@ -51,5 +51,6 @@ cards:
       charger_energy_today: charger.energy_today
       charger_energy_week: charger.energy_week
       charger_energy_month: charger.energy_month
+      charger_energy_year: charger.energy_year
       charger_session_cost: charger.session_cost
       charger_cost_month: charger.cost_month

@@ -377,7 +377,7 @@ the card observed before Pause.
 
 The latest-session card also reads compatible timestamp and tariff attributes
 from `charger_session_energy`. Optional `charger_energy_today`,
-`charger_energy_week`, `charger_energy_month`, `charger_energy_price`,
+`charger_energy_week`, `charger_energy_month`, `charger_energy_year`, `charger_energy_price`,
 `charger_session_cost`, and `charger_cost_month` mappings can point to Home
 Assistant utility meters, tariff sensors, or template sensors for persistent
 historical totals.
@@ -398,12 +398,18 @@ entities:
   charger_energy_today: sensor.kia_charger_energy_today
   charger_energy_week: sensor.kia_charger_energy_week
   charger_energy_month: sensor.kia_charger_energy_month
+  charger_energy_year: sensor.kia_charger_energy_year
   charger_energy_price: input_number.kia_charger_energy_price
   charger_cost_month: sensor.kia_charger_cost_this_month
 ```
 
 The Energy tab renders whichever history helpers are available. Missing optional
-periods no longer create empty cards.
+periods no longer create empty cards. When `charger_total_energy` exposes
+long-term statistics (`state_class: total` or `total_increasing`), the card also
+loads 30, 90, or 365 days of daily energy directly from Home Assistant Recorder;
+no additional helper is required. Set `charger_history_min_kwh` on the card to
+change the default `0.2` kWh threshold that separates charging days from standby
+consumption.
 
 ## Theme Behavior
 

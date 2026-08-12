@@ -32,6 +32,12 @@ utility_meter:
     cycle: monthly
     periodically_resetting: false
     always_available: true
+  kia_charger_energy_year:
+    name: Kia charger energy this year
+    source: sensor.your_charger_total_energy
+    cycle: yearly
+    periodically_resetting: false
+    always_available: true
 
 template:
   - sensor:

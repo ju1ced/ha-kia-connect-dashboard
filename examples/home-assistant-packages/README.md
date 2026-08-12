@@ -27,6 +27,7 @@ loaded by the Lovelace card itself.
      charger_energy_today: sensor.kia_charger_energy_today
      charger_energy_week: sensor.kia_charger_energy_week
      charger_energy_month: sensor.kia_charger_energy_month
+     charger_energy_year: sensor.kia_charger_energy_year
      charger_energy_price: input_number.kia_charger_energy_price
      charger_cost_month: sensor.kia_charger_cost_this_month
    ```
