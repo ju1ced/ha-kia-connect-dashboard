@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.15.0 - 2026-08-12
+
+- Added permanent charging-history analysis based on Home Assistant long-term
+  statistics, with selectable 30, 90, and 365-day periods.
+- Added charging totals, charging-day averages, estimated costs, a daily chart,
+  and an expandable table while filtering configurable standby consumption.
+- Added optional yearly charging-energy helpers and documentation for the new
+  history configuration.
+
 ## 2.14.0 - 2026-08-12
 
 - Added automatic per-trip route-source selection between two driver phones,
