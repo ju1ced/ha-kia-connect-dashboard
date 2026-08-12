@@ -15,7 +15,7 @@ are available in the current stable release.
 - Vehicle openings, tire status, Smart Key warning, and cover-based window
   controls.
 - Home charger status, Smappee strategy controls, Pause/Resume mode retention,
-  energy context, history helpers, and tariff estimates.
+  energy context, permanent 30/90/365-day statistics, and tariff estimates.
 - Seat comfort, rear-window heating, and departure schedule context.
 - Daily driving distance, efficiency, regeneration summaries, and 14-day
   consumption and regeneration charts.
@@ -27,8 +27,10 @@ are available in the current stable release.
   dynamic Overview connection status and configurable freshness thresholds.
 - CI-enforced dashboard, changelog, and release-tag version consistency.
 - Confirmation and feedback patterns for enabled remote actions.
+- Opt-in lock and unlock controls with confirmation and returned-state
+  verification.
 
-## Next: Validate persistent trip data
+## Parked: Validate persistent trip data
 
 - Validate Recorder-derived trips against real journeys and tune segmentation
   for missed or delayed Kia updates.
@@ -36,11 +38,19 @@ are available in the current stable release.
   recovery against real journeys.
 - Consider one-time import of recent Recorder trips into the persistent calendar.
 - Keep TRONITY research as an optional provider path rather than a dependency.
-- Add further long-term statistics where reliable entities are available.
+- This work is intentionally parked while Energy, vehicle actions,
+  documentation, and maintenance are completed.
+
+## Next: Validate charging history
+
+- Compare daily Home Assistant statistic changes with real Smappee sessions.
+- Validate the standby threshold and tariff estimates over 30, 90, and 365-day
+  views as more long-term data accumulates.
+- Keep the current total-increasing sensor as the permanent source of truth.
 
 ## Next: Safe vehicle actions
 
-- Review lock and unlock actions with confirmations and command-result feedback.
+- Validate the reviewed lock and unlock controls against real Kia responses.
 - Review supported light, trunk, hood, and charge-port actions individually.
 - Keep unsupported or insufficiently observable actions read-only.
 
@@ -56,6 +66,6 @@ are available in the current stable release.
 
 - Keep the built-in card version, changelog, release tag, and HACS metadata in
   sync.
-- Retire or clearly label legacy YAML paths as the custom card becomes the main
-  supported experience.
+- Keep legacy modular YAML as a reference and repository validation fixture;
+  support production installations through the HACS custom card.
 - Keep planning documents aligned with shipped releases and verified entities.

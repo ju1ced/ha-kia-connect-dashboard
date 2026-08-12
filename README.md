@@ -12,12 +12,12 @@ open-source Hyundai/Kia dashboard for Home Assistant users.
 The current stable HACS card provides responsive Overview, Battery, Vehicle,
 Climate, Energy, Location, and Settings views. It supports Dutch and English,
 battery diagnostics, cover-based window controls, generic home charger mappings,
-Smappee strategy controls, charging history helpers, tariff estimates, and
+Smappee strategy controls, permanent charging statistics, tariff estimates, and
 repository-side validation tools. Climate comfort controls, daily driving
 analytics, regeneration history, Recorder-derived trips, and optional Local
-Calendar trip persistence are also available. GPS route breadcrumbs, reviewed
-medium-risk vehicle actions, and complete screenshot documentation remain
-planned.
+Calendar trip persistence are also available. Reviewed opt-in lock controls use
+confirmation and returned-state verification. Broader vehicle actions and
+complete screenshot documentation remain planned.
 
 ## Mission
 
@@ -37,8 +37,8 @@ The dashboard architecture is intentionally vehicle-agnostic.
 - HACS users configure entities directly on `custom:kia-dashboard-card`.
 - Repository-side YAML renders use example mappings only.
 - The HACS custom card owns the primary production dashboard experience.
-- The repository-side modular YAML flow remains available for rendering and
-  architecture validation while its long-term support scope is reviewed.
+- The repository-side modular YAML flow is a reference and validation fixture;
+  the HACS custom card is the supported production installation path.
 - Production-quality documentation and validation.
 
 ## HACS Card Usage
@@ -67,6 +67,9 @@ entities:
 ```
 
 See `docs/hacs-card-configuration.md` for the complete card configuration.
+An anonymized complete example is available at
+`examples/hacs-reference-card.yaml`; common problems are covered in
+`docs/troubleshooting.md`.
 
 ## First Home Assistant Test
 
@@ -103,10 +106,10 @@ Reference renders are available in `docs/screenshots/` and documented in
 
 ## Planned Work
 
-- Optional GPS route breadcrumbs beyond the stored start/end trip context.
-- Additional long-term energy statistics.
-- Reviewed lock, light, and other medium-risk vehicle actions.
-- Installation, customization, troubleshooting, FAQ, and current screenshots.
+- Real-journey validation of persistent trip capture is parked temporarily.
+- Practical validation of long-term charging history and cost estimates.
+- Review of charge-port and hazard-light actions when reliable feedback exists.
+- Current screenshots and responsive visual QA across supported themes.
 
 See `ROADMAP.md` and `TASKS.md` for the maintained project plan.
 

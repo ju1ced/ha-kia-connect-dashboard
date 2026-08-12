@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added opt-in Vehicle lock and unlock controls with explicit confirmation,
+  returned-state verification, timeout feedback, and unavailable-state guards.
+- Documented live Smappee charging-statistics validation, published an
+  anonymized reference card configuration, and added troubleshooting guidance.
+- Parked real-journey trip validation, designated the HACS card as the supported
+  production path, and retained modular YAML as a reference/validation fixture.
+
 ## 2.15.0 - 2026-08-12
 
 - Added permanent charging-history analysis based on Home Assistant long-term

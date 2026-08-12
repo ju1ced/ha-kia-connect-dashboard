@@ -40,6 +40,7 @@ const calls = [];
 card._config = {
   charger_controls: true,
   charger_resume_via_mode: true,
+  vehicle_controls: true,
   entities: {
     charger_mode: "select.home_charger_mode",
     charger_pause: "button.home_charger_pause",
@@ -101,8 +102,13 @@ card._hass = {
       attributes: { unit_of_measurement: "kWh" },
     },
   },
-  callService: async (domain, service, data) =>
-    calls.push({ domain, service, data }),
+  callService: async (domain, service, data) => {
+    calls.push({ domain, service, data });
+    if (domain === "lock" && card._hass.states[data.entity_id]) {
+      card._hass.states[data.entity_id].state =
+        service === "lock" ? "locked" : "unlocked";
+    }
+  },
 };
 
 async function run() {
@@ -318,6 +324,44 @@ async function run() {
   assert.match(vehicle, /<b>Normal<\/b>/);
   assert.match(vehicle, /<b>Attention<\/b>/);
   assert.match(vehicle, /<b>Off<\/b>/);
+  assert.match(vehicle, /data-action="lock_vehicle" disabled/);
+  assert.match(vehicle, /data-action="unlock_vehicle"/);
+  assert.match(vehicle, /verify the returned lock state/);
+
+  card._hass.states["lock.vehicle"].state = "unlocked";
+  await card._setVehicleLock(true);
+  assert.deepEqual(calls.shift(), {
+    domain: "lock",
+    service: "lock",
+    data: { entity_id: "lock.vehicle" },
+  });
+  assert.equal(card._notice, "Vehicle locked successfully");
+  await card._setVehicleLock(false);
+  assert.deepEqual(calls.shift(), {
+    domain: "lock",
+    service: "unlock",
+    data: { entity_id: "lock.vehicle" },
+  });
+  assert.equal(card._notice, "Vehicle unlocked successfully");
+
+  card._config.vehicle_controls = false;
+  const readOnlyVehicle = card._renderVehicleTab();
+  assert.match(readOnlyVehicle, /data-action="lock_vehicle" disabled/);
+  assert.match(readOnlyVehicle, /data-action="unlock_vehicle" disabled/);
+  assert.match(readOnlyVehicle, /Set vehicle_controls: true/);
+  card._config.vehicle_controls = true;
+  card._hass.states["lock.vehicle"].state = "unavailable";
+  const unavailableLockVehicle = card._renderVehicleTab();
+  assert.match(unavailableLockVehicle, /data-action="lock_vehicle" disabled/);
+  assert.match(unavailableLockVehicle, /data-action="unlock_vehicle" disabled/);
+  const callsBeforeUnavailableLock = calls.length;
+  await card._setVehicleLock(true);
+  assert.equal(calls.length, callsBeforeUnavailableLock);
+  assert.equal(
+    card._notice,
+    "Vehicle lock status is unavailable; command not sent.",
+  );
+  card._hass.states["lock.vehicle"].state = "locked";
 
   card._config.entities.dashboard_version = "update.dashboard";
   card._hass.states["update.dashboard"] = {

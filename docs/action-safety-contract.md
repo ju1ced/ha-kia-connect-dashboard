@@ -2,10 +2,10 @@
 
 ## Purpose
 
-Remote vehicle actions must be reviewed before they are enabled. The dashboard
-currently keeps medium-risk and high-risk action buttons inert with
-`action: none`; this contract defines what must be true before refresh, climate,
-charging, lock, or maintenance actions become active.
+Remote vehicle actions must be reviewed before they are enabled. The HACS card
+supports reviewed climate, charging, window, and opt-in lock paths; unreviewed
+actions remain inert or read-only. This contract defines what must be true
+before refresh, climate, charging, lock, or maintenance actions become active.
 
 ## Action Classes
 
@@ -67,6 +67,14 @@ Expected behavior:
 - No high-risk action on Overview quick actions by default.
 - Prefer detail-page placement with surrounding status context.
 
+Reviewed high-risk binding:
+
+- The HACS card accepts `vehicle_controls: true` only with a mapped `lock.*`
+  entity.
+- Lock and unlock remain on Vehicle, never on Overview.
+- The service result alone is not treated as success; the card waits for the
+  lock entity to report `locked` or `unlocked` and reports a timeout otherwise.
+
 ## Template Rules
 
 - Use `kia_mapped_perform_action_button` only for low-risk mapped button entities
@@ -90,7 +98,6 @@ Expected behavior:
 
 ## Follow-up Work
 
-- Choose the Home Assistant confirmation pattern for medium-risk actions.
-- Decide whether medium-risk service calls should target scripts, buttons, or
-  integration services directly.
-- Test climate and charging feedback behavior before enabling real commands.
+- Validate actual Kia lock-command timing with browser confirmation enabled.
+- Keep charge-port, hazard-light, trunk, and hood controls read-only until each
+  command has an observable result and a documented failure path.

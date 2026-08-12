@@ -449,6 +449,25 @@ type: custom:kia-dashboard-card
 confirm_actions: false
 ```
 
+### Vehicle lock controls
+
+Lock and unlock are disabled by default even when `door_lock` is mapped. Enable
+the reviewed controls explicitly:
+
+```yaml
+type: custom:kia-dashboard-card
+vehicle_controls: true
+vehicle_action_timeout: 90000
+entities:
+  door_lock: lock.your_vehicle_door_lock
+```
+
+The buttons only render as active for a `lock.*` entity. Each command asks for
+confirmation and waits until Home Assistant reports `locked` or `unlocked`.
+Disabling `confirm_actions` is not recommended for access controls. Trunk, hood,
+headlamp, hazard-light, and charge-port actions remain read-only until their
+result can be verified reliably.
+
 ## Charge Limit Sliders
 
 When `charging_limit` or `dc_charging_limit` points to a `number.*` entity, the

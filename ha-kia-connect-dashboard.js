@@ -405,6 +405,22 @@ const KIA_DASHBOARD_NL = {
   "Close rear left window?": "Raam linksachter sluiten?",
   "Open rear right window?": "Raam rechtsachter openen?",
   "Close rear right window?": "Raam rechtsachter sluiten?",
+  "Lock the vehicle now?": "Voertuig nu vergrendelen?",
+  "Unlock the vehicle now?": "Voertuig nu ontgrendelen?",
+  "Lock vehicle": "Voertuig vergrendelen",
+  "Unlock vehicle": "Voertuig ontgrendelen",
+  "Lock command sent; waiting for vehicle status.": "Vergrendelopdracht verzonden; wachten op voertuigstatus.",
+  "Unlock command sent; waiting for vehicle status.": "Ontgrendelopdracht verzonden; wachten op voertuigstatus.",
+  "Vehicle locked successfully": "Voertuig succesvol vergrendeld",
+  "Vehicle unlocked successfully": "Voertuig succesvol ontgrendeld",
+  "Lock command was sent, but the vehicle did not report locked before the timeout.": "De vergrendelopdracht is verzonden, maar het voertuig meldde niet tijdig dat het vergrendeld was.",
+  "Unlock command was sent, but the vehicle did not report unlocked before the timeout.": "De ontgrendelopdracht is verzonden, maar het voertuig meldde niet tijdig dat het ontgrendeld was.",
+  "Vehicle is already locked": "Voertuig is al vergrendeld",
+  "Vehicle is already unlocked": "Voertuig is al ontgrendeld",
+  "Vehicle lock status is unavailable; command not sent.": "De vergrendelstatus van het voertuig is niet beschikbaar; opdracht niet verzonden.",
+  "Vehicle lock controls are not enabled or not mapped to a lock entity.": "De vergrendelbediening is niet ingeschakeld of niet aan een lock-entiteit toegewezen.",
+  "Remote lock controls require confirmation and verify the returned lock state. Other remote vehicle actions remain read-only.": "Vergrendeling op afstand vraagt bevestiging en controleert de teruggekoppelde status. Andere voertuigacties op afstand blijven alleen-lezen.",
+  "Set vehicle_controls: true to enable reviewed lock controls. Other remote vehicle actions remain read-only.": "Stel vehicle_controls: true in om de gecontroleerde vergrendelbediening te activeren. Andere voertuigacties op afstand blijven alleen-lezen.",
   "Driving history": "Rijgeschiedenis",
   "Daily driving data": "Dagelijkse rijgegevens",
   "Official Kia totals for the latest": "Officiële Kia-totalen voor de laatste",
@@ -1324,6 +1340,57 @@ class KiaDashboardCard extends HTMLElement {
     }
   }
 
+  async _waitForEntityState(entityKey, expectedState, timeoutMs = 90000) {
+    const expected = String(expectedState).toLowerCase();
+    const matches = () => String(this._obj(entityKey)?.state || "").toLowerCase() === expected;
+    if (matches()) return true;
+    const started = Date.now();
+    return new Promise((resolve) => {
+      const check = () => {
+        if (matches()) return resolve(true);
+        if (Date.now() - started >= timeoutMs) return resolve(false);
+        window.setTimeout(check, 1000);
+      };
+      window.setTimeout(check, 1000);
+    });
+  }
+
+  async _setVehicleLock(locked) {
+    const entityId = this._entity("door_lock");
+    const controlsEnabled = this._config.vehicle_controls === true || this._config.vehicle?.controls === true;
+    if (!this._hass || !controlsEnabled || !entityId?.startsWith("lock.")) {
+      this._noticeMessage("Vehicle lock controls are not enabled or not mapped to a lock entity.");
+      return;
+    }
+    const currentState = String(this._obj("door_lock")?.state || "").toLowerCase();
+    if (!["locked", "unlocked"].includes(currentState)) {
+      this._noticeMessage("Vehicle lock status is unavailable; command not sent.");
+      return;
+    }
+    if (this._locked() === locked) {
+      this._noticeMessage(locked ? "Vehicle is already locked" : "Vehicle is already unlocked");
+      return;
+    }
+    const action = locked ? "lock" : "unlock";
+    if (!this._confirm(locked ? "Lock the vehicle now?" : "Unlock the vehicle now?")) {
+      this._noticeMessage("Action cancelled");
+      return;
+    }
+    try {
+      await this._hass.callService("lock", action, { entity_id: entityId });
+      this._noticeMessage(locked ? "Lock command sent; waiting for vehicle status." : "Unlock command sent; waiting for vehicle status.");
+      const timeout = Math.max(5000, Number(this._config.vehicle_action_timeout) || 90000);
+      const confirmed = await this._waitForEntityState("door_lock", locked ? "locked" : "unlocked", timeout);
+      this._noticeMessage(confirmed
+        ? (locked ? "Vehicle locked successfully" : "Vehicle unlocked successfully")
+        : (locked
+          ? "Lock command was sent, but the vehicle did not report locked before the timeout."
+          : "Unlock command was sent, but the vehicle did not report unlocked before the timeout."));
+    } catch (error) {
+      this._noticeMessage(this._actionErrorMessage(error, entityId));
+    }
+  }
+
   async _setNumber(entityKey, value, confirmation = "") {
     const entityId = this._entity(entityKey);
     if (!entityId || !this._hass) return;
@@ -1371,6 +1438,8 @@ class KiaDashboardCard extends HTMLElement {
     if (action === "stop_climate") this._callEntity(this._entity("stop_climate") ? "stop_climate" : "climate", "turn_off", "Stop climate now?");
     if (action === "start_charging") this._callEntity("start_charging", "turn_on", "Start charging now?");
     if (action === "stop_charging") this._callEntity("stop_charging", "turn_off", "Stop charging now?");
+    if (action === "lock_vehicle") this._setVehicleLock(true);
+    if (action === "unlock_vehicle") this._setVehicleLock(false);
     if (action === "charger_start") this._callEntity("charger_start", "turn_on", "Start the home charger now?");
     if (action === "charger_pause") {
       this._rememberChargerMode();
@@ -1526,8 +1595,12 @@ class KiaDashboardCard extends HTMLElement {
     const summaryIcon = warnings.length ? "mdi:alert-outline" : missing ? "mdi:help-circle-outline" : "mdi:shield-check-outline";
     const summaryText = warnings.length ? `${warnings.length} item${warnings.length === 1 ? "" : "s"} to check${missing ? "; data incomplete" : ""}` : missing ? "Vehicle data incomplete" : "No active warnings";
     const heading = `<div class="vehicle-section-title"><ha-icon icon="mdi:car-door"></ha-icon><div><span>Perimeter</span><h2>Doors &amp; openings</h2></div></div>`;
+    const lockState = String(this._obj("door_lock")?.state || "").toLowerCase();
+    const lockStateReady = ["locked", "unlocked"].includes(lockState);
+    const lockControlsEnabled = (this._config.vehicle_controls === true || this._config.vehicle?.controls === true) && this._entity("door_lock")?.startsWith("lock.") && lockStateReady;
+    const lockControls = `<div class="vehicle-lock-actions"><button data-action="lock_vehicle" ${!lockControlsEnabled || lockState === "locked" ? "disabled" : ""}><ha-icon icon="mdi:lock"></ha-icon>Lock vehicle</button><button class="unlock" data-action="unlock_vehicle" ${!lockControlsEnabled || lockState === "unlocked" ? "disabled" : ""}><ha-icon icon="mdi:lock-open-variant"></ha-icon>Unlock vehicle</button></div>`;
     return `<main class="vehicle-detail"><header class="vehicle-page-heading card"><div><span>Vehicle detail</span><h2>Ready-state check</h2><p>Review access points, exterior lights, and tire status before departure.</p></div><div class="vehicle-page-meta"><div class="vehicle-page-status ${summaryTone}"><ha-icon icon="${summaryIcon}"></ha-icon><strong>${summaryText}</strong></div>${this._entity("vin") ? `<button class="vehicle-vin${vin.available ? "" : " unavailable"}" data-info="vin"><ha-icon icon="mdi:identifier"></ha-icon><span><small>VIN</small><strong>${this._safe(vin.value)}</strong></span></button>` : ""}</div></header><section class="vehicle-detail-grid">
-      <article class="vehicle-section card vehicle-security"><div class="vehicle-section-title"><ha-icon icon="mdi:shield-car"></ha-icon><div><span>Access</span><h2>Locks &amp; lights</h2></div></div><div class="vehicle-state-list">${tile("door_lock", "mdi:car-door-lock", "Door lock", "Vehicle security", unlocked, read("door_lock").available ? (unlocked ? "Unlocked" : "Locked") : undefined)}${tile("charge_port", "mdi:ev-plug-type2", "Charge port", "Port state", this._active("charge_port"), binaryLabel("charge_port", "Open", "Closed"))}${tile("lights", "mdi:car-light-high", "Headlights", "Exterior lights", lightsOn, binaryLabel("lights", "On", "Off"))}${this._entity("smart_key_battery_warning") ? tile("smart_key_battery_warning", "mdi:key-alert", "Smart key battery", "Key status", smartKeyWarning, smartKeyWarning ? "Replace battery" : "Normal") : ""}</div><p class="vehicle-section-note"><ha-icon icon="mdi:information-outline"></ha-icon>Remote lock and light commands remain disabled pending the action-safety review.</p></article>
+      <article class="vehicle-section card vehicle-security"><div class="vehicle-section-title"><ha-icon icon="mdi:shield-car"></ha-icon><div><span>Access</span><h2>Locks &amp; lights</h2></div></div><div class="vehicle-state-list">${tile("door_lock", "mdi:car-door-lock", "Door lock", "Vehicle security", unlocked, read("door_lock").available ? (unlocked ? "Unlocked" : "Locked") : undefined)}${tile("charge_port", "mdi:ev-plug-type2", "Charge port", "Port state", this._active("charge_port"), binaryLabel("charge_port", "Open", "Closed"))}${tile("lights", "mdi:car-light-high", "Headlights", "Exterior lights", lightsOn, binaryLabel("lights", "On", "Off"))}${this._entity("smart_key_battery_warning") ? tile("smart_key_battery_warning", "mdi:key-alert", "Smart key battery", "Key status", smartKeyWarning, smartKeyWarning ? "Replace battery" : "Normal") : ""}</div>${lockControls}<p class="vehicle-section-note"><ha-icon icon="mdi:information-outline"></ha-icon>${lockControlsEnabled ? "Remote lock controls require confirmation and verify the returned lock state. Other remote vehicle actions remain read-only." : "Set vehicle_controls: true to enable reviewed lock controls. Other remote vehicle actions remain read-only."}</p>${this._notice ? `<p class="notice">${this._safe(this._notice)}</p>` : ""}</article>
       <article class="vehicle-section card vehicle-openings">${heading}<div class="vehicle-opening-grid">${perimeterOpenings.map(([key, label, context]) => tile(key, key === "trunk" ? "mdi:car-back" : key === "hood" ? "mdi:car-cog" : "mdi:car-door", label, context, this._active(key), binaryLabel(key, "Open", "Closed"))).join("")}</div><div class="vehicle-window-grid">${windowTiles}</div></article>
       <article class="vehicle-section card vehicle-tires"><div class="vehicle-section-title"><ha-icon icon="mdi:car-tire-alert"></ha-icon><div><span>Road contact</span><h2>Tire status</h2></div></div><div class="vehicle-tire-layout"><div>${tile("tire_front_left", "mdi:tire", "Front left", "Tire pressure", this._tireStatus("tire_front_left") !== "OK", tireLabel("tire_front_left"))}${tile("tire_rear_left", "mdi:tire", "Rear left", "Tire pressure", this._tireStatus("tire_rear_left") !== "OK", tireLabel("tire_rear_left"))}</div><img src="${this._asset(this._config.images?.top || "ev6_top.png")}" alt="Top view of vehicle" onerror="this.style.display='none'"><div>${tile("tire_front_right", "mdi:tire", "Front right", "Tire pressure", this._tireStatus("tire_front_right") !== "OK", tireLabel("tire_front_right"))}${tile("tire_rear_right", "mdi:tire", "Rear right", "Tire pressure", this._tireStatus("tire_rear_right") !== "OK", tireLabel("tire_rear_right"))}</div></div></article>
       <article class="vehicle-section card vehicle-warnings"><div class="vehicle-section-title"><ha-icon icon="${warnings.length ? "mdi:alert-circle-outline" : missing ? "mdi:help-circle-outline" : "mdi:check-decagram-outline"}"></ha-icon><div><span>Summary</span><h2>${warnings.length ? "Items to review" : missing ? "Vehicle data incomplete" : "Vehicle checks normal"}</h2></div></div>${warnings.length ? `<ul>${warnings.map((warning) => `<li>${this._safe(warning)}</li>`).join("")}</ul>${missing ? `<p class="vehicle-mapping-note">Vehicle data is incomplete: ${missingKeys.length} signal${missingKeys.length === 1 ? " is" : "s are"} missing or unavailable. Check Settings for vehicle mappings.</p>` : ""}` : `<p>${missing ? `No active warnings in available data, but ${missingKeys.length} signal${missingKeys.length === 1 ? " is" : "s are"} missing or unavailable. Check Settings for vehicle mappings.` : "Locks, openings, lights, charge port, and tire pressure report normal states."}</p>`}</article>
@@ -2179,11 +2252,11 @@ class KiaDashboardCard extends HTMLElement {
       .vehicle-section-title { display:flex; align-items:center; gap:12px; margin-bottom:16px; } .vehicle-section-title>ha-icon { color:var(--blue); --mdc-icon-size:28px; } .vehicle-section-title h2 { margin-top:2px; font-size:20px; }
       .vehicle-state-list { display:grid; gap:9px; } .vehicle-state { width:100%; min-height:58px; padding:9px 11px; border:1px solid var(--kia-line); border-radius:8px; background:var(--kia-control); display:grid; grid-template-columns:26px minmax(100px,1fr) auto 22px; align-items:center; gap:10px; text-align:left; } .vehicle-state:hover:not(:disabled),.vehicle-state:focus-visible { border-color:var(--blue); } .vehicle-state:disabled { cursor:default; opacity:.72; }
       .vehicle-state>ha-icon:first-child { color:var(--kia-muted); --mdc-icon-size:21px; } .vehicle-state span { min-width:0; } .vehicle-state small { display:block; color:var(--kia-muted); font-size:11px; } .vehicle-state strong { display:block; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14px; } .vehicle-state b { max-width:116px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; text-transform:capitalize; }
-      .vehicle-state-indicator { color:var(--green); --mdc-icon-size:19px; } .vehicle-state.warning .vehicle-state-indicator { color:var(--amber); } .vehicle-state.unavailable .vehicle-state-indicator { color:var(--kia-muted); } .vehicle-section-note { margin-top:14px; padding-top:13px; border-top:1px solid var(--kia-line); display:flex; gap:8px; color:var(--kia-muted); font-size:12px; line-height:1.4; }
+      .vehicle-state-indicator { color:var(--green); --mdc-icon-size:19px; } .vehicle-state.warning .vehicle-state-indicator { color:var(--amber); } .vehicle-state.unavailable .vehicle-state-indicator { color:var(--kia-muted); } .vehicle-lock-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}.vehicle-lock-actions button{min-height:44px;border:1px solid color-mix(in srgb,var(--green) 55%,var(--kia-line));border-radius:8px;background:var(--kia-control);color:var(--kia-text);display:flex;align-items:center;justify-content:center;gap:8px;font-weight:800}.vehicle-lock-actions button.unlock{border-color:color-mix(in srgb,var(--amber) 55%,var(--kia-line))}.vehicle-lock-actions button:disabled{cursor:not-allowed;opacity:.45}.vehicle-lock-actions ha-icon{color:var(--green);--mdc-icon-size:20px}.vehicle-lock-actions .unlock ha-icon{color:var(--amber)}.vehicle-section-note { margin-top:14px; padding-top:13px; border-top:1px solid var(--kia-line); display:flex; gap:8px; color:var(--kia-muted); font-size:12px; line-height:1.4; }
       .vehicle-window-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:16px;padding-top:16px;border-top:1px solid var(--kia-line)}.vehicle-window-tile{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;min-width:0;padding:8px;border:1px solid var(--kia-line);border-radius:12px;background:var(--kia-control)}.vehicle-window-tile.warning{border-color:var(--amber)}.vehicle-window-tile.unavailable{opacity:.65}.vehicle-window-info{min-width:0;padding:2px;border:0;background:transparent;display:grid;grid-template-columns:24px minmax(0,1fr);align-items:center;gap:8px;text-align:left}.vehicle-window-info>ha-icon{color:var(--kia-muted);--mdc-icon-size:20px}.vehicle-window-info small,.vehicle-window-info strong,.vehicle-window-info b{display:block}.vehicle-window-info small{color:var(--kia-muted);font-size:10px}.vehicle-window-info strong{margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.vehicle-window-info b{margin-top:3px;font-size:11px;text-transform:capitalize}.vehicle-window-actions{display:grid;gap:4px}.vehicle-window-actions button{width:32px;height:28px;padding:0;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-card);display:grid;place-items:center}.vehicle-window-actions button:hover:not(:disabled),.vehicle-window-actions button:focus-visible{border-color:var(--blue);color:var(--blue)}.vehicle-window-actions button:disabled{cursor:not-allowed;opacity:.35}.vehicle-window-actions ha-icon{--mdc-icon-size:18px}
       .vehicle-opening-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; } .vehicle-tire-layout { display:grid; grid-template-columns:minmax(125px,1fr) 92px minmax(125px,1fr); gap:12px; align-items:center; } .vehicle-tire-layout>div { display:grid; gap:10px; } .vehicle-tire-layout img { width:88px; height:154px; object-fit:contain; justify-self:center; filter:drop-shadow(0 10px 12px rgba(0,0,0,.34)); } .vehicle-tire-layout .vehicle-state { grid-template-columns:22px minmax(76px,1fr) auto 20px; padding-inline:9px; }
       .vehicle-warnings { display:flex; flex-direction:column; justify-content:center; } .vehicle-warnings p,.vehicle-warnings ul { color:var(--kia-muted); line-height:1.55; } .vehicle-warnings ul { margin:0; padding-left:20px; } .vehicle-mapping-note { margin-top:12px; }
-      @media (max-width:1180px) { .vehicle-detail-grid { grid-template-columns:1fr; grid-template-areas:"security" "openings" "tires" "warnings"; } } @media (max-width:760px) { .vehicle-page-heading { align-items:flex-start; flex-direction:column; } .vehicle-page-meta,.vehicle-page-status { min-width:0; width:100%; box-sizing:border-box; } .vehicle-opening-grid,.vehicle-window-grid,.vehicle-tire-layout { grid-template-columns:1fr; } .vehicle-tire-layout img { grid-row:1; height:126px; } }
+      @media (max-width:1180px) { .vehicle-detail-grid { grid-template-columns:1fr; grid-template-areas:"security" "openings" "tires" "warnings"; } } @media (max-width:760px) { .vehicle-page-heading { align-items:flex-start; flex-direction:column; } .vehicle-page-meta,.vehicle-page-status { min-width:0; width:100%; box-sizing:border-box; } .vehicle-opening-grid,.vehicle-window-grid,.vehicle-tire-layout { grid-template-columns:1fr; } .vehicle-tire-layout img { grid-row:1; height:126px; } }@media(max-width:460px){.vehicle-lock-actions{grid-template-columns:1fr}}
     `;
   }
 
