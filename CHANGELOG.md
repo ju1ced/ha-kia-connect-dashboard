@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Fixed intermittent desktop Energy layout gaps when conditional driving
+  analytics forced otherwise paired cards onto incomplete grid rows.
+- Made vehicle energy and home power-flow panels full-width with responsive
+  multi-column statistics, while keeping live charger and controls paired.
+
 ## 2.12.0 - 2026-08-11
 
 - Added CI validation that keeps the built-in dashboard version aligned with
