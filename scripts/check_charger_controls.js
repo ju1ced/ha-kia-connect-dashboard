@@ -942,6 +942,37 @@ async function run() {
   assert.match(calendarDayView, /6341\.4 km/);
   assert.match(calendarDayView, /1\.30 kWh/);
   assert.doesNotMatch(calendarDayView, /<span>Recorder analysis<\/span>/);
+  let routeRequest = "";
+  global.fetch = async (url) => {
+    routeRequest = url;
+    return {
+      ok: true,
+      json: async () => ({
+        routes: [
+          {
+            geometry: {
+              coordinates: [
+                [3.41416, 50.83683],
+                [3.55, 50.9],
+                [3.73395, 51.07469],
+              ],
+            },
+          },
+        ],
+      }),
+    };
+  };
+  card._config.trip_route_matching = true;
+  await card._loadMatchedTripRoutes(card._calendarTrips);
+  assert.match(
+    routeRequest,
+    /^https:\/\/router\.project-osrm\.org\/route\/v1\/driving\//,
+  );
+  assert.match(routeRequest, /3\.414160,50\.836830/);
+  const matchedCalendarDayView = card._renderLocationTripHistory();
+  assert.match(matchedCalendarDayView, /Road-matched phone route/);
+  assert.match(matchedCalendarDayView, /Road-matched route/);
+  delete global.fetch;
   card._tripCalendarRequestKey = "";
   await card._loadTripCalendar();
   assert.equal(
