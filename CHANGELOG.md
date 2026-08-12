@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.16.0 - 2026-08-12
+
 - Added opt-in Vehicle lock and unlock controls with explicit confirmation,
   returned-state verification, timeout feedback, and unavailable-state guards.
 - Documented live Smappee charging-statistics validation, published an
