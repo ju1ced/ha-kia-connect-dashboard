@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.16.2 - 2026-08-12
+
 - Fixed lock controls remaining stale after a successful vehicle refresh by
   re-reading the local Home Assistant entity state and rendering it immediately.
 
