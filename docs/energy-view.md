@@ -76,6 +76,16 @@ weekly, monthly, and yearly utility meters plus a tariff-based monthly cost
 sensor.
 Individual available helpers render independently.
 
+## Live validation baseline
+
+The reference Smappee sensor was verified through Home Assistant MCP as a
+`total_increasing` energy statistic. Its daily long-term changes include roughly
+`0.051 kWh` of standby consumption and clearly separated charging days such as
+`6.312 kWh`, `13.857 kWh`, and `29.552 kWh`. The default `0.2 kWh` threshold
+therefore excludes standby days from the charging-day count while preserving
+them in the total and chart. Revalidate this distinction if another charger has
+a materially different idle load.
+
 See `docs/hacs-card-configuration.md` for the generic mapping and a Smappee EV
 example.
 

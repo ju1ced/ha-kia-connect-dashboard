@@ -6,7 +6,8 @@
 - [x] Replace the pre-HACS roadmap with the current product roadmap.
 - [x] Reconcile milestones, tasks, and issue backlog with shipped functionality.
 - [x] Automate built-in version validation against release metadata.
-- [ ] Decide whether legacy modular YAML views remain a supported install path.
+- [x] Keep legacy modular YAML views as reference/validation fixtures and make
+      the HACS custom card the supported production path.
 - [ ] Move released development notes out of the Unreleased changelog section as
       part of each release.
 
@@ -30,19 +31,29 @@
 - [ ] Validate trip reconstruction against real journeys and delayed updates.
 - [x] Add optional Local Calendar persistence beyond Recorder retention.
 - [ ] Validate calendar capture and restart recovery against real journeys.
+- [x] Add permanent 30/90/365-day charger statistics with standby filtering.
+- [ ] Validate charger statistics, threshold, and tariff estimates against real
+      sessions as long-term data accumulates.
 
 ## Safe vehicle actions
 
-- [ ] Review lock and unlock entities, confirmation wording, and result feedback.
-- [ ] Review supported light, trunk, hood, and charge-port actions separately.
-- [ ] Keep every action disabled until its state and command result are observable.
-- [ ] Add regression tests for each approved action domain and failure path.
+- [x] Review lock and unlock entities, confirmation wording, and result feedback.
+- [x] Enable opt-in lock controls only when mapped to a `lock.*` entity, with
+      confirmation and returned-state verification.
+- [x] Review light, trunk, hood, and charge-port entities; keep them read-only
+      until a reliable command result is available.
+- [x] Keep every unreviewed action disabled until its state and command result
+      are observable.
+- [x] Add regression tests for the approved lock action path.
+- [ ] Validate lock and unlock against real Kia command timing without disabling
+      confirmations.
 
 ## Documentation and visual QA
 
 - [ ] Capture real Home Assistant screenshots for every view.
 - [ ] Validate desktop, tablet, and mobile layouts.
 - [ ] Validate light and dark Home Assistant themes.
-- [ ] Complete installation and customization guides.
-- [ ] Complete troubleshooting and FAQ documentation.
-- [ ] Publish an anonymized, complete reference card configuration.
+- [x] Complete installation and customization guides for the supported HACS
+      card path.
+- [x] Add troubleshooting and FAQ documentation.
+- [x] Publish an anonymized, complete reference card configuration.

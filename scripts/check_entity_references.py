@@ -5,6 +5,7 @@ import re
 import sys
 
 ALLOWED = Path("dashboard/templates/entities.yaml")
+ALLOWED_REFERENCE_CARD = Path("examples/hacs-reference-card.yaml")
 ALLOWED_PACKAGE_ROOT = Path("examples/home-assistant-packages")
 IGNORED_PARTS = {".git", "build", "dist", "node_modules"}
 IGNORED_KEYS = {"perform_action"}
@@ -14,7 +15,7 @@ violations = []
 
 for path in Path(".").rglob("*.yaml"):
     if (
-        path == ALLOWED
+        path in {ALLOWED, ALLOWED_REFERENCE_CARD}
         or ALLOWED_PACKAGE_ROOT in path.parents
         or IGNORED_PARTS.intersection(path.parts)
     ):
@@ -29,6 +30,6 @@ for path in Path(".").rglob("*.yaml"):
             violations.append(f"{path}:{line_number}: {match.group(0)}")
 
 if violations:
-    print("Direct entity references are only allowed in dashboard/templates/entities.yaml")
+    print("Direct entity references are only allowed in the entity map, package examples, and the HACS reference card")
     print("\n".join(violations))
     sys.exit(1)

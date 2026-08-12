@@ -1,0 +1,124 @@
+---
+type: custom:kia-dashboard-card
+title: Kia EV6
+subtitle: GT-Line
+vehicle_controls: false
+charger_controls: true
+charger_resume_via_mode: true
+charger_history_min_kwh: 0.2
+asset_base: /local/vehicles/
+map_zoom: 16
+images:
+  normal: ev6_front_right.png
+  charging: ev6_charging.png
+  climate: ev6_climate.png
+entities:
+  battery_level: sensor.your_vehicle_ev_battery_level
+  battery_range: sensor.your_vehicle_ev_range
+  charging_state: binary_sensor.your_vehicle_ev_battery_charge
+  charging_power: sensor.your_vehicle_ev_charging_power
+  plug_connected: binary_sensor.your_vehicle_ev_battery_plug
+  charging_limit: number.your_vehicle_ac_charging_limit
+  dc_charging_limit: number.your_vehicle_dc_charging_limit
+  battery_state_of_health: sensor.your_vehicle_ev_state_of_health_battery
+  battery_remaining_energy: sensor.your_vehicle_ev_battery_remaining_energy
+  battery_capacity: sensor.your_vehicle_ev_battery_capacity
+  battery_pack_voltage: sensor.your_vehicle_ev_battery_pack_voltage
+  battery_temperature_min: sensor.your_vehicle_ev_battery_temperature_min
+  battery_temperature_max: sensor.your_vehicle_ev_battery_temperature_max
+  battery_water_temperature: sensor.your_vehicle_ev_battery_water_temperature
+  battery_heating: binary_sensor.your_vehicle_ev_battery_heating
+  battery_precondition: binary_sensor.your_vehicle_ev_battery_precondition
+  battery_winter_mode: binary_sensor.your_vehicle_ev_battery_winter_mode
+  battery_heater_power: sensor.your_vehicle_ev_battery_heater_power
+  battery_12v_level: sensor.your_vehicle_car_battery_level
+  battery_12v_fault: binary_sensor.your_vehicle_12v_battery_fault
+  estimated_charge_duration: sensor.your_vehicle_estimated_charge_duration
+  average_energy_consumption: sensor.your_vehicle_average_energy_consumption
+  energy_consumption_90d: sensor.your_vehicle_90_day_energy_consumption
+  odometer: sensor.your_vehicle_odometer
+  vin: sensor.your_vehicle_identification_number
+  location: device_tracker.your_vehicle_location
+  last_updated: sensor.your_vehicle_last_refresh
+  climate: climate.your_vehicle_climate_control
+  cabin_temperature: sensor.your_vehicle_cabin_temperature
+  outside_temperature: sensor.your_vehicle_outside_temperature
+  set_temperature: sensor.your_vehicle_set_temperature
+  defrost: binary_sensor.your_vehicle_defrost
+  steering_wheel_heater: binary_sensor.your_vehicle_steering_wheel_heater
+  rear_window_heater: binary_sensor.your_vehicle_rear_window_heater
+  driver_seat: sensor.your_vehicle_driver_seat
+  passenger_seat: sensor.your_vehicle_passenger_seat
+  rear_left_seat: sensor.your_vehicle_rear_left_seat
+  rear_right_seat: sensor.your_vehicle_rear_right_seat
+  climate_schedule_1: switch.your_vehicle_scheduled_departure_1
+  climate_departure_time_1: sensor.your_vehicle_departure_time_1
+  climate_departure_days_1: sensor.your_vehicle_departure_days_1
+  climate_schedule_2: switch.your_vehicle_scheduled_departure_2
+  climate_departure_time_2: sensor.your_vehicle_departure_time_2
+  door_lock: lock.your_vehicle_door_lock
+  trunk: binary_sensor.your_vehicle_trunk
+  hood: binary_sensor.your_vehicle_hood
+  lights: binary_sensor.your_vehicle_headlamp_status
+  charge_port: binary_sensor.your_vehicle_ev_charge_port
+  front_left_door: binary_sensor.your_vehicle_front_left_door
+  front_right_door: binary_sensor.your_vehicle_front_right_door
+  rear_left_door: binary_sensor.your_vehicle_rear_left_door
+  rear_right_door: binary_sensor.your_vehicle_rear_right_door
+  front_left_window: binary_sensor.your_vehicle_front_left_window
+  front_right_window: binary_sensor.your_vehicle_front_right_window
+  rear_left_window: binary_sensor.your_vehicle_rear_left_window
+  rear_right_window: binary_sensor.your_vehicle_rear_right_window
+  front_left_window_open: cover.your_vehicle_front_left_window
+  front_left_window_close: cover.your_vehicle_front_left_window
+  front_right_window_open: cover.your_vehicle_front_right_window
+  front_right_window_close: cover.your_vehicle_front_right_window
+  rear_left_window_open: cover.your_vehicle_rear_left_window
+  rear_left_window_close: cover.your_vehicle_rear_left_window
+  rear_right_window_open: cover.your_vehicle_rear_right_window
+  rear_right_window_close: cover.your_vehicle_rear_right_window
+  tire_front_left: binary_sensor.your_vehicle_tire_pressure_front_left
+  tire_front_right: binary_sensor.your_vehicle_tire_pressure_front_right
+  tire_rear_left: binary_sensor.your_vehicle_tire_pressure_rear_left
+  tire_rear_right: binary_sensor.your_vehicle_tire_pressure_rear_right
+  smart_key_battery_warning: binary_sensor.your_vehicle_smart_key_battery_warning
+  engine: binary_sensor.your_vehicle_engine
+  ignition: binary_sensor.your_vehicle_ignition
+  vehicle_data: sensor.your_vehicle_data
+  today_driving_stats: sensor.your_vehicle_today_driving_stats
+  daily_driving_stats: sensor.your_vehicle_daily_driving_stats
+  total_energy_regeneration: sensor.your_vehicle_total_energy_regeneration
+  drive_mode: sensor.your_vehicle_drive_mode
+  trip_calendar: calendar.your_vehicle_trips
+  refresh: button.your_vehicle_force_refresh
+  start_climate: switch.your_vehicle_climate
+  stop_climate: switch.your_vehicle_climate
+  start_charging: switch.your_vehicle_ev_charging
+  stop_charging: switch.your_vehicle_ev_charging
+  last_climate_result: sensor.your_vehicle_last_climate_result
+  last_charging_result: sensor.your_vehicle_last_charging_result
+  vent_windows: button.your_vehicle_vent_all_windows
+  charger_online: binary_sensor.your_charger_online
+  charger_status: sensor.your_charger_status
+  charger_mode: select.your_charger_mode
+  charger_power: sensor.your_charger_power
+  charger_current: sensor.your_charger_current
+  charger_current_limit: number.your_charger_current_limit
+  charger_session_energy: sensor.your_charger_session_energy
+  charger_total_energy: sensor.your_charger_total_energy
+  charger_pv_power: sensor.your_solar_power
+  charger_house_power: sensor.your_house_power
+  charger_grid_power: sensor.your_grid_power
+  charger_grid_support: sensor.your_grid_support
+  charger_start: button.your_charger_start
+  charger_pause: button.your_charger_pause
+  charger_resume: button.your_charger_resume
+  charger_stop: button.your_charger_stop
+  charger_energy_price: sensor.your_energy_price
+  charger_energy_today: sensor.your_charger_energy_today
+  charger_energy_week: sensor.your_charger_energy_week
+  charger_energy_month: sensor.your_charger_energy_month
+  charger_energy_year: sensor.your_charger_energy_year
+  charger_session_cost: sensor.your_charger_session_cost
+  charger_cost_month: sensor.your_charger_month_cost
+  dashboard_version: update.your_kia_dashboard_card
