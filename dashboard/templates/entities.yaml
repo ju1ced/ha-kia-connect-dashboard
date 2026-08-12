@@ -60,6 +60,7 @@ charger:
   energy_today: sensor.home_charger_energy_today
   energy_week: sensor.home_charger_energy_week
   energy_month: sensor.home_charger_energy_month
+  energy_year: sensor.home_charger_energy_year
   session_cost: sensor.home_charger_session_cost
   cost_month: sensor.home_charger_cost_month
 

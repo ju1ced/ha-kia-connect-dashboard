@@ -59,14 +59,21 @@ Standard.
 
 The history summary accepts optional Home Assistant utility-meter or template
 sensors through `charger_energy_today`, `charger_energy_week`,
-`charger_energy_month`, `charger_energy_price`, `charger_session_cost`, and
+`charger_energy_month`, `charger_energy_year`, `charger_energy_price`, `charger_session_cost`, and
 `charger_cost_month`. A mapped energy price can estimate session and monthly
 costs when explicit cost sensors are absent, and accepts euro or cent per-kWh
 units. When none are mapped, the Energy tab shows a clear helper-ready placeholder
 instead of inventing history from the current total.
+When `charger_total_energy` has a Home Assistant `state_class` such as
+`total_increasing`, the card also loads permanent long-term statistics directly
+from Recorder. The 30, 90, and 365-day views include totals, charging-day
+averages, estimated costs, a daily chart, and an expandable daily table. Values
+below `charger_history_min_kwh` (default `0.2`) remain visible in totals and the
+chart as standby consumption, but are excluded from the charging-day table.
 The repository includes a Home Assistant package example at
 `examples/home-assistant-packages/charger_history.yaml`; it creates daily,
-weekly, and monthly utility meters plus a tariff-based monthly cost sensor.
+weekly, monthly, and yearly utility meters plus a tariff-based monthly cost
+sensor.
 Individual available helpers render independently.
 
 See `docs/hacs-card-configuration.md` for the generic mapping and a Smappee EV

@@ -39,6 +39,12 @@ const KIA_DASHBOARD_NL = {
   "Charging current": "Laadstroom",
   "Charging finished": "Laden voltooid",
   "Charging history": "Laadgeschiedenis",
+  "Charging days": "Laaddagen",
+  "Cost": "Kosten",
+  "30 days": "30 dagen",
+  "90 days": "90 dagen",
+  "1 year": "1 jaar",
+  "Charging history unavailable": "Laadgeschiedenis niet beschikbaar",
   "Charging power": "Laadvermogen",
   "Charging session": "Laadsessie",
   "Charging state": "Laadstatus",
@@ -87,6 +93,8 @@ const KIA_DASHBOARD_NL = {
   "Energy": "Energie",
   "Energy details": "Energiedetails",
   "Energy price": "Energieprijs",
+  "Energy history": "Energiegeschiedenis",
+  "Energy used": "Verbruikte energie",
   "Energy regenerated": "Teruggewonnen energie",
   "Entity mapping": "Entiteitstoewijzing",
   "Estimated cost": "Geschatte kosten",
@@ -103,6 +111,7 @@ const KIA_DASHBOARD_NL = {
   "Grid support": "Netondersteuning",
   "Headlights": "Koplampen",
   "History helpers ready": "Geschiedenishulpen gereed",
+  "Map charger_total_energy to load permanent Home Assistant energy statistics.": "Wijs charger_total_energy toe om permanente energiestatistieken van Home Assistant te laden.",
   "Home Assistant theme": "Home Assistant-thema",
   "Home charger": "Thuislaadpunt",
   "Home charger connection": "Verbinding thuislaadpunt",
@@ -121,6 +130,8 @@ const KIA_DASHBOARD_NL = {
   "Latest scan": "Laatste controle",
   "Latest session": "Laatste sessie",
   "Latest session and totals": "Laatste sessie en totalen",
+  "Loading charging history": "Laadgeschiedenis laden",
+  "Long-term statistics": "Langetermijnstatistieken",
   "Light mode": "Lichte modus",
   "Lights": "Verlichting",
   "Live connection context": "Live verbindingsinformatie",
@@ -137,6 +148,7 @@ const KIA_DASHBOARD_NL = {
   "Mapping healthy": "Toewijzing in orde",
   "Mapping needs attention": "Toewijzing vereist aandacht",
   "Monthly cost": "Maandelijkse kosten",
+  "No charging days in this period": "Geen laaddagen in deze periode",
   "No": "Nee",
   "No active dashboard warnings. Review Vehicle and Settings after each Home Assistant update.": "Geen actieve dashboardwaarschuwingen. Controleer Voertuig en Instellingen na elke Home Assistant-update.",
   "No active warnings": "Geen actieve waarschuwingen",
@@ -236,10 +248,17 @@ const KIA_DASHBOARD_NL = {
   "System state": "Systeemstatus",
   "Temperature": "Temperatuur",
   "This month": "Deze maand",
+  "This year": "Dit jaar",
   "Today&apos;s driving": "Ritgegevens van vandaag",
   "Total regeneration": "Totale regeneratie",
   "of consumption": "van het verbruik",
   "This week": "Deze week",
+  "Average per charging day": "Gemiddeld per laaddag",
+  "Estimated period cost": "Geschatte periodekosten",
+  "Show daily charging data": "Dagelijkse laadgegevens tonen",
+  "Hide daily charging data": "Dagelijkse laadgegevens verbergen",
+  "Reading permanent Home Assistant energy statistics.": "Permanente energiestatistieken van Home Assistant worden geladen.",
+  "From Home Assistant Recorder": "Uit Home Assistant Recorder",
   "Tire pressure": "Bandenspanning",
   "Tire Status": "Bandenstatus",
   "Tire status": "Bandenstatus",
@@ -482,12 +501,20 @@ class KiaDashboardCard extends HTMLElement {
     this._tripSelectedDate = this._dateKey(new Date());
     this._tripCalendarMonth = this._tripSelectedDate.slice(0, 7);
     this._dailyHistoryExpanded = false;
+    this._chargerHistory = [];
+    this._chargerHistoryState = "idle";
+    this._chargerHistoryError = "";
+    this._chargerHistoryRequestKey = "";
+    this._chargerHistoryRequestToken = 0;
+    this._chargerHistoryPeriod = 90;
+    this._chargerHistoryExpanded = false;
   }
 
   setConfig(config) {
     const previousModeEntity = this._entity("charger_mode");
     const previousHistoryEntities = this._historyEntityIds().join("|");
     const previousTripCalendar = this._entity("trip_calendar");
+    const previousChargerTotal = this._entity("charger_total_energy");
     this._config = config || {};
     if (previousModeEntity !== this._entity("charger_mode")) this._chargerModeBeforePause = "";
     if (previousHistoryEntities !== this._historyEntityIds().join("|")) {
@@ -503,14 +530,22 @@ class KiaDashboardCard extends HTMLElement {
       this._calendarTrips = [];
       this._tripCalendarCache.clear();
     }
+    if (previousChargerTotal !== this._entity("charger_total_energy")) {
+      this._chargerHistoryRequestToken += 1;
+      this._chargerHistoryRequestKey = "";
+      this._chargerHistoryState = "idle";
+      this._chargerHistory = [];
+    }
     this._render();
     if (this._activeTab === "location") this._loadLocationTrips();
+    if (this._activeTab === "energy") this._loadChargerHistory();
   }
 
   set hass(hass) {
     this._hass = hass;
     this._render();
     if (this._activeTab === "location") this._loadLocationTrips();
+    if (this._activeTab === "energy") this._loadChargerHistory();
   }
 
   getCardSize() {
@@ -1162,6 +1197,7 @@ class KiaDashboardCard extends HTMLElement {
     this._activeTab = section;
     this._render();
     if (section === "location") this._loadLocationTrips(true);
+    if (section === "energy") this._loadChargerHistory(true);
   }
 
   _moreInfo(key) {
@@ -1557,6 +1593,94 @@ class KiaDashboardCard extends HTMLElement {
       <section class="climate-session card"><ha-icon icon="mdi:timer-outline"></ha-icon><div class="climate-session-copy"><span>Remote climate session</span><h2>${this._safe(this._entity("last_climate_result") ? this._state("last_climate_result") : "No command result mapped")}</h2><p>${scheduleTiles ? "Schedule and departure context" : "Timer and requested mode will appear when mapped state is available."}</p>${scheduleTiles ? `<div class="climate-readings climate-schedule-grid">${scheduleTiles}</div>` : ""}</div></section>
     </main>`;
   }
+  _chargerHistoryDays() {
+    return this._chargerHistoryPeriod;
+  }
+
+  _chargerHistoryKey() {
+    return [this._entity("charger_total_energy") || "", this._chargerHistoryDays(), this._dateKey(new Date())].join("|");
+  }
+
+  async _loadChargerHistory(force = false) {
+    const entityId = this._entity("charger_total_energy");
+    if (!this._hass?.callWS || !entityId) return;
+    const requestKey = this._chargerHistoryKey();
+    if (!force && this._chargerHistoryState === "loading") return;
+    if (!force && this._chargerHistoryState === "ready" && requestKey === this._chargerHistoryRequestKey) return;
+
+    const token = ++this._chargerHistoryRequestToken;
+    this._chargerHistoryRequestKey = requestKey;
+    this._chargerHistoryState = "loading";
+    this._chargerHistoryError = "";
+    this._render();
+    const end = new Date();
+    const start = new Date(end.getTime() - this._chargerHistoryDays() * 86400000);
+    try {
+      const response = await this._hass.callWS({
+        type: "recorder/statistics_during_period",
+        start_time: start.toISOString(),
+        end_time: end.toISOString(),
+        statistic_ids: [entityId],
+        period: "day",
+        types: ["change", "state"],
+      });
+      if (token !== this._chargerHistoryRequestToken) return;
+      const rows = response?.[entityId] || response?.statistics?.[entityId] || [];
+      this._chargerHistory = (Array.isArray(rows) ? rows : [])
+        .map((row) => {
+          const timestamp = typeof row.start === "number" ? row.start : new Date(row.start).getTime();
+          const energy = Number.parseFloat(row.change);
+          return { date: this._dateKey(timestamp), energy: Number.isFinite(energy) ? Math.max(0, energy) : 0 };
+        })
+        .filter((row) => row.date)
+        .sort((left, right) => left.date.localeCompare(right.date));
+      this._chargerHistoryState = "ready";
+    } catch (error) {
+      if (token !== this._chargerHistoryRequestToken) return;
+      this._chargerHistory = [];
+      this._chargerHistoryState = "error";
+      this._chargerHistoryError = error?.message || String(error || "Charging history unavailable");
+    }
+    if (this._activeTab === "energy") this._render();
+  }
+
+  _setChargerHistoryPeriod(days) {
+    if (![30, 90, 365].includes(days) || days === this._chargerHistoryPeriod) return;
+    this._chargerHistoryPeriod = days;
+    this._chargerHistoryRequestKey = "";
+    return this._loadChargerHistory(true);
+  }
+
+  _toggleChargerHistory() {
+    this._chargerHistoryExpanded = !this._chargerHistoryExpanded;
+    this._render();
+  }
+
+  _renderChargerHistoryStatistics(tariff) {
+    const days = this._chargerHistoryDays();
+    if (!this._entity("charger_total_energy")) {
+      return `<div class="charger-history-empty"><ha-icon icon="mdi:chart-timeline-variant"></ha-icon><div><strong>History helpers ready</strong><span>Map charger_total_energy to load permanent Home Assistant energy statistics.</span></div></div>`;
+    }
+    const controls = `<div class="charger-history-periods" aria-label="Charging history period">${[30, 90, 365].map((period) => `<button data-charger-history-period="${period}" class="${days === period ? "active" : ""}">${period === 365 ? "1 year" : `${period} days`}</button>`).join("")}<button class="refresh" data-charger-history-refresh aria-label="Refresh charging history"><ha-icon icon="mdi:refresh"></ha-icon></button></div>`;
+    if (this._chargerHistoryState === "loading" || this._chargerHistoryState === "idle") {
+      return `${controls}<div class="charger-history-empty"><ha-icon icon="mdi:loading"></ha-icon><div><strong>Loading charging history</strong><span>Reading permanent Home Assistant energy statistics.</span></div></div>`;
+    }
+    if (this._chargerHistoryState === "error") {
+      return `${controls}<div class="charger-history-empty warning"><ha-icon icon="mdi:alert-circle-outline"></ha-icon><div><strong>Charging history unavailable</strong><span>${this._safe(this._chargerHistoryError)}</span></div></div>`;
+    }
+    const threshold = Math.max(0, Number.parseFloat(this._config.charger_history_min_kwh ?? 0.2) || 0);
+    const rows = this._chargerHistory;
+    const chargingDays = rows.filter((row) => row.energy >= threshold);
+    const total = rows.reduce((sum, row) => sum + row.energy, 0);
+    const average = chargingDays.length ? chargingDays.reduce((sum, row) => sum + row.energy, 0) / chargingDays.length : 0;
+    const cost = Number.isFinite(tariff) ? total * tariff : null;
+    const chartRows = rows.slice(-31);
+    const maximum = Math.max(0.1, ...chartRows.map((row) => row.energy));
+    const chart = chartRows.length ? `<div class="charger-history-chart" role="img" aria-label="Daily charger energy over the latest ${chartRows.length} days"><div class="charger-history-bars">${chartRows.map((row) => `<div title="${this._safe(`${this._formatHistoryDay(row.date)}: ${row.energy.toFixed(2)} kWh`)}"><i class="${row.energy >= threshold ? "charging" : "idle"}" style="height:${Math.max(2, Math.round((row.energy / maximum) * 100))}%"></i><span>${this._safe(row.date.slice(5).replace("-", "/"))}</span></div>`).join("")}</div></div>` : "";
+    const details = chargingDays.slice().reverse().map((row) => `<div role="row"><strong role="cell">${this._safe(this._formatHistoryDay(row.date))}</strong><span role="cell">${row.energy.toFixed(2)} kWh</span><span role="cell">${Number.isFinite(tariff) ? `EUR ${(row.energy * tariff).toFixed(2)}` : "--"}</span></div>`).join("");
+    return `${controls}<div class="charger-history-summary"><div><span>Energy used</span><strong>${total.toFixed(1)} kWh</strong></div><div><span>Charging days</span><strong>${chargingDays.length}</strong></div><div><span>Average per charging day</span><strong>${average.toFixed(1)} kWh</strong></div><div><span>Estimated period cost</span><strong>${cost === null ? "--" : `EUR ${cost.toFixed(2)}`}</strong></div></div>${chart}${details ? `<button class="charger-history-toggle" data-charger-history-toggle aria-expanded="${this._chargerHistoryExpanded}"><span>${this._chargerHistoryExpanded ? "Hide daily charging data" : "Show daily charging data"}</span><ha-icon icon="mdi:chevron-${this._chargerHistoryExpanded ? "up" : "down"}"></ha-icon></button><div class="charger-history-table" role="table" ${this._chargerHistoryExpanded ? "" : "hidden"}><div class="header" role="row"><strong role="columnheader">Day</strong><strong role="columnheader">Energy</strong><strong role="columnheader">Cost</strong></div>${details}</div>` : `<div class="charger-history-empty"><ha-icon icon="mdi:calendar-blank-outline"></ha-icon><div><strong>No charging days in this period</strong><span>Days below ${threshold} kWh are treated as charger standby consumption.</span></div></div>`}`;
+  }
+
   _renderEnergyTab() {
     const battery = this._number("battery_level");
     const batteryUnit = this._unit("battery_level", "%") || "%";
@@ -1660,6 +1784,7 @@ class KiaDashboardCard extends HTMLElement {
       ["charger_energy_today", "mdi:calendar-today", "Today", "kWh"],
       ["charger_energy_week", "mdi:calendar-week", "This week", "kWh"],
       ["charger_energy_month", "mdi:calendar-month", "This month", "kWh"],
+      ["charger_energy_year", "mdi:calendar-range", "This year", "kWh"],
     ];
     const historyCards = [
       ...historyItems.filter(([key]) => usable(key)).map(([key, icon, label, unit]) => stat(key, icon, label, this._number(key), this._unit(key, unit))),
@@ -1674,7 +1799,7 @@ class KiaDashboardCard extends HTMLElement {
       <section class="energy-section charger-live card"><div class="energy-heading"><span><ha-icon icon="mdi:ev-station"></ha-icon></span><div><small>Home charger</small><h2>Live session</h2></div><span class="charger-health ${chargerOnline ? "online" : ""}"><i></i>${chargerOnline ? "Online" : usable("charger_online") ? "Offline" : "Not mapped"}</span></div><div class="charger-live-hero"><div><span>EVSE status</span><strong class="${chargerActive ? "positive-text" : ""}">${this._safe(this._chargerStatusLabel(chargerState))}</strong><small>${this._safe(chargerMode)}</small></div><ha-icon icon="${chargerActive ? "mdi:battery-charging" : "mdi:ev-plug-type2"}"></ha-icon></div><div class="energy-stats compact">${stat("charger_power", "mdi:flash", "Charger power", chargerPower, this._unit("charger_power", "W"), chargerActive ? "positive" : "")}${stat("charger_session_energy", "mdi:counter", "Session energy", sessionEnergy, this._unit("charger_session_energy", "kWh"))}${stat("charger_current", "mdi:current-ac", "Connector current", chargerCurrent, this._unit("charger_current", "A"))}${stat("charger_total_energy", "mdi:transmission-tower-import", "Total imported", totalEnergy, this._unit("charger_total_energy", "kWh"))}</div></section>
       <section class="energy-section charger-control card"><div class="energy-heading"><span><ha-icon icon="mdi:tune-variant"></ha-icon></span><div><small>Charging strategy</small><h2>Charger control</h2></div><span class="charger-safety"><ha-icon icon="mdi:shield-check-outline"></ha-icon>${controlsEnabled ? "Enabled" : "Read only"}</span></div><div class="charger-modes">${modeButtons}</div><div class="charger-current"><div><span>Charging current</span><strong>${this._safe(currentLimit)}${currentLimit !== "--" ? ` ${this._safe(this._unit("charger_current_limit", "A"))}` : ""}</strong></div><input type="range" min="${currentAttrs.min}" max="${currentAttrs.max}" step="${currentAttrs.step}" value="${currentLimit === "--" ? currentAttrs.min : currentLimit}" data-number="charger_current_limit" data-confirm="Change the home charger current limit?" ${!controlsEnabled || !this._entity("charger_current_limit") ? "disabled" : ""}></div><div class="charger-actions">${actionButton("charger_start", "charger_start", "mdi:play", "Start", "start")}${actionButton("charger_pause", "charger_pause", "mdi:pause", "Pause")}${actionButton("charger_resume", resumeEntityKey, "mdi:play-pause", "Resume")}${actionButton("charger_stop", "charger_stop", "mdi:stop", "Stop", "stop")}</div>${this._notice ? `<p class="energy-notice">${this._safe(this._notice)}</p>` : ""}<p class="energy-note"><ha-icon icon="mdi:information-outline"></ha-icon><span>${controlsEnabled ? "Commands use the mapped Home Assistant entities and ask for confirmation." : "Set charger_controls: true after reviewing the mapped action entities to enable controls."}</span></p></section>
       <section class="energy-section charger-flow card"><div class="energy-heading"><span><ha-icon icon="mdi:home-lightning-bolt-outline"></ha-icon></span><div><small>Home energy</small><h2>Power flow context</h2></div></div><div class="energy-stats compact">${stat("charger_pv_power", "mdi:solar-power", "Solar production", this._number("charger_pv_power"), this._unit("charger_pv_power", "W"), "positive")}${stat("charger_house_power", "mdi:home-lightning-bolt", "Home consumption", this._number("charger_house_power"), this._unit("charger_house_power", "W"))}${stat("charger_grid_power", "mdi:transmission-tower", "Grid power", this._number("charger_grid_power"), this._unit("charger_grid_power", "W"))}${stat("charger_grid_support", "mdi:transmission-tower-export", "Grid support", this._number("charger_grid_support"), this._unit("charger_grid_support", "A"))}</div><p class="energy-note"><ha-icon icon="mdi:leaf"></ha-icon><span>Smart and Solar remain charger-defined strategies; this card only reflects and selects the mapped Home Assistant mode.</span></p></section>
-      <section class="energy-section charger-history card"><div class="energy-heading"><span><ha-icon icon="mdi:history"></ha-icon></span><div><small>Charging history</small><h2>Latest session and totals</h2></div></div><div class="charger-session-summary"><div><span>Latest session</span><strong>${this._safe(sessionEnergy)}${sessionEnergy !== "--" ? ` ${this._safe(this._unit("charger_session_energy", "kWh"))}` : ""}</strong><small>${this._safe(sessionDate)}</small></div><div><span>Estimated cost</span><strong>${estimatedCost === "--" ? "--" : `EUR ${this._safe(Number(estimatedCost).toFixed(2))}`}</strong><small>${tariffContext}</small></div></div>${historyCards ? `<div class="charger-history-grid">${historyCards}</div>` : `<div class="charger-history-empty"><ha-icon icon="mdi:chart-timeline-variant"></ha-icon><div><strong>History helpers ready</strong><span>Map daily, weekly, or monthly utility-meter sensors to replace this placeholder with actual totals.</span></div></div>`}<button class="energy-back" data-nav="overview"><ha-icon icon="mdi:arrow-left"></ha-icon><span>Back to Overview</span></button></section>
+      <section class="energy-section charger-history card"><div class="energy-heading"><span><ha-icon icon="mdi:history"></ha-icon></span><div><small>Charging history</small><h2>Latest session and totals</h2></div></div><div class="charger-session-summary"><div><span>Latest session</span><strong>${this._safe(sessionEnergy)}${sessionEnergy !== "--" ? ` ${this._safe(this._unit("charger_session_energy", "kWh"))}` : ""}</strong><small>${this._safe(sessionDate)}</small></div><div><span>Estimated cost</span><strong>${estimatedCost === "--" ? "--" : `EUR ${this._safe(Number(estimatedCost).toFixed(2))}`}</strong><small>${tariffContext}</small></div></div>${historyCards ? `<div class="charger-history-grid">${historyCards}</div>` : ""}<div class="charger-long-term"><div class="charger-long-term-heading"><div><span>Long-term statistics</span><h3>Energy history</h3></div><small>From Home Assistant Recorder</small></div>${this._renderChargerHistoryStatistics(tariff)}</div><button class="energy-back" data-nav="overview"><ha-icon icon="mdi:arrow-left"></ha-icon><span>Back to Overview</span></button></section>
     </main>`;
   }
 
@@ -2072,6 +2197,7 @@ class KiaDashboardCard extends HTMLElement {
     return `
       .energy-detail{margin-top:12px;display:grid;grid-template-columns:1.15fr 1fr;gap:12px}.energy-detail>.card{min-width:0;overflow:hidden}.energy-intro{grid-column:1/-1;min-height:150px;padding:clamp(24px,3vw,42px);display:flex;align-items:center;justify-content:space-between;gap:28px;position:relative}.energy-intro:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 82% 50%,color-mix(in srgb,var(--blue) 18%,transparent),transparent 28%);pointer-events:none}.energy-intro>div:first-child{position:relative;z-index:1;max-width:720px}.energy-eyebrow,.energy-heading small{color:var(--blue);font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.energy-intro h2{margin-top:7px;font-size:clamp(25px,2.4vw,36px)}.energy-intro p,.energy-future>p{margin-top:10px;color:var(--kia-muted);line-height:1.5}.energy-orbit{flex:0 0 92px;width:92px;height:92px;border-radius:50%;display:grid;place-items:center;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--kia-card));border:1px solid color-mix(in srgb,var(--blue) 48%,var(--kia-line));box-shadow:0 0 38px color-mix(in srgb,var(--blue) 18%,transparent)}.energy-orbit ha-icon{--mdc-icon-size:44px}.energy-section,.energy-future{padding:22px}.energy-heading{display:flex;align-items:center;gap:12px;margin-bottom:18px}.energy-heading>span{width:42px;height:42px;flex:0 0 42px;border-radius:8px;display:grid;place-items:center;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--kia-card));border:1px solid var(--kia-line)}.energy-heading h2{margin-top:3px;font-size:20px}.energy-stats{display:grid;gap:10px}.energy-stat{width:100%;min-height:76px;padding:12px 14px;display:grid;grid-template-columns:42px minmax(0,1fr) 22px;align-items:center;gap:12px;color:var(--kia-text);text-align:left;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control)}.energy-stat:hover,.energy-stat:focus-visible{border-color:var(--blue);outline:none}.energy-stat-icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--blue);background:color-mix(in srgb,var(--blue) 11%,var(--kia-card))}.energy-stat-icon ha-icon{--mdc-icon-size:22px}.energy-stat-copy{min-width:0}.energy-stat-copy small{display:block;color:var(--kia-muted);font-size:12px;font-weight:700}.energy-stat-copy strong{display:block;margin-top:3px;font-size:clamp(18px,1.7vw,24px);line-height:1.1;overflow-wrap:anywhere}.energy-stat-copy em{color:var(--kia-muted);font-size:.65em;font-style:normal;font-weight:700}.energy-stat-link{color:var(--kia-muted);--mdc-icon-size:20px}.energy-stat.positive .energy-stat-icon,.energy-stat.positive .energy-stat-copy strong{color:var(--green)}.energy-note{margin-top:14px;padding-top:14px;border-top:1px solid var(--kia-line);display:flex;align-items:flex-start;gap:9px;color:var(--kia-muted);font-size:12px;line-height:1.45}.energy-note ha-icon{flex:0 0 auto;color:var(--blue);--mdc-icon-size:18px}.energy-future{min-height:210px;position:relative}.energy-bars{height:64px;margin-top:20px;display:flex;align-items:flex-end;gap:8px;opacity:.65}.energy-bars i{flex:1;min-width:8px;height:38%;border-radius:4px 4px 0 0;background:color-mix(in srgb,var(--blue) 46%,var(--kia-line))}.energy-bars i:nth-child(2),.energy-bars i:nth-child(6){height:62%}.energy-bars i:nth-child(3){height:48%}.energy-bars i:nth-child(4){height:82%}.energy-bars i:nth-child(5){height:70%}.energy-bars i:nth-child(7){height:94%}.energy-back{margin-top:20px;min-height:46px;padding:0 16px;display:inline-flex;align-items:center;gap:9px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);font-weight:800}.energy-back ha-icon{color:var(--blue);--mdc-icon-size:20px}@media(max-width:900px){.energy-detail{grid-template-columns:1fr}.energy-intro{grid-column:auto}}@media(max-width:560px){.energy-intro{align-items:flex-start}.energy-orbit{width:64px;height:64px;flex-basis:64px}.energy-orbit ha-icon{--mdc-icon-size:32px}.energy-section,.energy-future{padding:18px}}
       .energy-heading>div{min-width:0;flex:1}.energy-heading>.charger-health,.energy-heading>.charger-safety{width:auto;height:auto;flex:0 0 auto;border:0;background:transparent;display:flex;align-items:center;gap:7px;color:var(--kia-muted);font-size:11px;font-weight:800;white-space:nowrap}.charger-health i{width:8px;height:8px;border-radius:50%;background:var(--kia-muted);box-shadow:0 0 7px currentColor}.charger-health.online{color:var(--green)}.charger-health.online i{background:var(--green)}.charger-safety ha-icon{color:var(--blue);--mdc-icon-size:17px}.charger-live-hero{min-height:105px;margin-bottom:12px;padding:18px 20px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-recessed);display:flex;align-items:center;justify-content:space-between;gap:20px}.charger-live-hero span,.charger-live-hero small,.charger-current span,.charger-session-summary span,.charger-session-summary small,.charger-history-empty span{display:block;color:var(--kia-muted);font-size:12px}.charger-live-hero strong{display:block;margin:4px 0;font-size:clamp(24px,2.4vw,34px);text-transform:capitalize}.charger-live-hero>ha-icon{color:var(--blue);--mdc-icon-size:48px}.positive-text{color:var(--green)}.energy-stats.compact{grid-template-columns:repeat(2,minmax(0,1fr))}.charger-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.charger-mode{min-height:76px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-weight:800}.charger-mode ha-icon{color:var(--blue);--mdc-icon-size:26px}.charger-mode.active{border-color:var(--green);background:color-mix(in srgb,var(--green) 12%,var(--kia-card))}.charger-mode.active ha-icon,.charger-mode.active span{color:var(--green)}.charger-mode:disabled,.charger-action:disabled,.charger-current input:disabled{cursor:not-allowed;opacity:.5}.charger-current{margin-top:14px;padding:14px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-recessed);display:grid;grid-template-columns:auto minmax(120px,1fr);align-items:center;gap:18px}.charger-current strong{display:block;margin-top:3px}.charger-current input{width:100%;accent-color:var(--blue)}.charger-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px}.charger-action{min-height:48px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);display:flex;align-items:center;justify-content:center;gap:7px;font-weight:800}.charger-action ha-icon{color:var(--blue);--mdc-icon-size:20px}.charger-action.start{border-color:color-mix(in srgb,var(--green) 55%,var(--kia-line))}.charger-action.start ha-icon{color:var(--green)}.charger-action.stop{border-color:color-mix(in srgb,var(--red) 45%,var(--kia-line))}.charger-action.stop ha-icon{color:var(--red)}.energy-notice{margin-top:12px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--blue) 38%,var(--kia-line));border-radius:8px;background:color-mix(in srgb,var(--blue) 10%,var(--kia-card));color:var(--blue);font-size:12px}.charger-history{grid-column:1/-1}.charger-session-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.charger-session-summary>div{padding:18px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-recessed)}.charger-session-summary strong{display:block;margin:5px 0;font-size:clamp(24px,2.2vw,34px)}.charger-history-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}.charger-history-empty{min-height:92px;margin-top:10px;padding:18px;border:1px dashed var(--kia-line);border-radius:8px;background:var(--kia-recessed);display:flex;align-items:center;gap:15px}.charger-history-empty ha-icon{color:var(--blue);--mdc-icon-size:32px}.charger-history-empty strong{display:block;margin-bottom:4px}.charger-history-grid .energy-stat{grid-template-columns:36px minmax(0,1fr) 18px}.charger-history-grid .energy-stat-icon{width:34px;height:34px}@media(max-width:1050px){.energy-stats.compact,.charger-history-grid{grid-template-columns:1fr 1fr}.charger-actions{grid-template-columns:1fr 1fr}}@media(max-width:560px){.energy-stats.compact,.charger-history-grid,.charger-session-summary,.charger-current{grid-template-columns:1fr}.charger-modes{grid-template-columns:1fr}.energy-heading>.charger-health,.energy-heading>.charger-safety{grid-column:2;justify-self:start}.charger-actions{grid-template-columns:1fr 1fr}}
+      .charger-long-term{margin-top:22px;padding-top:20px;border-top:1px solid var(--kia-line)}.charger-long-term-heading{display:flex;align-items:end;justify-content:space-between;gap:16px}.charger-long-term-heading span,.charger-long-term-heading>small{color:var(--kia-muted);font-size:12px}.charger-long-term-heading h3{margin-top:3px;font-size:19px}.charger-history-periods{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}.charger-history-periods button{min-height:38px;padding:0 14px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);color:var(--kia-text);font-weight:800}.charger-history-periods button.active{border-color:var(--green);color:var(--green);background:color-mix(in srgb,var(--green) 11%,var(--kia-card))}.charger-history-periods button.refresh{width:40px;padding:0;display:grid;place-items:center;margin-left:auto}.charger-history-periods ha-icon{--mdc-icon-size:19px}.charger-history-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}.charger-history-summary>div{padding:14px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control)}.charger-history-summary span{display:block;color:var(--kia-muted);font-size:12px}.charger-history-summary strong{display:block;margin-top:5px;font-size:clamp(18px,1.5vw,23px)}.charger-history-chart{height:180px;margin-top:12px;padding:16px 14px 10px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-recessed);overflow:hidden}.charger-history-bars{height:100%;display:flex;align-items:stretch;gap:4px}.charger-history-bars>div{min-width:0;flex:1;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:6px}.charger-history-bars>div>i{align-self:end;width:72%;max-width:18px;min-height:2px;justify-self:center;border-radius:4px 4px 0 0;background:var(--kia-line)}.charger-history-bars>div>i.charging{background:var(--green)}.charger-history-bars span{overflow:hidden;color:var(--kia-muted);font-size:8px;text-align:center}.charger-history-toggle{width:100%;min-height:44px;margin-top:12px;padding:0 14px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);color:var(--kia-text);display:flex;align-items:center;justify-content:space-between;font-weight:800}.charger-history-table{margin-top:8px;border:1px solid var(--kia-line);border-radius:8px;overflow:hidden}.charger-history-table[hidden]{display:none}.charger-history-table>div{min-height:44px;padding:9px 14px;display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;gap:12px;border-top:1px solid var(--kia-line);color:var(--kia-muted);font-size:12px}.charger-history-table>div:first-child{border-top:0}.charger-history-table>.header{background:var(--kia-recessed);color:var(--kia-text)}.charger-history-table>div strong{color:var(--kia-text)}.charger-history-empty.warning ha-icon{color:var(--red)}@media(max-width:760px){.charger-history-summary{grid-template-columns:1fr 1fr}.charger-history-chart{height:150px}.charger-history-bars{gap:2px}.charger-history-bars span{display:none}}@media(max-width:460px){.charger-history-summary{grid-template-columns:1fr}.charger-long-term-heading{align-items:start;flex-direction:column}.charger-history-table>div{grid-template-columns:1.3fr 1fr 1fr;padding-inline:10px}}
       .driving-analytics{grid-column:1/-1}.driving-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.driving-summary button{min-height:92px;padding:15px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);color:var(--kia-text);text-align:left}.driving-summary button:hover,.driving-summary button:focus-visible{border-color:var(--blue)}.driving-summary span,.driving-summary small{display:block;color:var(--kia-muted);font-size:12px}.driving-summary strong{display:block;margin-top:6px;font-size:clamp(18px,1.6vw,24px)}.driving-summary em{color:var(--kia-muted);font-size:.65em;font-style:normal}.driving-summary small{margin-top:4px}.driving-chart{margin-top:18px;padding:16px 16px 10px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-recessed)}.driving-chart-legend{display:flex;justify-content:flex-end;gap:16px;color:var(--kia-muted);font-size:11px}.driving-chart-legend span{display:flex;align-items:center;gap:5px}.driving-chart-legend i{width:9px;height:9px;border-radius:2px}.driving-chart i.consumed{background:var(--blue)}.driving-chart i.regenerated{background:var(--green)}.driving-chart-bars{height:150px;margin-top:12px;display:flex;align-items:stretch;gap:7px}.driving-day{min-width:0;flex:1;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:7px}.driving-day>div{min-height:0;display:flex;align-items:flex-end;justify-content:center;gap:2px;border-bottom:1px solid var(--kia-line)}.driving-day>div i{width:min(11px,44%);min-height:3px;border-radius:3px 3px 0 0}.driving-day>span{overflow:hidden;color:var(--kia-muted);font-size:9px;text-align:center}@media(max-width:760px){.driving-summary{grid-template-columns:1fr 1fr}.driving-chart-bars{height:120px;gap:3px}.driving-day>span{font-size:8px}}@media(max-width:460px){.driving-summary{grid-template-columns:1fr}.driving-chart{padding-inline:10px}.driving-chart-legend{justify-content:flex-start}}
       .vehicle-energy,.charger-flow{grid-column:1/-1}.vehicle-energy .energy-stats,.charger-flow .energy-stats.compact{grid-template-columns:repeat(4,minmax(0,1fr))}@media(max-width:1200px){.vehicle-energy .energy-stats,.charger-flow .energy-stats.compact{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.vehicle-energy .energy-stats,.charger-flow .energy-stats.compact{grid-template-columns:1fr}}
     `;
@@ -2299,6 +2425,9 @@ class KiaDashboardCard extends HTMLElement {
     this.shadowRoot.querySelectorAll("[data-trip-month]").forEach((el) => el.addEventListener("click", () => this._shiftTripMonth(Number.parseInt(el.dataset.tripMonth, 10) || 0)));
     this.shadowRoot.querySelectorAll("[data-trip-date]").forEach((el) => el.addEventListener("click", () => this._selectTripDate(el.dataset.tripDate)));
     this.shadowRoot.querySelectorAll("[data-trip-refresh]").forEach((el) => el.addEventListener("click", () => this._loadTripCalendar(true)));
+    this.shadowRoot.querySelectorAll("[data-charger-history-period]").forEach((el) => el.addEventListener("click", () => this._setChargerHistoryPeriod(Number.parseInt(el.dataset.chargerHistoryPeriod, 10))));
+    this.shadowRoot.querySelectorAll("[data-charger-history-refresh]").forEach((el) => el.addEventListener("click", () => this._loadChargerHistory(true)));
+    this.shadowRoot.querySelectorAll("[data-charger-history-toggle]").forEach((el) => el.addEventListener("click", () => this._toggleChargerHistory()));
   }
 
   _styles() {

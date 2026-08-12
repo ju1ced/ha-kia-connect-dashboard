@@ -48,6 +48,7 @@ card._config = {
     charger_stop: "button.home_charger_stop",
     charger_status: "sensor.home_charger_status",
     charger_session_energy: "sensor.home_charger_session_energy",
+    charger_total_energy: "sensor.home_charger_total_energy",
     charger_energy_today: "sensor.home_charger_energy_today",
     charger_energy_month: "sensor.home_charger_energy_month",
     charger_energy_price: "sensor.home_energy_price",
@@ -70,6 +71,14 @@ card._hass = {
     "sensor.home_charger_session_energy": {
       state: "10",
       attributes: { unit_of_measurement: "kWh" },
+    },
+    "sensor.home_charger_total_energy": {
+      state: "12276.83",
+      attributes: {
+        unit_of_measurement: "kWh",
+        device_class: "energy",
+        state_class: "total_increasing",
+      },
     },
     "sensor.home_charger_energy_month": {
       state: "100",
@@ -170,6 +179,8 @@ async function run() {
       "Laadstrategie",
       "Energiestroom",
       "Laatste sessie en totalen",
+      "Langetermijnstatistieken",
+      "Energiegeschiedenis",
     ],
     location: [
       "Positie-informatie",
@@ -243,7 +254,7 @@ async function run() {
   assert.match(card.shadowRoot.innerHTML, />Settings</);
 
   const settings = card._renderSettingsTab();
-  assert.match(settings, /12 of 12 available/);
+  assert.match(settings, /13 of 13 available/);
   assert.match(settings, /Connection health/);
   assert.match(settings, /Vehicle connection/);
   assert.match(settings, /Data current/);
@@ -336,6 +347,56 @@ async function run() {
   assert.match(energy, /27\.73 <em>EUR/);
   assert.match(energy, /from mapped energy price/);
   assert.doesNotMatch(energy, /This week/);
+
+  let statisticsRequest = null;
+  card._hass.callWS = async (request) => {
+    statisticsRequest = request;
+    return {
+      "sensor.home_charger_total_energy": [
+        {
+          start: new Date("2026-08-08T00:00:00+02:00").getTime(),
+          change: 0.05,
+          state: 12270.3,
+        },
+        {
+          start: new Date("2026-08-09T00:00:00+02:00").getTime(),
+          change: 6.31,
+          state: 12276.61,
+        },
+        {
+          start: new Date("2026-08-10T00:00:00+02:00").getTime(),
+          change: 0.05,
+          state: 12276.66,
+        },
+        {
+          start: new Date("2026-08-11T00:00:00+02:00").getTime(),
+          change: 14.34,
+          state: 12291,
+        },
+      ],
+    };
+  };
+  await card._loadChargerHistory(true);
+  assert.equal(statisticsRequest.type, "recorder/statistics_during_period");
+  assert.deepEqual(statisticsRequest.statistic_ids, [
+    "sensor.home_charger_total_energy",
+  ]);
+  assert.equal(statisticsRequest.period, "day");
+  assert.equal(card._chargerHistoryState, "ready");
+  assert.equal(card._chargerHistory.length, 4);
+  const longTermHistory = card._renderChargerHistoryStatistics(0.2773);
+  assert.match(longTermHistory, /Energy used/);
+  assert.match(longTermHistory, /20\.8 kWh/);
+  assert.match(longTermHistory, /Charging days/);
+  assert.match(longTermHistory, />2</);
+  assert.match(longTermHistory, /Average per charging day/);
+  assert.match(longTermHistory, /10\.3 kWh/);
+  assert.match(longTermHistory, /EUR 5\.75/);
+  assert.match(longTermHistory, /Show daily charging data/);
+  assert.doesNotMatch(longTermHistory, /08 aug.*0\.05 kWh/);
+  await card._setChargerHistoryPeriod(30);
+  assert.equal(card._chargerHistoryPeriod, 30);
+  assert.equal(statisticsRequest.period, "day");
 
   card._hass.states["sensor.home_energy_price"] = {
     state: "27.73",
@@ -794,6 +855,10 @@ async function run() {
   assert.doesNotMatch(
     fallbackCard._renderEnergyTab({}),
     /Daily driving history/,
+  );
+  assert.match(
+    fallbackCard._renderEnergyTab({}),
+    /Map charger_total_energy to load permanent Home Assistant energy statistics/,
   );
   const vehicleControls = card._renderVehicleTab();
   assert.match(vehicleControls, /Smart key battery/);
