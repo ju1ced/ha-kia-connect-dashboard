@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.14.0 - 2026-08-12
+
 - Added automatic per-trip route-source selection between two driver phones,
   using recent GPS movement and optional automotive activity signals.
 - Added Kia-only and fixed-phone modes, with Kia fallback and a locked driver
