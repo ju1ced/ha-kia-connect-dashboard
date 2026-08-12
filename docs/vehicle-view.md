@@ -39,6 +39,11 @@ for explicit confirmation, and wait for the entity to report the requested
 state. The default timeout is 90 seconds and can be changed with
 `vehicle_action_timeout` in milliseconds.
 
+If `refresh` maps to a `button.*` entity, a lock action that has not produced the
+requested state after five seconds triggers that refresh exactly once. Configure
+the grace period with `vehicle_action_refresh_delay`; no repeated Kia polling is
+performed.
+
 The target Kia inventory exposes trunk, hood, and headlamp state without paired
 commands. Hazard-light buttons do not expose a reliable end state, and the
 charge-port switch semantics have not been validated. Those controls therefore

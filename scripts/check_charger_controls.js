@@ -55,6 +55,7 @@ card._config = {
     charger_energy_price: "sensor.home_energy_price",
     vin: "sensor.vehicle_vin",
     last_updated: "sensor.vehicle_last_updated",
+    refresh: "button.vehicle_refresh",
   },
 };
 card._hass = {
@@ -68,6 +69,7 @@ card._hass = {
     "button.home_charger_resume": { state: "unknown", attributes: {} },
     "button.home_charger_start": { state: "unknown", attributes: {} },
     "button.home_charger_stop": { state: "unknown", attributes: {} },
+    "button.vehicle_refresh": { state: "unknown", attributes: {} },
     "sensor.home_charger_status": { state: "suspended_evse", attributes: {} },
     "sensor.home_charger_session_energy": {
       state: "10",
@@ -260,7 +262,7 @@ async function run() {
   assert.match(card.shadowRoot.innerHTML, />Settings</);
 
   const settings = card._renderSettingsTab();
-  assert.match(settings, /13 of 13 available/);
+  assert.match(settings, /14 of 14 available/);
   assert.match(settings, /Connection health/);
   assert.match(settings, /Vehicle connection/);
   assert.match(settings, /Data current/);
@@ -329,12 +331,22 @@ async function run() {
   assert.match(vehicle, /verify the returned lock state/);
 
   card._hass.states["lock.vehicle"].state = "unlocked";
+  let requestedVehicleRefresh = "";
+  let requestedVehicleRefreshTimeout = 0;
+  const refreshAfterAction = card._refreshVehicleStateAfterAction.bind(card);
+  card._refreshVehicleStateAfterAction = async (expectedState, timeout) => {
+    requestedVehicleRefresh = expectedState;
+    requestedVehicleRefreshTimeout = timeout;
+    return false;
+  };
   await card._setVehicleLock(true);
   assert.deepEqual(calls.shift(), {
     domain: "lock",
     service: "lock",
     data: { entity_id: "lock.vehicle" },
   });
+  assert.equal(requestedVehicleRefresh, "locked");
+  assert.equal(requestedVehicleRefreshTimeout, 90000);
   assert.equal(card._notice, "Vehicle locked successfully");
   await card._setVehicleLock(false);
   assert.deepEqual(calls.shift(), {
@@ -342,7 +354,26 @@ async function run() {
     service: "unlock",
     data: { entity_id: "lock.vehicle" },
   });
+  assert.equal(requestedVehicleRefresh, "unlocked");
   assert.equal(card._notice, "Vehicle unlocked successfully");
+  card._refreshVehicleStateAfterAction = refreshAfterAction;
+
+  card._hass.states["lock.vehicle"].state = "unlocked";
+  card._config.vehicle_action_refresh_delay = 0;
+  await card._refreshVehicleStateAfterAction("locked");
+  assert.deepEqual(calls.shift(), {
+    domain: "button",
+    service: "press",
+    data: { entity_id: "button.vehicle_refresh" },
+  });
+  assert.equal(
+    card._notice,
+    "Vehicle status refresh requested; waiting for the updated lock state.",
+  );
+  card._hass.states["lock.vehicle"].state = "locked";
+  const callsBeforeCurrentVehicleState = calls.length;
+  await card._refreshVehicleStateAfterAction("locked");
+  assert.equal(calls.length, callsBeforeCurrentVehicleState);
 
   card._config.vehicle_controls = false;
   const readOnlyVehicle = card._renderVehicleTab();

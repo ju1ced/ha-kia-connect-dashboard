@@ -458,12 +458,20 @@ the reviewed controls explicitly:
 type: custom:kia-dashboard-card
 vehicle_controls: true
 vehicle_action_timeout: 90000
+vehicle_action_refresh_delay: 5000
 entities:
   door_lock: lock.your_vehicle_door_lock
+  refresh: button.your_vehicle_force_refresh
 ```
 
 The buttons only render as active for a `lock.*` entity. Each command asks for
 confirmation and waits until Home Assistant reports `locked` or `unlocked`.
+When the requested state has not appeared after the configured grace period, the
+card presses the mapped `refresh` button once. This asks the Kia integration for
+fresh vehicle data without repeatedly polling it. Set
+`vehicle_action_refresh_delay` in milliseconds between `0` and `30000`; it
+defaults to five seconds. Without a mapped `button.*` refresh entity, the card
+keeps the original passive wait behavior.
 Disabling `confirm_actions` is not recommended for access controls. Trunk, hood,
 headlamp, hazard-light, and charge-port actions remain read-only until their
 result can be verified reliably.
