@@ -411,6 +411,8 @@ const KIA_DASHBOARD_NL = {
   "Unlock vehicle": "Voertuig ontgrendelen",
   "Lock command sent; waiting for vehicle status.": "Vergrendelopdracht verzonden; wachten op voertuigstatus.",
   "Unlock command sent; waiting for vehicle status.": "Ontgrendelopdracht verzonden; wachten op voertuigstatus.",
+  "Vehicle status refresh requested; waiting for the updated lock state.": "Vernieuwing van de voertuigstatus aangevraagd; wachten op de bijgewerkte vergrendelstatus.",
+  "Automatic vehicle status refresh failed; waiting for Home Assistant to update.": "Automatisch vernieuwen van de voertuigstatus is mislukt; wachten tot Home Assistant de status bijwerkt.",
   "Vehicle locked successfully": "Voertuig succesvol vergrendeld",
   "Vehicle unlocked successfully": "Voertuig succesvol ontgrendeld",
   "Lock command was sent, but the vehicle did not report locked before the timeout.": "De vergrendelopdracht is verzonden, maar het voertuig meldde niet tijdig dat het vergrendeld was.",
@@ -1355,6 +1357,26 @@ class KiaDashboardCard extends HTMLElement {
     });
   }
 
+  async _refreshVehicleStateAfterAction(expectedState, timeoutMs = 90000) {
+    const refreshEntityId = this._entity("refresh");
+    if (!this._hass || !refreshEntityId?.startsWith("button.")) return false;
+    const configuredDelay = Number(this._config.vehicle_action_refresh_delay);
+    const maximumDelay = Math.max(0, Math.min(30000, timeoutMs - 1000));
+    const delay = Number.isFinite(configuredDelay) ? Math.max(0, Math.min(maximumDelay, configuredDelay)) : Math.min(5000, maximumDelay);
+    if (delay > 0) {
+      await new Promise((resolve) => window.setTimeout(resolve, delay));
+    }
+    if (String(this._obj("door_lock")?.state || "").toLowerCase() === String(expectedState).toLowerCase()) return false;
+    try {
+      await this._hass.callService("button", "press", { entity_id: refreshEntityId });
+      this._noticeMessage("Vehicle status refresh requested; waiting for the updated lock state.");
+      return true;
+    } catch (_error) {
+      this._noticeMessage("Automatic vehicle status refresh failed; waiting for Home Assistant to update.");
+      return false;
+    }
+  }
+
   async _setVehicleLock(locked) {
     const entityId = this._entity("door_lock");
     const controlsEnabled = this._config.vehicle_controls === true || this._config.vehicle?.controls === true;
@@ -1380,7 +1402,9 @@ class KiaDashboardCard extends HTMLElement {
       await this._hass.callService("lock", action, { entity_id: entityId });
       this._noticeMessage(locked ? "Lock command sent; waiting for vehicle status." : "Unlock command sent; waiting for vehicle status.");
       const timeout = Math.max(5000, Number(this._config.vehicle_action_timeout) || 90000);
-      const confirmed = await this._waitForEntityState("door_lock", locked ? "locked" : "unlocked", timeout);
+      const expectedState = locked ? "locked" : "unlocked";
+      void this._refreshVehicleStateAfterAction(expectedState, timeout);
+      const confirmed = await this._waitForEntityState("door_lock", expectedState, timeout);
       this._noticeMessage(confirmed
         ? (locked ? "Vehicle locked successfully" : "Vehicle unlocked successfully")
         : (locked

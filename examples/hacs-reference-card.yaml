@@ -3,6 +3,7 @@ type: custom:kia-dashboard-card
 title: Kia EV6
 subtitle: GT-Line
 vehicle_controls: false
+vehicle_action_refresh_delay: 5000
 charger_controls: true
 charger_resume_via_mode: true
 charger_history_min_kwh: 0.2

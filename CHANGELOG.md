@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added a single automatic Kia data refresh after lock or unlock when the
+  requested state does not arrive during the configurable grace period.
+
 ## 2.16.0 - 2026-08-12
 
 - Added opt-in Vehicle lock and unlock controls with explicit confirmation,
