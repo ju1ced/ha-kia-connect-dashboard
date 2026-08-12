@@ -111,6 +111,11 @@ card._hass = {
         service === "lock" ? "locked" : "unlocked";
     }
   },
+  callApi: async (_method, path) => {
+    const entityId = path.replace(/^states\//, "");
+    const entity = card._hass.states[entityId];
+    return entity ? { entity_id: entityId, ...entity } : undefined;
+  },
 };
 
 async function run() {
@@ -374,6 +379,37 @@ async function run() {
   const callsBeforeCurrentVehicleState = calls.length;
   await card._refreshVehicleStateAfterAction("locked");
   assert.equal(calls.length, callsBeforeCurrentVehicleState);
+
+  card._hass.states["lock.vehicle"] = {
+    state: "locked",
+    last_updated: "2026-08-12T10:00:00Z",
+    attributes: {},
+  };
+  const callApi = card._hass.callApi;
+  card._hass.callApi = async () => ({
+    entity_id: "lock.vehicle",
+    state: "unlocked",
+    last_updated: "2026-08-12T10:01:00Z",
+    attributes: {},
+  });
+  const refreshedLockState =
+    await card._readEntityStateFromHomeAssistant("door_lock");
+  assert.equal(refreshedLockState.state, "unlocked");
+  assert.equal(card._obj("door_lock").state, "unlocked");
+  card.hass = {
+    ...card._hass,
+    states: {
+      ...card._hass.states,
+      "lock.vehicle": {
+        state: "unlocked",
+        last_updated: "2026-08-12T10:01:01Z",
+        attributes: {},
+      },
+    },
+    callApi,
+  };
+  assert.equal(card._entityStateOverrides.has("lock.vehicle"), false);
+  assert.equal(card._obj("door_lock").state, "unlocked");
 
   card._config.vehicle_controls = false;
   const readOnlyVehicle = card._renderVehicleTab();

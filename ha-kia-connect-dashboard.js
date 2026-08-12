@@ -526,6 +526,7 @@ class KiaDashboardCard extends HTMLElement {
     this._chargerHistoryRequestToken = 0;
     this._chargerHistoryPeriod = 90;
     this._chargerHistoryExpanded = false;
+    this._entityStateOverrides = new Map();
   }
 
   setConfig(config) {
@@ -561,6 +562,14 @@ class KiaDashboardCard extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
+    for (const [entityId, override] of this._entityStateOverrides) {
+      const live = hass?.states?.[entityId];
+      const liveTimestamp = Date.parse(live?.last_updated || live?.last_changed || "") || 0;
+      const overrideTimestamp = Date.parse(override?.last_updated || override?.last_changed || "") || 0;
+      if (!live || live.state === override.state || liveTimestamp >= overrideTimestamp) {
+        this._entityStateOverrides.delete(entityId);
+      }
+    }
     this._render();
     if (this._activeTab === "location") this._loadLocationTrips();
     if (this._activeTab === "energy") this._loadChargerHistory();
@@ -576,7 +585,7 @@ class KiaDashboardCard extends HTMLElement {
 
   _obj(key) {
     const entityId = this._entity(key);
-    return entityId && this._hass ? this._hass.states[entityId] : undefined;
+    return entityId && this._hass ? this._entityStateOverrides.get(entityId) || this._hass.states[entityId] : undefined;
   }
 
   _state(key, fallback = "--") {
@@ -1345,16 +1354,36 @@ class KiaDashboardCard extends HTMLElement {
   async _waitForEntityState(entityKey, expectedState, timeoutMs = 90000) {
     const expected = String(expectedState).toLowerCase();
     const matches = () => String(this._obj(entityKey)?.state || "").toLowerCase() === expected;
-    if (matches()) return true;
+    if (matches()) {
+      this._render();
+      return true;
+    }
     const started = Date.now();
     return new Promise((resolve) => {
-      const check = () => {
-        if (matches()) return resolve(true);
+      const check = async () => {
+        if (!matches()) await this._readEntityStateFromHomeAssistant(entityKey);
+        if (matches()) {
+          this._render();
+          return resolve(true);
+        }
         if (Date.now() - started >= timeoutMs) return resolve(false);
         window.setTimeout(check, 1000);
       };
       window.setTimeout(check, 1000);
     });
+  }
+
+  async _readEntityStateFromHomeAssistant(entityKey) {
+    const entityId = this._entity(entityKey);
+    if (!entityId || !this._hass?.callApi) return undefined;
+    try {
+      const state = await this._hass.callApi("GET", `states/${entityId}`);
+      if (!state || state.entity_id !== entityId || typeof state.state !== "string") return undefined;
+      this._entityStateOverrides.set(entityId, state);
+      return state;
+    } catch (_error) {
+      return undefined;
+    }
   }
 
   async _refreshVehicleStateAfterAction(expectedState, timeoutMs = 90000) {

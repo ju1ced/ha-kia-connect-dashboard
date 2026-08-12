@@ -44,6 +44,10 @@ requested state after five seconds triggers that refresh exactly once. Configure
 the grace period with `vehicle_action_refresh_delay`; no repeated Kia polling is
 performed.
 
+During the remaining wait, the card checks the local Home Assistant state API
+and redraws the controls as soon as that API confirms the requested lock state.
+This avoids requiring a browser reload when a Lovelace state update is delayed.
+
 The target Kia inventory exposes trunk, hood, and headlamp state without paired
 commands. Hazard-light buttons do not expose a reliable end state, and the
 charge-port switch semantics have not been validated. Those controls therefore
