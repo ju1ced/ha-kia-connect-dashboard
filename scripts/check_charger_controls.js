@@ -761,7 +761,11 @@ async function run() {
   assert.doesNotMatch(calendarDayView, /<span>Recorder analysis<\/span>/);
   card._tripCalendarRequestKey = "";
   await card._loadTripCalendar();
-  assert.equal(calendarRequestCount, 1, "the visible month should be served from the calendar cache");
+  assert.equal(
+    calendarRequestCount,
+    1,
+    "the visible month should be served from the calendar cache",
+  );
   card._tripViewMode = "overview";
   const calendarOverview = card._renderLocationTripHistory();
   assert.match(calendarOverview, /All calendar history/);
