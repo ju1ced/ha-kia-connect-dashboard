@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.16.1 - 2026-08-12
+
 - Added a single automatic Kia data refresh after lock or unlock when the
   requested state does not arrive during the configurable grace period.
 
