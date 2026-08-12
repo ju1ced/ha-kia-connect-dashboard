@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added automatic per-trip route-source selection between two driver phones,
+  using recent GPS movement and optional automotive activity signals.
+- Added Kia-only and fixed-phone modes, with Kia fallback and a locked driver
+  choice that prevents a stationary phone at home from entering another
+  driver's trip.
+
 ## 2.13.0 - 2026-08-12
 
 - Fixed intermittent desktop Energy layout gaps when conditional driving

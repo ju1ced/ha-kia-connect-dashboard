@@ -66,8 +66,17 @@ Recorder retention.
    sensor.your_vehicle_today_driving_stats
    device_tracker.your_vehicle_location
    device_tracker.your_driver_phone
+   device_tracker.your_second_driver_phone
    button.your_vehicle_force_refresh
    calendar.your_vehicle_trips
+   ```
+
+   The following activity sensors are optional. Replace them when the Companion
+   app exposes detected activity; otherwise leave the placeholders unchanged:
+
+   ```text
+   sensor.your_driver_phone_detected_activity
+   sensor.your_second_driver_phone_detected_activity
    ```
 
 5. Run **Developer tools > YAML > Check configuration**, then restart Home
@@ -96,15 +105,28 @@ This can expose stops that fall between the integration's normal updates, but it
 adds Kia API traffic and cannot guarantee detection of stops shorter than five
 minutes.
 
-`input_boolean.kia_trip_use_driver_tracker` also starts disabled. Replace
-`device_tracker.your_driver_phone` with the driver's phone tracker (a `person.*`
-entity with latitude and longitude is valid too), then enable the helper to use
-that tracker for route coordinates while the Kia engine reports an active trip.
-The phone is sampled once per minute; it is never used to decide whether a trip
-started or stopped. This opt-in avoids silently assigning another person's
-movement to the vehicle. The result is a close breadcrumb approximation, not a
-road-snapped navigation route; road snapping would require an external routing
-or map-matching service.
+`input_boolean.kia_trip_use_driver_tracker` is the privacy master switch and
+starts disabled. Replace the primary and secondary tracker placeholders (a
+`person.*` entity with latitude and longitude is valid too), then enable this
+helper when phone-assisted routes are wanted. Choose the behavior with
+`input_select.kia_trip_route_mode`:
+
+- `Automatic` observes both phones for two minutes. A phone qualifies after
+  receiving a recent GPS update and moving at least 350 meters, or 100 meters
+  when its optional activity sensor reports `automotive`, `in_vehicle`, or
+  `driving`. The best candidate is locked for the remainder of the trip. While
+  no candidate qualifies, Kia remains the source and selection is retried every
+  two minutes.
+- `Kia only` never selects a phone.
+- `Primary phone` and `Secondary phone` explicitly select that tracker when GPS
+  coordinates are available, with Kia as fallback.
+
+This means a primary phone left at home is rejected when the second driver
+leaves with the vehicle. If only the stationary phone is configured, the route
+stays on Kia points. The selected phone is sampled once per minute; it never
+decides whether a trip started or stopped. The result is a close breadcrumb
+approximation, not a road-snapped navigation route; road snapping would require
+an external routing or map-matching service.
 
 The package expects the remaining-energy sensor in `kJ`, `Wh`, or `kWh` and
 normalizes it to `kWh`. The card treats the resulting values as estimates because

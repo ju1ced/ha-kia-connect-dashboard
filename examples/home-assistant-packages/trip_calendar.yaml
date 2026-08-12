@@ -4,9 +4,9 @@
 # Before loading this package:
 # 1. Add a Local Calendar in Home Assistant.
 # 2. Replace every calendar.your_vehicle_trips and every source entity below.
-# 3. Replace device_tracker.your_driver_phone with the tracker used by the
-#    regular driver. Leave Kia trip driver tracker off if you do not want to
-#    combine phone locations with vehicle data.
+# 3. Replace the primary and secondary driver trackers. The matching detected
+#    activity sensors are optional; leave their placeholders unchanged if the
+#    Companion app does not expose them.
 # 4. Copy this file to /config/packages/trip_calendar.yaml and restart HA.
 
 input_boolean:
@@ -25,6 +25,17 @@ input_datetime:
     name: Kia trip started at
     has_date: true
     has_time: true
+
+input_select:
+  kia_trip_route_mode:
+    name: Kia trip route mode
+    icon: mdi:map-marker-path
+    options:
+      - Automatic
+      - Kia only
+      - Primary phone
+      - Secondary phone
+    initial: Automatic
 
 input_number:
   kia_trip_start_odometer:
@@ -55,6 +66,18 @@ input_text:
     max: 255
   kia_trip_start_coordinates:
     name: Kia trip start coordinates
+    max: 255
+  kia_trip_primary_start_coordinates:
+    name: Kia trip primary phone start coordinates
+    max: 255
+  kia_trip_secondary_start_coordinates:
+    name: Kia trip secondary phone start coordinates
+    max: 255
+  kia_trip_selected_route_tracker:
+    name: Kia trip selected route tracker
+    max: 255
+  kia_trip_route_source:
+    name: Kia trip route source
     max: 255
   kia_trip_route_points:
     name: Kia trip route points
@@ -93,13 +116,7 @@ automation:
           {{ has_value('sensor.your_vehicle_odometer') }}
     actions:
       - variables:
-          route_tracker: >-
-            {% set phone_lat = state_attr('device_tracker.your_driver_phone', 'latitude') %}
-            {% set phone_lon = state_attr('device_tracker.your_driver_phone', 'longitude') %}
-            {{ 'device_tracker.your_driver_phone'
-               if is_state('input_boolean.kia_trip_use_driver_tracker', 'on') and
-                  phone_lat is number and phone_lon is number
-               else 'device_tracker.your_vehicle_location' }}
+          route_tracker: device_tracker.your_vehicle_location
           start_energy_raw: >-
             {{ states('sensor.your_vehicle_remaining_energy') | float(0) }}
           start_energy_unit: >-
@@ -120,6 +137,16 @@ automation:
           start_coordinates: >-
             {% set lat = state_attr(route_tracker, 'latitude') %}
             {% set lon = state_attr(route_tracker, 'longitude') %}
+            {{ (lat | round(6) ~ ',' ~ lon | round(6))
+               if lat is number and lon is number else '' }}
+          primary_start_coordinates: >-
+            {% set lat = state_attr('device_tracker.your_driver_phone', 'latitude') %}
+            {% set lon = state_attr('device_tracker.your_driver_phone', 'longitude') %}
+            {{ (lat | round(6) ~ ',' ~ lon | round(6))
+               if lat is number and lon is number else '' }}
+          secondary_start_coordinates: >-
+            {% set lat = state_attr('device_tracker.your_second_driver_phone', 'latitude') %}
+            {% set lon = state_attr('device_tracker.your_second_driver_phone', 'longitude') %}
             {{ (lat | round(6) ~ ',' ~ lon | round(6))
                if lat is number and lon is number else '' }}
           start_driving_stats: >-
@@ -174,6 +201,26 @@ automation:
           value: "{{ start_coordinates | trim }}"
       - action: input_text.set_value
         target:
+          entity_id: input_text.kia_trip_primary_start_coordinates
+        data:
+          value: "{{ primary_start_coordinates | trim }}"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.kia_trip_secondary_start_coordinates
+        data:
+          value: "{{ secondary_start_coordinates | trim }}"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.kia_trip_selected_route_tracker
+        data:
+          value: device_tracker.your_vehicle_location
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.kia_trip_route_source
+        data:
+          value: kia
+      - action: input_text.set_value
+        target:
           entity_id: input_text.kia_trip_route_points
         data:
           value: "{{ start_coordinates | trim }}"
@@ -196,6 +243,161 @@ automation:
         target:
           entity_id: input_boolean.kia_trip_active
 
+  - id: kia_trip_calendar_select_route_tracker
+    alias: Kia trip calendar - select route tracker
+    description: Select a moving driver phone or keep Kia as the route source.
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.your_vehicle_engine
+        to: "on"
+        id: started
+      - trigger: time_pattern
+        minutes: "/2"
+        id: retry
+    actions:
+      - if:
+          - condition: trigger
+            id: started
+        then:
+          - delay: "00:02:00"
+      - condition: state
+        entity_id: input_boolean.kia_trip_active
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.your_vehicle_engine
+        state: "on"
+      - condition: state
+        entity_id: input_text.kia_trip_route_source
+        state: kia
+      - variables:
+          route_mode: "{{ states('input_select.kia_trip_route_mode') | lower }}"
+          primary_tracker: device_tracker.your_driver_phone
+          secondary_tracker: device_tracker.your_second_driver_phone
+          primary_movement_km: >-
+            {% macro movement(start_value, tracker) -%}
+              {% set parts = start_value.split(',') %}
+              {% set lat2 = state_attr(tracker, 'latitude') %}
+              {% set lon2 = state_attr(tracker, 'longitude') %}
+              {% if parts | length == 2 and lat2 is number and lon2 is number %}
+                {% set lat1 = parts[0] | float %}
+                {% set lon1 = parts[1] | float %}
+                {% set dlat = (lat2 - lat1) * pi / 180 %}
+                {% set dlon = (lon2 - lon1) * pi / 180 %}
+                {% set value = sin(dlat / 2) ** 2 +
+                   cos(lat1 * pi / 180) * cos(lat2 * pi / 180) *
+                   sin(dlon / 2) ** 2 %}
+                {{ 6371 * 2 * atan2(sqrt(value), sqrt(1 - value)) }}
+              {% else %}
+                0
+              {% endif %}
+            {%- endmacro %}
+            {{ movement(states('input_text.kia_trip_primary_start_coordinates'),
+                        primary_tracker) | float(0) }}
+          secondary_movement_km: >-
+            {% macro movement(start_value, tracker) -%}
+              {% set parts = start_value.split(',') %}
+              {% set lat2 = state_attr(tracker, 'latitude') %}
+              {% set lon2 = state_attr(tracker, 'longitude') %}
+              {% if parts | length == 2 and lat2 is number and lon2 is number %}
+                {% set lat1 = parts[0] | float %}
+                {% set lon1 = parts[1] | float %}
+                {% set dlat = (lat2 - lat1) * pi / 180 %}
+                {% set dlon = (lon2 - lon1) * pi / 180 %}
+                {% set value = sin(dlat / 2) ** 2 +
+                   cos(lat1 * pi / 180) * cos(lat2 * pi / 180) *
+                   sin(dlon / 2) ** 2 %}
+                {{ 6371 * 2 * atan2(sqrt(value), sqrt(1 - value)) }}
+              {% else %}
+                0
+              {% endif %}
+            {%- endmacro %}
+            {{ movement(states('input_text.kia_trip_secondary_start_coordinates'),
+                        secondary_tracker) | float(0) }}
+          primary_activity: >-
+            {{ states('sensor.your_driver_phone_detected_activity') | lower }}
+          secondary_activity: >-
+            {{ states('sensor.your_second_driver_phone_detected_activity') | lower }}
+          primary_updated_ts: >-
+            {% set tracker_state = expand(primary_tracker) | first %}
+            {{ as_timestamp(tracker_state.last_updated, 0)
+               if tracker_state is defined else 0 }}
+          secondary_updated_ts: >-
+            {% set tracker_state = expand(secondary_tracker) | first %}
+            {{ as_timestamp(tracker_state.last_updated, 0)
+               if tracker_state is defined else 0 }}
+      - variables:
+          primary_automotive: >-
+            {{ primary_activity in ['automotive', 'in_vehicle', 'driving'] }}
+          secondary_automotive: >-
+            {{ secondary_activity in ['automotive', 'in_vehicle', 'driving'] }}
+          primary_recent: >-
+            {{ primary_updated_ts | float(0) >=
+                 as_timestamp(states('input_datetime.kia_trip_started_at'), 0) and
+               as_timestamp(now()) - primary_updated_ts | float(0) <= 300 }}
+          secondary_recent: >-
+            {{ secondary_updated_ts | float(0) >=
+                 as_timestamp(states('input_datetime.kia_trip_started_at'), 0) and
+               as_timestamp(now()) - secondary_updated_ts | float(0) <= 300 }}
+          primary_candidate: >-
+            {{ primary_recent | bool(false) and
+               (primary_movement_km | float(0) >= 0.35 or
+                (primary_automotive | bool(false) and
+                 primary_movement_km | float(0) >= 0.1)) }}
+          secondary_candidate: >-
+            {{ secondary_recent | bool(false) and
+               (secondary_movement_km | float(0) >= 0.35 or
+                (secondary_automotive | bool(false) and
+                 secondary_movement_km | float(0) >= 0.1)) }}
+          primary_score: >-
+            {{ primary_movement_km | float(0) +
+               (5 if primary_automotive | bool(false) else 0) }}
+          secondary_score: >-
+            {{ secondary_movement_km | float(0) +
+               (5 if secondary_automotive | bool(false) else 0) }}
+      - variables:
+          selected_tracker: >-
+            {% if not is_state('input_boolean.kia_trip_use_driver_tracker', 'on') or
+                  route_mode == 'kia only' %}
+              device_tracker.your_vehicle_location
+            {% elif route_mode == 'primary phone' %}
+              {{ primary_tracker
+                 if state_attr(primary_tracker, 'latitude') is number and
+                    state_attr(primary_tracker, 'longitude') is number
+                 else 'device_tracker.your_vehicle_location' }}
+            {% elif route_mode == 'secondary phone' %}
+              {{ secondary_tracker
+                 if state_attr(secondary_tracker, 'latitude') is number and
+                    state_attr(secondary_tracker, 'longitude') is number
+                 else 'device_tracker.your_vehicle_location' }}
+            {% elif primary_candidate | bool(false) and
+                    (not secondary_candidate | bool(false) or
+                     primary_score | float(0) >= secondary_score | float(0)) %}
+              {{ primary_tracker }}
+            {% elif secondary_candidate | bool(false) %}
+              {{ secondary_tracker }}
+            {% else %}
+              device_tracker.your_vehicle_location
+            {% endif %}
+          selected_source: >-
+            {% if selected_tracker | trim == primary_tracker %}
+              phone-primary
+            {% elif selected_tracker | trim == secondary_tracker %}
+              phone-secondary
+            {% else %}
+              kia
+            {% endif %}
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.kia_trip_selected_route_tracker
+        data:
+          value: "{{ selected_tracker | trim }}"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.kia_trip_route_source
+        data:
+          value: "{{ selected_source | trim }}"
+
   - id: kia_trip_calendar_capture_route
     alias: Kia trip calendar - capture route points
     description: Preserve vehicle or opted-in driver-phone points while a trip is active.
@@ -213,11 +415,15 @@ automation:
     actions:
       - variables:
           route_tracker: >-
-            {% set phone_lat = state_attr('device_tracker.your_driver_phone', 'latitude') %}
-            {% set phone_lon = state_attr('device_tracker.your_driver_phone', 'longitude') %}
-            {{ 'device_tracker.your_driver_phone'
-               if is_state('input_boolean.kia_trip_use_driver_tracker', 'on') and
-                  phone_lat is number and phone_lon is number
+            {% set selected = states('input_text.kia_trip_selected_route_tracker') %}
+            {% set selected_phone = selected in
+               ['device_tracker.your_driver_phone',
+                'device_tracker.your_second_driver_phone'] %}
+            {{ selected
+               if state_attr(selected, 'latitude') is number and
+                  state_attr(selected, 'longitude') is number and
+                  (not selected_phone or
+                   is_state('input_boolean.kia_trip_use_driver_tracker', 'on'))
                else 'device_tracker.your_vehicle_location' }}
           route_point: >-
             {% set lat = state_attr(route_tracker, 'latitude') %}
@@ -450,10 +656,11 @@ automation:
                        timestamp_custom('%Y-%m-%d %H:%M:%S', true) }}
                   location: "{{ destination | string | trim }}"
                   description: >-
-                    {% set use_phone =
-                       is_state('input_boolean.kia_trip_use_driver_tracker', 'on') %}
-                    {% set route_tracker = 'device_tracker.your_driver_phone'
-                       if use_phone else 'device_tracker.your_vehicle_location' %}
+                    {% set selected =
+                       states('input_text.kia_trip_selected_route_tracker') %}
+                    {% set route_tracker = selected
+                       if state_attr(selected, 'latitude') is number
+                       else 'device_tracker.your_vehicle_location' %}
                     {% set destination_lat = state_attr(route_tracker, 'latitude') %}
                     {% set destination_lon = state_attr(route_tracker, 'longitude') %}
                     {{ {
@@ -468,7 +675,7 @@ automation:
                          (destination_lon | string))
                         if destination_lat is number and destination_lon is number
                         else '',
-                      'route_source': 'phone' if use_phone else 'kia',
+                      'route_source': states('input_text.kia_trip_route_source'),
                       'route_points':
                         ([states('input_text.kia_trip_route_points'),
                           states('input_text.kia_trip_route_points_2'),

@@ -252,10 +252,13 @@ companion package from
 The package setup and required source-entity replacements are documented in the
 adjacent package README.
 
-The package can optionally sample a designated driver phone once per minute
-during an engine-confirmed trip. This produces a much closer breadcrumb route
-than the relatively sparse Kia tracker without sending coordinates to a route
-service. It does not perform road snapping.
+The package can optionally select between two driver phones during an
+engine-confirmed trip. Automatic mode observes movement for two minutes, locks
+the best moving candidate for that trip, and retains Kia as fallback when both
+phones stay behind or lack current coordinates. The selected phone is sampled
+once per minute. This produces a much closer breadcrumb route than the
+relatively sparse Kia tracker without sending coordinates to a route service.
+It does not perform road snapping.
 
 ## Optional Settings Entities
 
