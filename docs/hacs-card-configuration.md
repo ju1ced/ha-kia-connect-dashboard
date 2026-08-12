@@ -472,6 +472,10 @@ fresh vehicle data without repeatedly polling it. Set
 `vehicle_action_refresh_delay` in milliseconds between `0` and `30000`; it
 defaults to five seconds. Without a mapped `button.*` refresh entity, the card
 keeps the original passive wait behavior.
+While waiting, the card re-reads the lock entity from the local Home Assistant
+state API. A newly confirmed state is rendered immediately, even when Lovelace
+has not yet delivered another card update. These local reads do not contact Kia
+or trigger additional vehicle refreshes.
 Disabling `confirm_actions` is not recommended for access controls. Trunk, hood,
 headlamp, hazard-light, and charge-port actions remain read-only until their
 result can be verified reliably.
