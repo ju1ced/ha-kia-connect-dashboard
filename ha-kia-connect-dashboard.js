@@ -432,6 +432,9 @@ const KIA_DASHBOARD_NL = {
   "Stored trips": "Opgeslagen ritten",
   "Route overview": "Routeoverzicht",
   "Available Kia location points": "Beschikbare Kia-locatiepunten",
+  "Phone-assisted route points": "Routepunten via telefoon",
+  "Loading route data": "Routegegevens laden",
+  "No route points available for this day": "Geen routepunten beschikbaar voor deze dag",
   "Approximate routes": "Benaderde routes",
   "Approximate trip route": "Benaderde ritroute",
   "Approximate route": "Benaderde route",
@@ -474,6 +477,7 @@ class KiaDashboardCard extends HTMLElement {
     this._tripCalendarError = "";
     this._tripCalendarRequestKey = "";
     this._tripCalendarRequestToken = 0;
+    this._tripCalendarCache = new Map();
     this._tripViewMode = "day";
     this._tripSelectedDate = this._dateKey(new Date());
     this._tripCalendarMonth = this._tripSelectedDate.slice(0, 7);
@@ -497,6 +501,7 @@ class KiaDashboardCard extends HTMLElement {
       this._tripCalendarRequestKey = "";
       this._tripCalendarState = "idle";
       this._calendarTrips = [];
+      this._tripCalendarCache.clear();
     }
     this._render();
     if (this._activeTab === "location") this._loadLocationTrips();
@@ -627,7 +632,8 @@ class KiaDashboardCard extends HTMLElement {
       this._tripViewMode,
       range.start.toISOString(),
       range.end.toISOString(),
-      calendar?.last_changed || calendar?.last_updated || "",
+      calendar?.last_changed || "",
+      calendar?.last_updated || "",
     ].join("|");
   }
 
@@ -694,6 +700,7 @@ class KiaDashboardCard extends HTMLElement {
       electronicsEnergy: this._calendarNumber(data.electronics_energy_kwh),
       batteryCareEnergy: this._calendarNumber(data.battery_care_energy_kwh),
       regeneratedEnergy: this._calendarNumber(data.regenerated_energy_kwh),
+      routeSource: String(data.route_source || "kia"),
       routePoints,
     };
   }
@@ -703,6 +710,15 @@ class KiaDashboardCard extends HTMLElement {
     if (!entityId || !this._hass?.callApi) return;
     const requestKey = this._tripCalendarKey();
     if (!force && (this._tripCalendarState === "loading" || (this._tripCalendarState === "ready" && requestKey === this._tripCalendarRequestKey))) return;
+
+    if (!force && this._tripCalendarCache.has(requestKey)) {
+      this._tripCalendarRequestKey = requestKey;
+      this._calendarTrips = this._tripCalendarCache.get(requestKey);
+      this._tripCalendarState = "ready";
+      this._tripCalendarError = "";
+      if (this._activeTab === "location") this._render();
+      return;
+    }
 
     const token = ++this._tripCalendarRequestToken;
     this._tripCalendarRequestKey = requestKey;
@@ -718,6 +734,10 @@ class KiaDashboardCard extends HTMLElement {
         .map((event) => this._calendarTrip(event))
         .filter(Boolean)
         .sort((left, right) => right.start - left.start);
+      this._tripCalendarCache.set(requestKey, this._calendarTrips);
+      while (this._tripCalendarCache.size > 18) {
+        this._tripCalendarCache.delete(this._tripCalendarCache.keys().next().value);
+      }
       this._tripCalendarState = "ready";
     } catch (error) {
       if (token !== this._tripCalendarRequestToken) return;
@@ -1804,7 +1824,13 @@ class KiaDashboardCard extends HTMLElement {
       return `<polyline class="trip-route-line route-${index % 4}" points="${points}"></polyline><circle class="trip-route-point start" cx="${(start.x - left).toFixed(1)}" cy="${(start.y - top).toFixed(1)}" r="8"></circle><circle class="trip-route-point end" cx="${(end.x - left).toFixed(1)}" cy="${(end.y - top).toFixed(1)}" r="8"></circle>`;
     }).join("");
     const pointCount = routes.reduce((sum, route) => sum + route.length, 0);
-    return `<section class="trip-route-map" aria-label="Approximate routes"><div class="trip-route-map-heading"><div><span>Route overview</span><strong>Available Kia location points</strong></div><small>${pointCount} points</small></div><div class="trip-route-map-canvas"><svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Approximate trip route">${tiles.join("")}<g>${lines}</g></svg><span class="trip-route-quality">Approximate route</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a></div></section>`;
+    const phoneAssisted = trips.some((trip) => ["phone", "driver"].includes(String(trip.routeSource || "").toLowerCase()));
+    const sourceLabel = phoneAssisted ? "Phone-assisted route points" : "Available Kia location points";
+    return `<section class="trip-route-map" aria-label="Approximate routes"><div class="trip-route-map-heading"><div><span>Route overview</span><strong>${sourceLabel}</strong></div><small>${pointCount} points</small></div><div class="trip-route-map-canvas"><svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Approximate trip route">${tiles.join("")}<g>${lines}</g></svg><span class="trip-route-quality">Approximate route</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a></div></section>`;
+  }
+
+  _renderTripRoutePlaceholder(message = "No route points available for this day") {
+    return `<div class="trip-route-placeholder"><ha-icon icon="mdi:map-marker-path"></ha-icon><div><strong>Route overview</strong><span>${message}</span></div></div>`;
   }
 
   _renderTripCards(trips) {
@@ -1854,6 +1880,7 @@ class KiaDashboardCard extends HTMLElement {
     const selectedTrips = isDay ? this._calendarTrips.filter((trip) => this._dateKey(trip.start) === this._tripSelectedDate) : this._calendarTrips;
     const renderLimit = this._tripCalendarLimit();
     const shownTrips = selectedTrips.slice(0, renderLimit);
+    const routeMap = this._renderTripRouteMap(shownTrips);
     let content = "";
     if (this._tripCalendarState === "loading" || this._tripCalendarState === "idle") {
       content = `<div class="location-history-empty"><ha-icon icon="mdi:loading"></ha-icon><div><strong>Loading calendar history</strong><span>Reading stored trips from the mapped Home Assistant calendar.</span></div></div>`;
@@ -1862,12 +1889,13 @@ class KiaDashboardCard extends HTMLElement {
     } else if (!selectedTrips.length) {
       content = `<div class="location-history-empty"><ha-icon icon="mdi:calendar-blank-outline"></ha-icon><div><strong>${isDay ? "No stored trips for this day" : "No stored trips found"}</strong><span>${isDay ? "Choose another date or switch to Overview." : "New trips appear after the Home Assistant trip package records a completed drive."}</span></div></div>`;
     } else {
-      content = `${this._renderTripSummary(selectedTrips, isDay ? "Selected day" : "All calendar history")}${this._renderTripRouteMap(shownTrips)}${this._renderTripCards(shownTrips)}${selectedTrips.length > shownTrips.length ? `<p class="location-history-limit">Showing the latest ${shownTrips.length} of ${selectedTrips.length} trips. Increase trip_calendar_limit to show more.</p>` : ""}`;
+      content = `${this._renderTripSummary(selectedTrips, isDay ? "Selected day" : "All calendar history")}${isDay ? "" : routeMap}${this._renderTripCards(shownTrips)}${selectedTrips.length > shownTrips.length ? `<p class="location-history-limit">Showing the latest ${shownTrips.length} of ${selectedTrips.length} trips. Increase trip_calendar_limit to show more.</p>` : ""}`;
     }
+    const dayRoute = routeMap || this._renderTripRoutePlaceholder(this._tripCalendarState === "loading" || this._tripCalendarState === "idle" ? "Loading route data" : "No route points available for this day");
     return `<section class="location-history-section location-history card">
       <div class="location-history-top"><div class="location-history-heading"><ha-icon icon="mdi:calendar-road"></ha-icon><div><span>Persistent calendar</span><h2>Stored trip history</h2><p>Trips are stored locally in Home Assistant and remain available beyond Recorder retention.</p></div></div><button class="trip-calendar-refresh" data-trip-refresh aria-label="Refresh calendar"><ha-icon icon="mdi:refresh"></ha-icon></button></div>
       <div class="trip-view-toggle" role="group" aria-label="Trip history view"><button class="${isDay ? "active" : ""}" data-trip-view="day">Day</button><button class="${isDay ? "" : "active"}" data-trip-view="overview">Overview</button></div>
-      ${isDay ? this._renderTripCalendar() : ""}
+      ${isDay ? `<div class="trip-calendar-layout">${this._renderTripCalendar()}${dayRoute}</div>` : ""}
       <div class="trip-history-content"><h3>${isDay ? `${this._formatHistoryDay(this._tripSelectedDate)}` : "All calendar history"}</h3>${content}</div>
       <p class="location-history-note"><ha-icon icon="mdi:information-outline"></ha-icon>Calendar events are the persistent source; Recorder analysis remains the fallback when no trip calendar is mapped.</p>
     </section>`;
@@ -2081,10 +2109,11 @@ class KiaDashboardCard extends HTMLElement {
       .location-trip-list{display:grid;gap:10px;margin-top:18px}.location-trip-item{padding:16px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);display:grid;grid-template-columns:minmax(220px,.85fr) minmax(0,1.65fr);gap:20px}.location-trip-route span,.location-trip-route small,.location-trip-metrics small{display:block;color:var(--kia-muted);font-size:11px}.location-trip-route h3{margin:5px 0;font-size:15px;line-height:1.35;overflow-wrap:anywhere}.location-trip-route h3 ha-icon{color:var(--blue);--mdc-icon-size:16px;vertical-align:middle}.location-trip-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.location-trip-metrics>span{min-width:0;padding:9px 10px;border-left:2px solid color-mix(in srgb,var(--blue) 45%,var(--kia-line))}.location-trip-metrics strong{display:block;margin-top:4px;font-size:13px;overflow-wrap:anywhere}.location-history-empty{min-height:100px;margin-top:18px;padding:18px;border:1px dashed var(--kia-line);border-radius:8px;background:var(--kia-recessed);display:flex;align-items:center;gap:14px}.location-history-empty>ha-icon{color:var(--blue);--mdc-icon-size:32px}.location-history-empty.warning>ha-icon{color:var(--amber)}.location-history-empty strong,.location-history-empty span{display:block}.location-history-empty span{margin-top:4px;color:var(--kia-muted);font-size:12px}.location-history-note{margin-top:14px;padding-top:13px;border-top:1px solid var(--kia-line);display:flex;align-items:flex-start;gap:8px;color:var(--kia-muted);font-size:12px;line-height:1.45}.location-history-note ha-icon{color:var(--blue);--mdc-icon-size:18px;flex:0 0 auto}
       .location-history-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.trip-calendar-refresh,.trip-calendar-toolbar button,.trip-calendar-today{border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control);color:var(--kia-text);cursor:pointer}.trip-calendar-refresh{width:42px;height:42px;display:grid;place-items:center;flex:0 0 auto}.trip-calendar-refresh:hover,.trip-calendar-refresh:focus-visible,.trip-calendar-toolbar button:hover,.trip-calendar-toolbar button:focus-visible,.trip-calendar-today:hover,.trip-calendar-today:focus-visible{border-color:var(--blue)}
       .trip-view-toggle{width:min(360px,100%);margin:18px 0 0;display:grid;grid-template-columns:1fr 1fr;padding:4px;border:1px solid var(--kia-line);border-radius:10px;background:var(--kia-recessed)}.trip-view-toggle button{min-height:40px;border:0;border-radius:7px;background:transparent;color:var(--kia-text);font-weight:800;cursor:pointer}.trip-view-toggle button.active{background:color-mix(in srgb,var(--blue) 14%,var(--kia-control));color:var(--blue);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--blue) 55%,transparent)}
-      .trip-calendar{max-width:720px;margin-top:18px;padding:14px;border:1px solid var(--kia-line);border-radius:10px;background:var(--kia-recessed)}.trip-calendar-toolbar{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;gap:10px}.trip-calendar-toolbar strong{text-align:center;text-transform:capitalize}.trip-calendar-toolbar button{height:38px;display:grid;place-items:center}.trip-calendar-weekdays,.trip-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.trip-calendar-weekdays{margin-top:12px}.trip-calendar-weekdays span{text-align:center;color:var(--kia-muted);font-size:11px;font-weight:800;text-transform:uppercase}.trip-calendar-grid{margin-top:7px}.trip-calendar-grid button{position:relative;min-height:52px;padding:6px;border:1px solid transparent;border-radius:8px;background:var(--kia-control);color:var(--kia-text);cursor:pointer}.trip-calendar-grid button.outside{opacity:.4}.trip-calendar-grid button.today{border-color:color-mix(in srgb,var(--blue) 45%,var(--kia-line))}.trip-calendar-grid button.selected{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 15%,var(--kia-control));color:var(--blue)}.trip-calendar-grid button small{position:absolute;right:5px;bottom:4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--blue);color:var(--kia-card);font-size:10px;line-height:18px}.trip-calendar-today{margin-top:10px;min-height:34px;padding:0 13px;font-weight:700}
+      .trip-calendar-layout{display:grid;grid-template-columns:minmax(360px,.75fr) minmax(0,1.45fr);gap:16px;align-items:stretch;margin-top:18px}.trip-calendar{min-width:0;padding:14px;border:1px solid var(--kia-line);border-radius:10px;background:var(--kia-recessed)}.trip-calendar-toolbar{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;gap:10px}.trip-calendar-toolbar strong{text-align:center;text-transform:capitalize}.trip-calendar-toolbar button{height:38px;display:grid;place-items:center}.trip-calendar-weekdays,.trip-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.trip-calendar-weekdays{margin-top:12px}.trip-calendar-weekdays span{text-align:center;color:var(--kia-muted);font-size:11px;font-weight:800;text-transform:uppercase}.trip-calendar-grid{margin-top:7px}.trip-calendar-grid button{position:relative;min-height:52px;padding:6px;border:1px solid transparent;border-radius:8px;background:var(--kia-control);color:var(--kia-text);cursor:pointer}.trip-calendar-grid button.outside{opacity:.4}.trip-calendar-grid button.today{border-color:color-mix(in srgb,var(--blue) 45%,var(--kia-line))}.trip-calendar-grid button.selected{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 15%,var(--kia-control));color:var(--blue)}.trip-calendar-grid button small{position:absolute;right:5px;bottom:4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--blue);color:var(--kia-card);font-size:10px;line-height:18px}.trip-calendar-today{margin-top:10px;min-height:34px;padding:0 13px;font-weight:700}
       .trip-history-content{margin-top:20px}.trip-history-content>h3{font-size:16px}.location-trip-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:14px}.location-trip-summary>div{padding:12px;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-control)}.location-trip-summary span,.location-trip-summary strong{display:block}.location-trip-summary span{color:var(--kia-muted);font-size:11px}.location-trip-summary strong{margin-top:5px;font-size:16px}.location-history-limit{margin-top:12px;color:var(--kia-muted);font-size:12px}
+      .trip-calendar-layout>.trip-route-map{margin-top:0;display:grid;grid-template-rows:auto minmax(0,1fr)}.trip-calendar-layout>.trip-route-map .trip-route-map-canvas{height:100%;min-height:0;aspect-ratio:auto}.trip-route-placeholder{min-height:320px;padding:24px;border:1px dashed var(--kia-line);border-radius:10px;background:var(--kia-recessed);display:flex;align-items:center;justify-content:center;gap:14px;color:var(--kia-muted);text-align:left}.trip-route-placeholder>ha-icon{color:var(--blue);--mdc-icon-size:38px}.trip-route-placeholder strong,.trip-route-placeholder span{display:block}.trip-route-placeholder span{margin-top:5px;font-size:12px}
       .location-trip-summary small{display:block;margin-top:3px;color:var(--blue);font-size:10px;font-weight:700}.trip-route-map{margin-top:14px;border:1px solid var(--kia-line);border-radius:10px;overflow:hidden;background:var(--kia-control)}.trip-route-map-heading{padding:11px 13px;display:flex;align-items:center;justify-content:space-between;gap:12px}.trip-route-map-heading span,.trip-route-map-heading strong{display:block}.trip-route-map-heading span,.trip-route-map-heading small{color:var(--kia-muted);font-size:11px}.trip-route-map-heading strong{margin-top:3px;font-size:14px}.trip-route-map-canvas{position:relative;aspect-ratio:1200/430;min-height:240px;overflow:hidden;background:var(--kia-recessed)}.trip-route-map-canvas svg{display:block;width:100%;height:100%}.trip-route-line{fill:none;stroke:var(--blue);stroke-width:7;stroke-linecap:round;stroke-linejoin:round;paint-order:stroke;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}.trip-route-line.route-1{stroke:#7e57c2}.trip-route-line.route-2{stroke:#f59e0b}.trip-route-line.route-3{stroke:#ef5350}.trip-route-point{stroke:white;stroke-width:4}.trip-route-point.start{fill:var(--blue)}.trip-route-point.end{fill:#ef5350}.trip-route-quality,.trip-route-map-canvas>a{position:absolute;bottom:7px;padding:4px 7px;border-radius:5px;background:color-mix(in srgb,var(--kia-card) 88%,transparent);font-size:10px;color:var(--kia-text);z-index:2}.trip-route-quality{left:8px}.trip-route-map-canvas>a{right:8px;text-decoration:none}.location-trip-table{margin-top:14px;border:1px solid var(--kia-line);border-radius:10px;overflow-x:auto;background:var(--kia-control)}.location-trip-table-head,.location-trip-row>summary{min-width:1040px;display:grid;grid-template-columns:1.05fr .8fr .8fr .85fr .85fr 1.2fr .9fr .95fr 28px;align-items:center}.location-trip-table-head{background:var(--kia-recessed)}.location-trip-table-head>span{padding:10px 11px;font-size:11px;font-weight:800}.location-trip-row{border-top:1px solid var(--kia-line)}.location-trip-row>summary{list-style:none;cursor:pointer}.location-trip-row>summary::-webkit-details-marker{display:none}.location-trip-row>summary:hover,.location-trip-row>summary:focus-visible{background:color-mix(in srgb,var(--blue) 7%,var(--kia-control))}.location-trip-row>summary>ha-icon{color:var(--blue);transition:transform .2s}.location-trip-row[open]>summary>ha-icon{transform:rotate(180deg)}.trip-cell{min-width:0;padding:11px}.trip-cell small,.trip-cell strong{display:block}.trip-cell small{color:var(--kia-muted);font-size:10px}.trip-cell strong{margin-top:3px;font-size:12px;overflow-wrap:anywhere}.location-trip-detail{min-width:760px;padding:14px;border-top:1px solid var(--kia-line);background:var(--kia-recessed);display:grid;grid-template-columns:minmax(220px,.8fr) minmax(0,1.8fr);gap:18px}.location-trip-detail p{color:var(--kia-muted);font-size:12px}.trip-energy-breakdown{display:grid;grid-template-columns:repeat(5,minmax(100px,1fr));gap:8px}.trip-energy-breakdown>span{padding:9px 10px;border-left:2px solid color-mix(in srgb,var(--blue) 48%,var(--kia-line));background:var(--kia-control)}.trip-energy-breakdown small,.trip-energy-breakdown strong{display:block}.trip-energy-breakdown small{color:var(--kia-muted);font-size:10px}.trip-energy-breakdown strong{margin-top:4px;font-size:12px}
-      @media (max-width:980px) { .location-detail { grid-template-columns:1fr 1fr; grid-template-areas:"map map" "summary summary" "parking trip" "daily daily" "history history" "back back"; } .location-detail-map { min-height:500px; } .location-period-summary,.location-trip-summary{grid-template-columns:1fr 1fr}.location-daily-table{overflow-x:auto}.location-daily-row{min-width:760px}.location-trip-item{grid-template-columns:1fr}.location-trip-metrics{grid-template-columns:repeat(3,minmax(0,1fr))} }
+      @media (max-width:980px) { .location-detail { grid-template-columns:1fr 1fr; grid-template-areas:"map map" "summary summary" "parking trip" "daily daily" "history history" "back back"; } .location-detail-map { min-height:500px; } .trip-calendar-layout{grid-template-columns:1fr}.trip-calendar-layout>.trip-route-map .trip-route-map-canvas{min-height:280px;aspect-ratio:1200/430}.location-period-summary,.location-trip-summary{grid-template-columns:1fr 1fr}.location-daily-table{overflow-x:auto}.location-daily-row{min-width:760px}.location-trip-item{grid-template-columns:1fr}.location-trip-metrics{grid-template-columns:repeat(3,minmax(0,1fr))} }
       @media (max-width:640px) { .location-detail { grid-template-columns:1fr; grid-template-areas:"map" "summary" "parking" "trip" "daily" "history" "back"; } .location-detail-map { min-height:0; padding:16px; grid-template-rows:auto minmax(300px,52vh) auto; } .location-detail-summary,.location-context-card,.location-history-section { padding:18px; } .location-stat-grid,.location-trip-stats,.location-period-summary,.location-trip-summary { grid-template-columns:1fr; } .location-trip-metrics{grid-template-columns:1fr 1fr}.location-trip-item{padding:14px}.trip-calendar{padding:10px}.trip-calendar-grid button{min-height:44px;padding:4px}.trip-calendar-grid button small{right:3px;bottom:3px}.location-history-top{gap:8px}.trip-route-map-canvas{min-height:210px}.location-trip-detail{grid-template-columns:1fr}.trip-energy-breakdown{grid-template-columns:1fr 1fr} }
     `;
   }
