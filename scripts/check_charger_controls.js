@@ -249,8 +249,8 @@ async function run() {
   assert.match(settings, /Data current/);
   assert.match(settings, /Vehicle data updated within the expected interval/);
   assert.match(settings, /Dashboard version/);
-  assert.match(settings, /2.12.0/);
-  assert.equal(window.customCards[0].version, "2.12.0");
+  assert.match(settings, /2.13.0/);
+  assert.equal(window.customCards[0].version, "2.13.0");
 
   card._hass.states["sensor.vehicle_last_updated"].state = new Date(
     Date.now() - 4 * 60 * 60 * 1000,

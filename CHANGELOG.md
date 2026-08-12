@@ -4,10 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.13.0 - 2026-08-12
+
 - Fixed intermittent desktop Energy layout gaps when conditional driving
   analytics forced otherwise paired cards onto incomplete grid rows.
 - Made vehicle energy and home power-flow panels full-width with responsive
   multi-column statistics, while keeping live charger and controls paired.
+- Moved the selected-day route map beside the trip calendar and cached loaded
+  calendar ranges to make repeat navigation faster.
+- Added opt-in one-minute driver-phone breadcrumbs and segmented route storage
+  for substantially more detailed trip routes.
 
 ## 2.12.0 - 2026-08-11
 
