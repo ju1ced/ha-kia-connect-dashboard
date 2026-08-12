@@ -691,7 +691,7 @@ async function run() {
         average_speed_kmh: 24.8,
         origin_coordinates: "50.83683,3.41416",
         destination_coordinates: "51.07469,3.73395",
-        route_source: "phone",
+        route_source: "phone-secondary",
         route_points: [
           "50.83683,3.41416",
           "50.98780,3.70164",
@@ -740,7 +740,7 @@ async function run() {
   assert.equal(card._calendarTrips[0].distance, 12.4);
   assert.equal(card._calendarTrips[0].endOdometer, 6341.4);
   assert.equal(card._calendarTrips[0].routePoints.length, 3);
-  assert.equal(card._calendarTrips[0].routeSource, "phone");
+  assert.equal(card._calendarTrips[0].routeSource, "phone-secondary");
   assert.equal(card._calendarTrips[0].regeneratedEnergy, 1.3);
   const legacyTrip = card._calendarTrip({
     ...calendarEvents[0],

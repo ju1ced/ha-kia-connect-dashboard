@@ -65,10 +65,30 @@ for helper in range(2, 7):
 if (
     "is_state('input_boolean.kia_trip_use_driver_tracker', 'on')" not in content
     or "device_tracker.your_driver_phone" not in content
+    or "device_tracker.your_second_driver_phone" not in content
     or "minutes: \"/1\"" not in content
 ):
     errors.append("driver-phone route sampling must be opt-in and sampled once per minute")
-if "'route_source': 'phone' if use_phone else 'kia'" not in store:
+if (
+    "  - id: kia_trip_calendar_select_route_tracker" not in content
+    or "kia_trip_route_mode:" not in content
+    or "Primary phone" not in content
+    or "Secondary phone" not in content
+    or "primary_movement_km:" not in content
+    or "secondary_movement_km:" not in content
+    or "primary_recent:" not in content
+    or "secondary_recent:" not in content
+    or "minutes: \"/2\"" not in content
+    or "phone-primary" not in content
+    or "phone-secondary" not in content
+):
+    errors.append("automatic route selection must score and lock either driver phone")
+if (
+    "states('input_text.kia_trip_selected_route_tracker')" not in content
+    or "entity_id: input_text.kia_trip_route_source" not in content
+):
+    errors.append("the selected tracker and route source must persist for the active trip")
+if "'route_source': states('input_text.kia_trip_route_source')" not in store:
     errors.append("calendar JSON must identify the route source")
 if "  - id: kia_trip_calendar_detailed_sampling" not in content:
     errors.append("optional detailed sampling automation is missing")

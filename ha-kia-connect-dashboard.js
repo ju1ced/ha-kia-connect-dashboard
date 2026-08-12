@@ -1824,7 +1824,7 @@ class KiaDashboardCard extends HTMLElement {
       return `<polyline class="trip-route-line route-${index % 4}" points="${points}"></polyline><circle class="trip-route-point start" cx="${(start.x - left).toFixed(1)}" cy="${(start.y - top).toFixed(1)}" r="8"></circle><circle class="trip-route-point end" cx="${(end.x - left).toFixed(1)}" cy="${(end.y - top).toFixed(1)}" r="8"></circle>`;
     }).join("");
     const pointCount = routes.reduce((sum, route) => sum + route.length, 0);
-    const phoneAssisted = trips.some((trip) => ["phone", "driver"].includes(String(trip.routeSource || "").toLowerCase()));
+    const phoneAssisted = trips.some((trip) => /^(phone|driver)/.test(String(trip.routeSource || "").toLowerCase()));
     const sourceLabel = phoneAssisted ? "Phone-assisted route points" : "Available Kia location points";
     return `<section class="trip-route-map" aria-label="Approximate routes"><div class="trip-route-map-heading"><div><span>Route overview</span><strong>${sourceLabel}</strong></div><small>${pointCount} points</small></div><div class="trip-route-map-canvas"><svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Approximate trip route">${tiles.join("")}<g>${lines}</g></svg><span class="trip-route-quality">Approximate route</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a></div></section>`;
   }
