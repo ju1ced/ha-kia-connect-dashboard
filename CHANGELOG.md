@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.17.1 - 2026-08-13
+
+- Fixed road-matched trip routes disappearing in Home Assistant Chromium by
+  rendering explicit non-scaling SVG paths with a contrasting casing.
+- Aligned the trip-map tiles, tint, border, rounding, and marker treatment with
+  the main Location map.
+
 ## 2.17.0 - 2026-08-13
 
 - Added opt-in OSRM road matching for stored phone-assisted trip points, with
