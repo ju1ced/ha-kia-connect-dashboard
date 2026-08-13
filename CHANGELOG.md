@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.17.0 - 2026-08-13
+
+- Added opt-in OSRM road matching for stored phone-assisted trip points, with
+  session caching, visible-route loading, configurable self-hosted routing, and
+  the local breadcrumb route retained as fallback.
+
 ## 2.16.2 - 2026-08-12
 
 - Fixed lock controls remaining stale after a successful vehicle refresh by
