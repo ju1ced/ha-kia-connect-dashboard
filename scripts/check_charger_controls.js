@@ -979,6 +979,30 @@ async function run() {
   assert.match(matchedCalendarDayView, /class="trip-route-overlay"/);
   assert.match(matchedCalendarDayView, /vector-effect="non-scaling-stroke"/);
   assert.doesNotMatch(matchedCalendarDayView, /<polyline/);
+  assert.match(matchedCalendarDayView, /data-trip-route-zoom="out"/);
+  assert.match(
+    matchedCalendarDayView,
+    /data-trip-route-zoom="reset"[^>]*disabled/,
+  );
+  assert.match(matchedCalendarDayView, /data-trip-route-zoom="in"/);
+  assert.equal(card._tripRouteZoomOffset(), 0);
+  card._setTripRouteZoom("in");
+  assert.equal(card._tripRouteZoomOffset(), 1);
+  const zoomedCalendarDayView = card._renderLocationTripHistory();
+  assert.doesNotMatch(
+    zoomedCalendarDayView,
+    /data-trip-route-zoom="reset"[^>]*disabled/,
+  );
+  card._tripSelectedDate = "2026-08-07";
+  assert.equal(
+    card._tripRouteZoomOffset(),
+    0,
+    "route zoom should be stored per selected day",
+  );
+  card._tripSelectedDate = "2026-08-06";
+  assert.equal(card._tripRouteZoomOffset(), 1);
+  card._setTripRouteZoom("reset");
+  assert.equal(card._tripRouteZoomOffset(), 0);
   delete global.fetch;
   card._tripCalendarRequestKey = "";
   await card._loadTripCalendar();
