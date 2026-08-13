@@ -974,6 +974,9 @@ async function run() {
   assert.match(matchedCalendarDayView, /Road-matched route/);
   assert.match(matchedCalendarDayView, /class="trip-route-casing"/);
   assert.match(matchedCalendarDayView, /class="trip-route-line route-0" d="M/);
+  assert.match(matchedCalendarDayView, /class="trip-route-tiles"/);
+  assert.match(matchedCalendarDayView, /class="trip-route-tint"/);
+  assert.match(matchedCalendarDayView, /class="trip-route-overlay"/);
   assert.match(matchedCalendarDayView, /vector-effect="non-scaling-stroke"/);
   assert.doesNotMatch(matchedCalendarDayView, /<polyline/);
   delete global.fetch;
