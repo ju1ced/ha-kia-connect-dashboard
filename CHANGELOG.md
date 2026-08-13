@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.17.2 - 2026-08-13
+
+- Added compact zoom-in, zoom-out, and reset controls to the stored trip map.
+- Kept map zoom state separate for each selected calendar day and the overview.
+
 ## 2.17.1 - 2026-08-13
 
 - Fixed road-matched trip routes disappearing in Home Assistant Chromium by
