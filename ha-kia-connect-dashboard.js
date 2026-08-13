@@ -470,11 +470,13 @@ const KIA_DASHBOARD_NL = {
   "Route overview": "Routeoverzicht",
   "Available Kia location points": "Beschikbare Kia-locatiepunten",
   "Phone-assisted route points": "Routepunten via telefoon",
+  "Road-matched phone route": "Wegroute via telefoon",
   "Loading route data": "Routegegevens laden",
   "No route points available for this day": "Geen routepunten beschikbaar voor deze dag",
   "Approximate routes": "Benaderde routes",
   "Approximate trip route": "Benaderde ritroute",
   "Approximate route": "Benaderde route",
+  "Road-matched route": "Route over de weg",
   "points": "punten",
   "Start": "Start",
   "End": "Einde",
@@ -515,6 +517,8 @@ class KiaDashboardCard extends HTMLElement {
     this._tripCalendarRequestKey = "";
     this._tripCalendarRequestToken = 0;
     this._tripCalendarCache = new Map();
+    this._tripRouteCache = new Map();
+    this._tripRouteRequests = new Map();
     this._tripViewMode = "day";
     this._tripSelectedDate = this._dateKey(new Date());
     this._tripCalendarMonth = this._tripSelectedDate.slice(0, 7);
@@ -533,8 +537,10 @@ class KiaDashboardCard extends HTMLElement {
     const previousModeEntity = this._entity("charger_mode");
     const previousHistoryEntities = this._historyEntityIds().join("|");
     const previousTripCalendar = this._entity("trip_calendar");
+    const previousTripRouteSettings = `${this._config?.trip_route_matching === true}|${this._config?.trip_route_service || ""}`;
     const previousChargerTotal = this._entity("charger_total_energy");
     this._config = config || {};
+    const tripRouteSettings = `${this._config?.trip_route_matching === true}|${this._config?.trip_route_service || ""}`;
     if (previousModeEntity !== this._entity("charger_mode")) this._chargerModeBeforePause = "";
     if (previousHistoryEntities !== this._historyEntityIds().join("|")) {
       this._tripHistoryRequestToken += 1;
@@ -548,6 +554,10 @@ class KiaDashboardCard extends HTMLElement {
       this._tripCalendarState = "idle";
       this._calendarTrips = [];
       this._tripCalendarCache.clear();
+    }
+    if (previousTripRouteSettings !== tripRouteSettings) {
+      this._tripRouteCache.clear();
+      this._tripRouteRequests.clear();
     }
     if (previousChargerTotal !== this._entity("charger_total_energy")) {
       this._chargerHistoryRequestToken += 1;
@@ -779,6 +789,7 @@ class KiaDashboardCard extends HTMLElement {
       this._tripCalendarState = "ready";
       this._tripCalendarError = "";
       if (this._activeTab === "location") this._render();
+      this._loadMatchedTripRoutes(this._visibleCalendarTrips());
       return;
     }
 
@@ -808,6 +819,12 @@ class KiaDashboardCard extends HTMLElement {
       this._tripCalendarError = error?.message || String(error || "Calendar unavailable");
     }
     if (this._activeTab === "location") this._render();
+    if (this._tripCalendarState === "ready") this._loadMatchedTripRoutes(this._visibleCalendarTrips());
+  }
+
+  _visibleCalendarTrips() {
+    const selected = this._tripViewMode === "day" ? this._calendarTrips.filter((trip) => this._dateKey(trip.start) === this._tripSelectedDate) : this._calendarTrips;
+    return selected.slice(0, this._tripCalendarLimit());
   }
 
   _loadLocationTrips(force = false) {
@@ -841,6 +858,7 @@ class KiaDashboardCard extends HTMLElement {
       this._loadTripCalendar();
     } else {
       this._render();
+      this._loadMatchedTripRoutes(this._visibleCalendarTrips());
     }
   }
 
@@ -2010,6 +2028,50 @@ class KiaDashboardCard extends HTMLElement {
     };
   }
 
+  _tripRouteKey(trip) {
+    return `${trip.id}|${trip.routePoints.map((point) => `${point.lat.toFixed(5)},${point.lon.toFixed(5)}`).join(";")}`;
+  }
+
+  _tripRouteService() {
+    return String(this._config?.trip_route_service || "https://router.project-osrm.org").replace(/\/$/, "");
+  }
+
+  _tripRoutePoints(trip) {
+    const raw = Array.isArray(trip.routePoints) ? trip.routePoints.filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lon)) : [];
+    const matched = this._tripRouteCache.get(this._tripRouteKey(trip));
+    return Array.isArray(matched) && matched.length >= 2 ? matched : raw;
+  }
+
+  async _loadMatchedTripRoutes(trips) {
+    if (this._config?.trip_route_matching !== true || typeof fetch !== "function") return;
+    const candidates = trips.filter((trip) => /^(phone|driver)/.test(String(trip.routeSource || "").toLowerCase()) && trip.routePoints.length >= 2);
+    let changed = false;
+    await Promise.all(candidates.map(async (trip) => {
+      const key = this._tripRouteKey(trip);
+      if (this._tripRouteCache.has(key)) return;
+      if (this._tripRouteRequests.has(key)) return this._tripRouteRequests.get(key);
+      const unique = trip.routePoints.filter((point, index, points) => index === 0 || point.lat !== points[index - 1].lat || point.lon !== points[index - 1].lon);
+      if (unique.length < 2) return;
+      const coordinates = unique.map((point) => `${point.lon.toFixed(6)},${point.lat.toFixed(6)}`).join(";");
+      const request = fetch(`${this._tripRouteService()}/route/v1/driving/${coordinates}?overview=full&geometries=geojson&steps=false`)
+        .then((response) => {
+          if (!response.ok) throw new Error(`Route service returned ${response.status}`);
+          return response.json();
+        })
+        .then((data) => {
+          const geometry = data?.routes?.[0]?.geometry?.coordinates;
+          if (!Array.isArray(geometry) || geometry.length < 2) throw new Error("Route service returned no geometry");
+          this._tripRouteCache.set(key, geometry.map(([lon, lat]) => ({ lat: Number(lat), lon: Number(lon) })).filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lon)));
+          changed = true;
+        })
+        .catch(() => this._tripRouteCache.set(key, null))
+        .finally(() => this._tripRouteRequests.delete(key));
+      this._tripRouteRequests.set(key, request);
+      return request;
+    }));
+    if (changed && this._activeTab === "location") this._render();
+  }
+
   _renderTripSummary(trips, label) {
     const totals = this._tripTotals(trips);
     return `<div class="location-trip-summary" aria-label="${this._safe(label)}">
@@ -2021,7 +2083,7 @@ class KiaDashboardCard extends HTMLElement {
   }
 
   _renderTripRouteMap(trips) {
-    const routes = trips.map((trip) => Array.isArray(trip.routePoints) ? trip.routePoints.filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lon)) : []).filter((route) => route.length >= 2);
+    const routes = trips.map((trip) => this._tripRoutePoints(trip)).filter((route) => route.length >= 2);
     if (!routes.length) return "";
     const width = 1200;
     const height = 430;
@@ -2076,8 +2138,10 @@ class KiaDashboardCard extends HTMLElement {
     }).join("");
     const pointCount = routes.reduce((sum, route) => sum + route.length, 0);
     const phoneAssisted = trips.some((trip) => /^(phone|driver)/.test(String(trip.routeSource || "").toLowerCase()));
-    const sourceLabel = phoneAssisted ? "Phone-assisted route points" : "Available Kia location points";
-    return `<section class="trip-route-map" aria-label="Approximate routes"><div class="trip-route-map-heading"><div><span>Route overview</span><strong>${sourceLabel}</strong></div><small>${pointCount} points</small></div><div class="trip-route-map-canvas"><svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Approximate trip route">${tiles.join("")}<g>${lines}</g></svg><span class="trip-route-quality">Approximate route</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a></div></section>`;
+    const roadMatched = trips.some((trip) => Array.isArray(this._tripRouteCache.get(this._tripRouteKey(trip))));
+    const sourceLabel = roadMatched ? "Road-matched phone route" : phoneAssisted ? "Phone-assisted route points" : "Available Kia location points";
+    const qualityLabel = roadMatched ? "Road-matched route" : "Approximate route";
+    return `<section class="trip-route-map" aria-label="Approximate routes"><div class="trip-route-map-heading"><div><span>Route overview</span><strong>${sourceLabel}</strong></div><small>${pointCount} points</small></div><div class="trip-route-map-canvas"><svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Approximate trip route">${tiles.join("")}<g>${lines}</g></svg><span class="trip-route-quality">${qualityLabel}</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a></div></section>`;
   }
 
   _renderTripRoutePlaceholder(message = "No route points available for this day") {

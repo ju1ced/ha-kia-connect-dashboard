@@ -230,6 +230,7 @@ entities:
   trip_calendar: calendar.your_vehicle_trips
 trip_calendar_start: "2020-01-01"
 trip_calendar_limit: 250
+trip_route_matching: true
 ```
 
 With this mapping, Location uses the calendar as its primary trip source and
@@ -257,8 +258,17 @@ engine-confirmed trip. Automatic mode observes movement for two minutes, locks
 the best moving candidate for that trip, and retains Kia as fallback when both
 phones stay behind or lack current coordinates. The selected phone is sampled
 once per minute. This produces a much closer breadcrumb route than the
-relatively sparse Kia tracker without sending coordinates to a route service.
-It does not perform road snapping.
+relatively sparse Kia tracker. Set `trip_route_matching: true` to replace those
+straight breadcrumb segments with a road-following route from the public OSRM
+service. This opt-in sends the stored route coordinates to that external
+service while the Location tab is open; the result is cached in the card and
+the raw breadcrumb remains the fallback. To use a self-hosted OSRM-compatible
+endpoint instead, set `trip_route_service`, for example:
+
+```yaml
+trip_route_matching: true
+trip_route_service: https://router.example.com
+```
 
 ## Optional Settings Entities
 
