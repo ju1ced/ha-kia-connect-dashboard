@@ -480,6 +480,7 @@ const KIA_DASHBOARD_NL = {
   "Zoom in": "Inzoomen",
   "Zoom out": "Uitzoomen",
   "Reset map zoom": "Kaartzoom herstellen",
+  "Drag map to move": "Sleep de kaart om te verschuiven",
   "points": "punten",
   "Start": "Start",
   "End": "Einde",
@@ -523,6 +524,7 @@ class KiaDashboardCard extends HTMLElement {
     this._tripRouteCache = new Map();
     this._tripRouteRequests = new Map();
     this._tripRouteZoomByView = new Map();
+    this._tripRoutePanByView = new Map();
     this._tripViewMode = "day";
     this._tripSelectedDate = this._dateKey(new Date());
     this._tripCalendarMonth = this._tripSelectedDate.slice(0, 7);
@@ -2054,10 +2056,26 @@ class KiaDashboardCard extends HTMLElement {
     return this._tripRouteZoomByView.get(this._tripRouteZoomKey()) || 0;
   }
 
+  _tripRoutePanOffset() {
+    return this._tripRoutePanByView.get(this._tripRouteZoomKey()) || { x: 0, y: 0 };
+  }
+
+  _setTripRoutePan(x, y, render = true) {
+    const key = this._tripRouteZoomKey();
+    const next = {
+      x: Math.max(-2400, Math.min(2400, Number(x) || 0)),
+      y: Math.max(-860, Math.min(860, Number(y) || 0)),
+    };
+    if (next.x === 0 && next.y === 0) this._tripRoutePanByView.delete(key);
+    else this._tripRoutePanByView.set(key, next);
+    if (render && this._activeTab === "location") this._render();
+  }
+
   _setTripRouteZoom(action) {
     const key = this._tripRouteZoomKey();
     if (action === "reset") {
       this._tripRouteZoomByView.delete(key);
+      this._tripRoutePanByView.delete(key);
     } else {
       const direction = action === "in" ? 1 : action === "out" ? -1 : 0;
       const next = Math.max(-4, Math.min(4, this._tripRouteZoomOffset() + direction));
@@ -2065,6 +2083,39 @@ class KiaDashboardCard extends HTMLElement {
       else this._tripRouteZoomByView.set(key, next);
     }
     if (this._activeTab === "location") this._render();
+  }
+
+  _setupTripRoutePan() {
+    const canvas = this.shadowRoot.querySelector?.("[data-trip-route-pan]");
+    if (!canvas) return;
+    let drag = null;
+    const finish = (event, commit) => {
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      const current = drag;
+      drag = null;
+      canvas.classList.remove("dragging");
+      canvas.querySelector("svg")?.style.removeProperty("transform");
+      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+      if (!commit) return;
+      const rect = canvas.getBoundingClientRect();
+      const renderedScale = Math.max(rect.width / 1200, rect.height / 430, 0.001);
+      this._setTripRoutePan(current.pan.x + (event.clientX - current.x) / renderedScale, current.pan.y + (event.clientY - current.y) / renderedScale);
+    };
+    canvas.addEventListener("pointerdown", (event) => {
+      if (event.button !== undefined && event.button !== 0) return;
+      if (event.target.closest?.("a")) return;
+      drag = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, pan: this._tripRoutePanOffset() };
+      canvas.setPointerCapture?.(event.pointerId);
+      canvas.classList.add("dragging");
+      event.preventDefault();
+    });
+    canvas.addEventListener("pointermove", (event) => {
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      const svg = canvas.querySelector("svg");
+      if (svg) svg.style.transform = `translate(${event.clientX - drag.x}px, ${event.clientY - drag.y}px)`;
+    });
+    canvas.addEventListener("pointerup", (event) => finish(event, true));
+    canvas.addEventListener("pointercancel", (event) => finish(event, false));
   }
 
   async _loadMatchedTripRoutes(trips) {
@@ -2138,8 +2189,9 @@ class KiaDashboardCard extends HTMLElement {
     const xs = projected.map((point) => point.x);
     const ys = projected.map((point) => point.y);
     const center = { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 };
-    const left = center.x - width / 2;
-    const top = center.y - height / 2;
+    const pan = this._tripRoutePanOffset();
+    const left = center.x - width / 2 - pan.x;
+    const top = center.y - height / 2 - pan.y;
     const scale = 2 ** zoom;
     const firstTileX = Math.floor(left / 256);
     const lastTileX = Math.floor((left + width) / 256);
@@ -2170,7 +2222,8 @@ class KiaDashboardCard extends HTMLElement {
     const sourceLabel = roadMatched ? "Road-matched phone route" : phoneAssisted ? "Phone-assisted route points" : "Available Kia location points";
     const qualityLabel = roadMatched ? "Road-matched route" : "Approximate route";
     const zoomOffset = this._tripRouteZoomOffset();
-    return `<section class="trip-route-map" aria-label="Approximate routes"><div class="trip-route-map-heading"><div><span>Route overview</span><strong>${sourceLabel}</strong></div><div class="trip-route-map-meta"><small>${pointCount} points</small><div class="trip-route-controls" role="group" aria-label="Map zoom"><button data-trip-route-zoom="out" aria-label="Zoom out" ${zoomOffset <= -4 ? "disabled" : ""}><ha-icon icon="mdi:minus"></ha-icon></button><button data-trip-route-zoom="reset" aria-label="Reset map zoom" ${zoomOffset === 0 ? "disabled" : ""}><ha-icon icon="mdi:fit-to-screen-outline"></ha-icon></button><button data-trip-route-zoom="in" aria-label="Zoom in" ${zoomOffset >= 4 ? "disabled" : ""}><ha-icon icon="mdi:plus"></ha-icon></button></div></div></div><div class="trip-route-map-canvas"><svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Approximate trip route"><g class="trip-route-tiles">${tiles.join("")}</g><rect class="trip-route-tint" width="${width}" height="${height}"></rect><g class="trip-route-overlay">${lines}</g></svg><span class="trip-route-quality">${qualityLabel}</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a></div></section>`;
+    const panned = pan.x !== 0 || pan.y !== 0;
+    return `<section class="trip-route-map" aria-label="Approximate routes"><div class="trip-route-map-heading"><div><span>Route overview</span><strong>${sourceLabel}</strong></div><div class="trip-route-map-meta"><small>${pointCount} points</small><div class="trip-route-controls" role="group" aria-label="Map zoom"><button data-trip-route-zoom="out" aria-label="Zoom out" ${zoomOffset <= -4 ? "disabled" : ""}><ha-icon icon="mdi:minus"></ha-icon></button><button data-trip-route-zoom="reset" aria-label="Reset map zoom" ${zoomOffset === 0 && !panned ? "disabled" : ""}><ha-icon icon="mdi:fit-to-screen-outline"></ha-icon></button><button data-trip-route-zoom="in" aria-label="Zoom in" ${zoomOffset >= 4 ? "disabled" : ""}><ha-icon icon="mdi:plus"></ha-icon></button></div></div></div><div class="trip-route-map-canvas" data-trip-route-pan aria-label="Drag map to move"><svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Approximate trip route"><g class="trip-route-tiles">${tiles.join("")}</g><rect class="trip-route-tint" width="${width}" height="${height}"></rect><g class="trip-route-overlay">${lines}</g></svg><span class="trip-route-quality">${qualityLabel}</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a></div></section>`;
   }
 
   _renderTripRoutePlaceholder(message = "No route points available for this day") {
@@ -2646,6 +2699,7 @@ class KiaDashboardCard extends HTMLElement {
     this.shadowRoot.querySelectorAll("[data-trip-date]").forEach((el) => el.addEventListener("click", () => this._selectTripDate(el.dataset.tripDate)));
     this.shadowRoot.querySelectorAll("[data-trip-refresh]").forEach((el) => el.addEventListener("click", () => this._loadTripCalendar(true)));
     this.shadowRoot.querySelectorAll("[data-trip-route-zoom]").forEach((el) => el.addEventListener("click", () => this._setTripRouteZoom(el.dataset.tripRouteZoom)));
+    this._setupTripRoutePan();
     this.shadowRoot.querySelectorAll("[data-charger-history-period]").forEach((el) => el.addEventListener("click", () => this._setChargerHistoryPeriod(Number.parseInt(el.dataset.chargerHistoryPeriod, 10))));
     this.shadowRoot.querySelectorAll("[data-charger-history-refresh]").forEach((el) => el.addEventListener("click", () => this._loadChargerHistory(true)));
     this.shadowRoot.querySelectorAll("[data-charger-history-toggle]").forEach((el) => el.addEventListener("click", () => this._toggleChargerHistory()));
@@ -2689,7 +2743,7 @@ class KiaDashboardCard extends HTMLElement {
       .health-panel { display:flex; align-items:center; gap:26px; } .shield { color:var(--green); --mdc-icon-size:56px; } .health-panel h2 { font-size:22px; } .health-panel p { color:var(--kia-muted); margin-top:6px; } .ghost { position:absolute; right:28px; bottom:18px; opacity:.12; --mdc-icon-size:72px; }
       .footer { margin-top:12px; min-height:44px; padding:0 16px; display:flex; align-items:center; justify-content:space-between; color:var(--kia-muted); } .footer span { display:flex; align-items:center; gap:8px; }
       .detail-placeholder { margin-top:12px; min-height:clamp(300px,38vw,560px); padding:clamp(28px,5vw,72px); display:flex; align-items:center; justify-content:center; gap:24px; text-align:left; } .detail-placeholder>ha-icon { color:var(--blue); --mdc-icon-size:64px; } .detail-placeholder span { color:var(--blue); font-size:13px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; } .detail-placeholder h2 { margin-top:6px; font-size:clamp(28px,3vw,44px); } .detail-placeholder p { max-width:620px; margin-top:10px; color:var(--kia-muted); line-height:1.5; }
-      .trip-route-map-meta{display:flex;align-items:center;gap:10px}.trip-route-controls{display:flex;gap:4px}.trip-route-controls button{width:34px;height:34px;padding:0;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-card);color:var(--kia-text);display:grid;place-items:center}.trip-route-controls button:hover:not(:disabled),.trip-route-controls button:focus-visible:not(:disabled){border-color:var(--blue);color:var(--blue)}.trip-route-controls button:disabled{opacity:.35;cursor:default}.trip-route-controls ha-icon{--mdc-icon-size:19px}
+      .trip-route-map-canvas[data-trip-route-pan]{cursor:grab;touch-action:none;user-select:none}.trip-route-map-canvas[data-trip-route-pan].dragging{cursor:grabbing}.trip-route-map-canvas[data-trip-route-pan] svg{will-change:transform}.trip-route-map-meta{display:flex;align-items:center;gap:10px}.trip-route-controls{display:flex;gap:4px}.trip-route-controls button{width:34px;height:34px;padding:0;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-card);color:var(--kia-text);display:grid;place-items:center}.trip-route-controls button:hover:not(:disabled),.trip-route-controls button:focus-visible:not(:disabled){border-color:var(--blue);color:var(--blue)}.trip-route-controls button:disabled{opacity:.35;cursor:default}.trip-route-controls ha-icon{--mdc-icon-size:19px}
       @media (max-width:1180px){.hero{grid-template-columns:1fr;gap:16px}.divider{display:none}.hero-data{grid-template-columns:repeat(2,minmax(0,1fr))}.status-stack{grid-template-columns:repeat(3,minmax(0,1fr));justify-self:stretch}.grid{grid-template-columns:1fr 1fr;grid-template-areas:"battery actions" "vehicle vehicle" "location location" "tires health"}.location-panel{min-height:auto}.location-layout{grid-template-rows:auto auto;height:auto}.map{min-height:clamp(260px,36vw,360px)}.nav-items{grid-template-columns:repeat(3,1fr)}}
       @media (max-width:760px){ha-card.kia-shell{padding:10px}.chip{min-height:36px;padding:0 10px;font-size:12px}.hero{padding:18px;min-height:0}.car-stage img{height:210px;object-position:center}.hero-data,.grid{grid-template-columns:1fr}.grid{grid-template-areas:"battery" "actions" "vehicle" "location" "tires" "health"}.nav-items{grid-template-columns:repeat(2,1fr)}.status-stack{grid-template-columns:1fr}.battery-gauge,.battery-facts,.limit-control{grid-template-columns:1fr}.location-layout{height:auto}.footer{flex-direction:column;align-items:flex-start;padding:12px 16px;gap:8px}.detail-placeholder{min-height:320px;flex-direction:column;text-align:center}}
     `;

@@ -985,6 +985,8 @@ async function run() {
     /data-trip-route-zoom="reset"[^>]*disabled/,
   );
   assert.match(matchedCalendarDayView, /data-trip-route-zoom="in"/);
+  assert.match(matchedCalendarDayView, /data-trip-route-pan/);
+  assert.match(matchedCalendarDayView, /aria-label="Drag map to move"/);
   assert.equal(card._tripRouteZoomOffset(), 0);
   card._setTripRouteZoom("in");
   assert.equal(card._tripRouteZoomOffset(), 1);
@@ -1001,8 +1003,24 @@ async function run() {
   );
   card._tripSelectedDate = "2026-08-06";
   assert.equal(card._tripRouteZoomOffset(), 1);
+  assert.deepEqual(card._tripRoutePanOffset(), { x: 0, y: 0 });
+  card._setTripRoutePan(120, -60, false);
+  assert.deepEqual(card._tripRoutePanOffset(), { x: 120, y: -60 });
+  const pannedCalendarDayView = card._renderLocationTripHistory();
+  assert.doesNotMatch(
+    pannedCalendarDayView,
+    /data-trip-route-zoom="reset"[^>]*disabled/,
+  );
+  card._tripSelectedDate = "2026-08-07";
+  assert.deepEqual(
+    card._tripRoutePanOffset(),
+    { x: 0, y: 0 },
+    "route position should be stored per selected day",
+  );
+  card._tripSelectedDate = "2026-08-06";
   card._setTripRouteZoom("reset");
   assert.equal(card._tripRouteZoomOffset(), 0);
+  assert.deepEqual(card._tripRoutePanOffset(), { x: 0, y: 0 });
   delete global.fetch;
   card._tripCalendarRequestKey = "";
   await card._loadTripCalendar();
