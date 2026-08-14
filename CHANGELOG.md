@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.17.5 - 2026-08-14
+
 - Prevented frequent phone-tracker updates from rebuilding the complete card and
   snapping the Location page back to the top.
 - Preserved active scroll containers when a relevant Home Assistant state still
