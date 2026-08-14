@@ -2118,7 +2118,7 @@ class KiaDashboardCard extends HTMLElement {
     };
     if (next.x === 0 && next.y === 0) this._tripRoutePanByView.delete(key);
     else this._tripRoutePanByView.set(key, next);
-    if (render && this._activeTab === "location") this._render();
+    if (render && this._activeTab === "location") this._render(true);
   }
 
   _setTripRouteZoom(action) {
@@ -2132,7 +2132,7 @@ class KiaDashboardCard extends HTMLElement {
       if (next === 0) this._tripRouteZoomByView.delete(key);
       else this._tripRouteZoomByView.set(key, next);
     }
-    if (this._activeTab === "location") this._render();
+    if (this._activeTab === "location") this._render(true);
   }
 
   _setupTripRoutePan() {
@@ -2223,7 +2223,7 @@ class KiaDashboardCard extends HTMLElement {
       this._tripRouteRequests.set(key, request);
       return request;
     }));
-    if (changed && this._activeTab === "location") this._render();
+    if (changed && this._activeTab === "location") this._render(true);
   }
 
   _renderTripSummary(trips, label) {
