@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.17.6 - 2026-08-14
+
+- Preserved the Home Assistant page position when panning, zooming, or resetting
+  the stored trip map.
+- Prevented asynchronous road-matching updates from moving the Location view
+  back to the top.
+- Added regression coverage for trip-map interaction renders.
+
 ## 2.17.5 - 2026-08-14
 
 - Prevented frequent phone-tracker updates from rebuilding the complete card and
