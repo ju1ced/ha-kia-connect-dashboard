@@ -974,7 +974,17 @@ async function run() {
   assert.match(matchedCalendarDayView, /Road-matched route/);
   assert.match(matchedCalendarDayView, /class="trip-route-casing"/);
   assert.match(matchedCalendarDayView, /class="trip-route-line route-0" d="M/);
-  assert.match(matchedCalendarDayView, /class="trip-route-tiles"/);
+  assert.match(
+    matchedCalendarDayView,
+    /class="trip-route-tiles trip-route-html-tiles"/,
+  );
+  assert.match(matchedCalendarDayView, /class="trip-route-drag-layer"/);
+  assert.match(matchedCalendarDayView, /class="trip-route-map-content"/);
+  assert.match(
+    matchedCalendarDayView,
+    /<img src="https:\/\/tile\.openstreetmap\.org\//,
+  );
+  assert.doesNotMatch(matchedCalendarDayView, /<image /);
   assert.match(matchedCalendarDayView, /class="trip-route-tint"/);
   assert.match(matchedCalendarDayView, /class="trip-route-overlay"/);
   assert.match(matchedCalendarDayView, /vector-effect="non-scaling-stroke"/);
