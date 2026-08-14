@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.17.4 - 2026-08-14
+
+- Unified the stored trip map with the Location map's HTML-based OpenStreetMap
+  tile renderer, visual treatment, and responsive scaling.
+- Smoothed route-map panning by coalescing pointer movement per animation frame.
+
 ## 2.17.3 - 2026-08-14
 
 - Added mouse, touch, and pen panning to the stored trip map.
