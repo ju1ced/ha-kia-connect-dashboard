@@ -91,6 +91,17 @@ assert.equal(global.document.scrollingElement.scrollTop, 640);
 assert.equal(scrollParent.scrollTop, 420);
 assert.equal(scrollParent.scrollLeft, 12);
 
+const renderCalls = [];
+card._activeTab = "location";
+card._render = (preserveScroll = false) => renderCalls.push(preserveScroll);
+card._setTripRoutePan(120, -40);
+card._setTripRouteZoom("in");
+assert.deepEqual(
+  renderCalls,
+  [true, true],
+  "trip-map pan and zoom must preserve the Home Assistant scroll position",
+);
+
 const source = require("node:fs").readFileSync(
   require.resolve("../ha-kia-connect-dashboard.js"),
   "utf8",
