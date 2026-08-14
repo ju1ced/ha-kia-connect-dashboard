@@ -976,8 +976,9 @@ async function run() {
   assert.match(matchedCalendarDayView, /class="trip-route-line route-0" d="M/);
   assert.match(
     matchedCalendarDayView,
-    /class="trip-route-tiles trip-route-html-tiles"/,
+    /class="map-tiles trip-route-tiles trip-route-html-tiles"/,
   );
+  assert.match(matchedCalendarDayView, /class="map trip-route-map-canvas"/);
   assert.match(matchedCalendarDayView, /class="trip-route-drag-layer"/);
   assert.match(matchedCalendarDayView, /class="trip-route-map-content"/);
   assert.match(
@@ -985,7 +986,8 @@ async function run() {
     /<img src="https:\/\/tile\.openstreetmap\.org\//,
   );
   assert.doesNotMatch(matchedCalendarDayView, /<image /);
-  assert.match(matchedCalendarDayView, /class="trip-route-tint"/);
+  assert.doesNotMatch(matchedCalendarDayView, /class="trip-route-tint"/);
+  assert.match(card._styles(), /\.map:before/);
   assert.match(matchedCalendarDayView, /class="trip-route-overlay"/);
   assert.match(matchedCalendarDayView, /vector-effect="non-scaling-stroke"/);
   assert.doesNotMatch(matchedCalendarDayView, /<polyline/);

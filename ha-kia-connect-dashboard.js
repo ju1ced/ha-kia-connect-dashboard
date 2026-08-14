@@ -577,18 +577,68 @@ class KiaDashboardCard extends HTMLElement {
   }
 
   set hass(hass) {
+    const previousHass = this._hass;
     this._hass = hass;
+    let overridesChanged = false;
     for (const [entityId, override] of this._entityStateOverrides) {
       const live = hass?.states?.[entityId];
       const liveTimestamp = Date.parse(live?.last_updated || live?.last_changed || "") || 0;
       const overrideTimestamp = Date.parse(override?.last_updated || override?.last_changed || "") || 0;
       if (!live || live.state === override.state || liveTimestamp >= overrideTimestamp) {
         this._entityStateOverrides.delete(entityId);
+        overridesChanged = true;
       }
     }
-    this._render();
+    if (!overridesChanged && !this._shouldRenderForHass(previousHass, hass)) return;
+    this._render(true);
     if (this._activeTab === "location") this._loadLocationTrips();
     if (this._activeTab === "energy") this._loadChargerHistory();
+  }
+
+  _shouldRenderForHass(previousHass, nextHass) {
+    if (!previousHass || !nextHass) return true;
+    if (previousHass.locale?.language !== nextHass.locale?.language) return true;
+
+    // The phone tracker can update every few seconds while a trip is active. Its
+    // Recorder history is loaded separately, so rebuilding the complete card for
+    // every live coordinate only interrupts scrolling and map interaction.
+    const passiveEntityKeys = new Set(["trip_person_tracker"]);
+    const entityIds = Object.entries(this._config?.entities || {})
+      .filter(([key, entityId]) => !passiveEntityKeys.has(key) && typeof entityId === "string")
+      .map(([, entityId]) => entityId);
+    return entityIds.some((entityId) => previousHass.states?.[entityId] !== nextHass.states?.[entityId]);
+  }
+
+  _captureScrollPositions() {
+    const positions = [];
+    const seen = new Set();
+    const scrollingElement = typeof document !== "undefined" ? document.scrollingElement : null;
+    const add = (element) => {
+      if (!element || seen.has(element)) return;
+      seen.add(element);
+      if ((element.scrollHeight || 0) > (element.clientHeight || 0) + 1 || element === scrollingElement) {
+        positions.push({ element, top: element.scrollTop, left: element.scrollLeft });
+      }
+    };
+
+    add(scrollingElement);
+    let node = this;
+    while (node) {
+      add(node);
+      if (node.parentElement) {
+        node = node.parentElement;
+      } else {
+        node = node.getRootNode?.()?.host || null;
+      }
+    }
+    return positions;
+  }
+
+  _restoreScrollPositions(positions) {
+    for (const { element, top, left } of positions || []) {
+      if (Number.isFinite(top)) element.scrollTop = top;
+      if (Number.isFinite(left)) element.scrollLeft = left;
+    }
   }
 
   getCardSize() {
@@ -2089,9 +2139,13 @@ class KiaDashboardCard extends HTMLElement {
     const canvas = this.shadowRoot.querySelector?.("[data-trip-route-pan]");
     if (!canvas) return;
     const content = canvas.querySelector(".trip-route-map-content");
+    let lastScale = null;
     const updateScale = () => {
       const rect = canvas.getBoundingClientRect();
-      content?.style.setProperty("--trip-map-scale", String(Math.max(rect.width / 1200, rect.height / 430, 0.001)));
+      const scale = Math.max(rect.width / 1200, rect.height / 430, 0.001);
+      if (lastScale !== null && Math.abs(scale - lastScale) < 0.001) return;
+      lastScale = scale;
+      content?.style.setProperty("--trip-map-scale", String(scale));
     };
     this._tripRouteResizeObserver?.disconnect();
     updateScale();
@@ -2247,7 +2301,7 @@ class KiaDashboardCard extends HTMLElement {
     const qualityLabel = roadMatched ? "Road-matched route" : "Approximate route";
     const zoomOffset = this._tripRouteZoomOffset();
     const panned = pan.x !== 0 || pan.y !== 0;
-    return `<section class="trip-route-map" aria-label="Approximate routes"><div class="trip-route-map-heading"><div><span>Route overview</span><strong>${sourceLabel}</strong></div><div class="trip-route-map-meta"><small>${pointCount} points</small><div class="trip-route-controls" role="group" aria-label="Map zoom"><button data-trip-route-zoom="out" aria-label="Zoom out" ${zoomOffset <= -4 ? "disabled" : ""}><ha-icon icon="mdi:minus"></ha-icon></button><button data-trip-route-zoom="reset" aria-label="Reset map zoom" ${zoomOffset === 0 && !panned ? "disabled" : ""}><ha-icon icon="mdi:fit-to-screen-outline"></ha-icon></button><button data-trip-route-zoom="in" aria-label="Zoom in" ${zoomOffset >= 4 ? "disabled" : ""}><ha-icon icon="mdi:plus"></ha-icon></button></div></div></div><div class="trip-route-map-canvas" data-trip-route-pan aria-label="Drag map to move"><div class="trip-route-drag-layer"><div class="trip-route-map-content"><div class="trip-route-tiles trip-route-html-tiles">${tiles.join("")}</div><div class="trip-route-tint"></div><svg class="trip-route-overlay" viewBox="0 0 ${width} ${height}" role="img" aria-label="Approximate trip route"><g>${lines}</g></svg></div></div><span class="trip-route-quality">${qualityLabel}</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a></div></section>`;
+    return `<section class="trip-route-map" aria-label="Approximate routes"><div class="trip-route-map-heading"><div><span>Route overview</span><strong>${sourceLabel}</strong></div><div class="trip-route-map-meta"><small>${pointCount} points</small><div class="trip-route-controls" role="group" aria-label="Map zoom"><button data-trip-route-zoom="out" aria-label="Zoom out" ${zoomOffset <= -4 ? "disabled" : ""}><ha-icon icon="mdi:minus"></ha-icon></button><button data-trip-route-zoom="reset" aria-label="Reset map zoom" ${zoomOffset === 0 && !panned ? "disabled" : ""}><ha-icon icon="mdi:fit-to-screen-outline"></ha-icon></button><button data-trip-route-zoom="in" aria-label="Zoom in" ${zoomOffset >= 4 ? "disabled" : ""}><ha-icon icon="mdi:plus"></ha-icon></button></div></div></div><div class="map trip-route-map-canvas" data-trip-route-pan aria-label="Drag map to move"><div class="trip-route-drag-layer"><div class="trip-route-map-content"><div class="map-tiles trip-route-tiles trip-route-html-tiles">${tiles.join("")}</div><svg class="trip-route-overlay" viewBox="0 0 ${width} ${height}" role="img" aria-label="Approximate trip route"><g>${lines}</g></svg></div></div><span class="trip-route-quality">${qualityLabel}</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a></div></section>`;
   }
 
   _renderTripRoutePlaceholder(message = "No route points available for this day") {
@@ -2652,8 +2706,9 @@ class KiaDashboardCard extends HTMLElement {
     return (renderers[this._activeTab] || renderers.overview).call(this, context);
   }
 
-  _render() {
+  _render(preserveScroll = false) {
     if (!this.shadowRoot) return;
+    const scrollPositions = preserveScroll ? this._captureScrollPositions() : [];
 
     const title = this._config.title || "Kia EV6";
     const battery = this._number("battery_level", 0);
@@ -2727,6 +2782,7 @@ class KiaDashboardCard extends HTMLElement {
     this.shadowRoot.querySelectorAll("[data-charger-history-period]").forEach((el) => el.addEventListener("click", () => this._setChargerHistoryPeriod(Number.parseInt(el.dataset.chargerHistoryPeriod, 10))));
     this.shadowRoot.querySelectorAll("[data-charger-history-refresh]").forEach((el) => el.addEventListener("click", () => this._loadChargerHistory(true)));
     this.shadowRoot.querySelectorAll("[data-charger-history-toggle]").forEach((el) => el.addEventListener("click", () => this._toggleChargerHistory()));
+    this._restoreScrollPositions(scrollPositions);
   }
 
   _styles() {
@@ -2767,7 +2823,7 @@ class KiaDashboardCard extends HTMLElement {
       .health-panel { display:flex; align-items:center; gap:26px; } .shield { color:var(--green); --mdc-icon-size:56px; } .health-panel h2 { font-size:22px; } .health-panel p { color:var(--kia-muted); margin-top:6px; } .ghost { position:absolute; right:28px; bottom:18px; opacity:.12; --mdc-icon-size:72px; }
       .footer { margin-top:12px; min-height:44px; padding:0 16px; display:flex; align-items:center; justify-content:space-between; color:var(--kia-muted); } .footer span { display:flex; align-items:center; gap:8px; }
       .detail-placeholder { margin-top:12px; min-height:clamp(300px,38vw,560px); padding:clamp(28px,5vw,72px); display:flex; align-items:center; justify-content:center; gap:24px; text-align:left; } .detail-placeholder>ha-icon { color:var(--blue); --mdc-icon-size:64px; } .detail-placeholder span { color:var(--blue); font-size:13px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; } .detail-placeholder h2 { margin-top:6px; font-size:clamp(28px,3vw,44px); } .detail-placeholder p { max-width:620px; margin-top:10px; color:var(--kia-muted); line-height:1.5; }
-      .trip-route-map-canvas[data-trip-route-pan]{cursor:grab;touch-action:none;user-select:none}.trip-route-map-canvas[data-trip-route-pan].dragging{cursor:grabbing}.trip-route-drag-layer{position:absolute;inset:0;z-index:0;will-change:transform}.trip-route-map-content{--trip-map-scale:1;position:absolute;left:50%;top:50%;width:1200px;height:430px;transform:translate(-50%,-50%) scale(var(--trip-map-scale));transform-origin:center}.trip-route-html-tiles,.trip-route-tint,.trip-route-overlay{position:absolute;inset:0}.trip-route-html-tiles{z-index:0;overflow:hidden}.trip-route-html-tiles img{position:absolute;width:256px;height:256px;display:block}.trip-route-tint{z-index:1;background:color-mix(in srgb,var(--kia-card) 4%,transparent);pointer-events:none}.trip-route-overlay{z-index:2;width:100%;height:100%;overflow:visible}.trip-route-map-meta{display:flex;align-items:center;gap:10px}.trip-route-controls{display:flex;gap:4px}.trip-route-controls button{width:34px;height:34px;padding:0;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-card);color:var(--kia-text);display:grid;place-items:center}.trip-route-controls button:hover:not(:disabled),.trip-route-controls button:focus-visible:not(:disabled){border-color:var(--blue);color:var(--blue)}.trip-route-controls button:disabled{opacity:.35;cursor:default}.trip-route-controls ha-icon{--mdc-icon-size:19px}
+      .trip-route-map{overflow-anchor:none}.trip-route-map-canvas.map[data-trip-route-pan]{min-height:240px;cursor:grab;touch-action:none;user-select:none}.trip-route-map-canvas[data-trip-route-pan].dragging{cursor:grabbing}.trip-route-drag-layer{position:absolute;inset:0;z-index:2;will-change:transform}.trip-route-map-content{--trip-map-scale:1;position:absolute;left:50%;top:50%;width:1200px;height:430px;transform:translate(-50%,-50%) scale(var(--trip-map-scale));transform-origin:center}.trip-route-html-tiles,.trip-route-overlay{position:absolute;inset:0}.trip-route-html-tiles.map-tiles{z-index:0;display:block;width:1200px;height:430px;transform:none;overflow:hidden}.trip-route-html-tiles img{position:absolute;width:256px;height:256px;display:block}.trip-route-overlay{z-index:2;width:100%;height:100%;overflow:visible}.trip-route-map-meta{display:flex;align-items:center;gap:10px}.trip-route-controls{display:flex;gap:4px}.trip-route-controls button{width:34px;height:34px;padding:0;border:1px solid var(--kia-line);border-radius:8px;background:var(--kia-card);color:var(--kia-text);display:grid;place-items:center}.trip-route-controls button:hover:not(:disabled),.trip-route-controls button:focus-visible:not(:disabled){border-color:var(--blue);color:var(--blue)}.trip-route-controls button:disabled{opacity:.35;cursor:default}.trip-route-controls ha-icon{--mdc-icon-size:19px}
       @media (max-width:1180px){.hero{grid-template-columns:1fr;gap:16px}.divider{display:none}.hero-data{grid-template-columns:repeat(2,minmax(0,1fr))}.status-stack{grid-template-columns:repeat(3,minmax(0,1fr));justify-self:stretch}.grid{grid-template-columns:1fr 1fr;grid-template-areas:"battery actions" "vehicle vehicle" "location location" "tires health"}.location-panel{min-height:auto}.location-layout{grid-template-rows:auto auto;height:auto}.map{min-height:clamp(260px,36vw,360px)}.nav-items{grid-template-columns:repeat(3,1fr)}}
       @media (max-width:760px){ha-card.kia-shell{padding:10px}.chip{min-height:36px;padding:0 10px;font-size:12px}.hero{padding:18px;min-height:0}.car-stage img{height:210px;object-position:center}.hero-data,.grid{grid-template-columns:1fr}.grid{grid-template-areas:"battery" "actions" "vehicle" "location" "tires" "health"}.nav-items{grid-template-columns:repeat(2,1fr)}.status-stack{grid-template-columns:1fr}.battery-gauge,.battery-facts,.limit-control{grid-template-columns:1fr}.location-layout{height:auto}.footer{flex-direction:column;align-items:flex-start;padding:12px 16px;gap:8px}.detail-placeholder{min-height:320px;flex-direction:column;text-align:center}}
     `;
