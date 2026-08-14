@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.17.3 - 2026-08-14
+
+- Added mouse, touch, and pen panning to the stored trip map.
+- Kept the map position separate per calendar view and made reset restore both
+  zoom and position.
+
 ## 2.17.2 - 2026-08-13
 
 - Added compact zoom-in, zoom-out, and reset controls to the stored trip map.
