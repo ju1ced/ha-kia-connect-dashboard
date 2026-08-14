@@ -2,7 +2,12 @@ const assert = require("node:assert/strict");
 
 let KiaDashboardCard;
 global.document = {
-  scrollingElement: { scrollHeight: 2000, clientHeight: 800, scrollTop: 640, scrollLeft: 0 },
+  scrollingElement: {
+    scrollHeight: 2000,
+    clientHeight: 800,
+    scrollTop: 640,
+    scrollLeft: 0,
+  },
 };
 global.HTMLElement = class {
   attachShadow() {
@@ -42,7 +47,10 @@ const trackerOnlyUpdate = {
   locale: { language: "nl" },
   states: {
     "sensor.ev_battery": battery,
-    "device_tracker.phone": { state: "not_home", attributes: { latitude: 50.9 } },
+    "device_tracker.phone": {
+      state: "not_home",
+      attributes: { latitude: 50.9 },
+    },
   },
 };
 assert.equal(card._shouldRenderForHass(oldHass, trackerOnlyUpdate), false);
@@ -55,7 +63,13 @@ const batteryUpdate = {
   },
 };
 assert.equal(card._shouldRenderForHass(oldHass, batteryUpdate), true);
-assert.equal(card._shouldRenderForHass(oldHass, { ...oldHass, locale: { language: "en" } }), true);
+assert.equal(
+  card._shouldRenderForHass(oldHass, {
+    ...oldHass,
+    locale: { language: "en" },
+  }),
+  true,
+);
 
 const scrollParent = {
   scrollHeight: 1600,
@@ -77,8 +91,14 @@ assert.equal(global.document.scrollingElement.scrollTop, 640);
 assert.equal(scrollParent.scrollTop, 420);
 assert.equal(scrollParent.scrollLeft, 12);
 
-const source = require("node:fs").readFileSync(require.resolve("../ha-kia-connect-dashboard.js"), "utf8");
+const source = require("node:fs").readFileSync(
+  require.resolve("../ha-kia-connect-dashboard.js"),
+  "utf8",
+);
 assert.match(source, /class="map trip-route-map-canvas"/);
-assert.match(source, /class="map-tiles trip-route-tiles trip-route-html-tiles"/);
+assert.match(
+  source,
+  /class="map-tiles trip-route-tiles trip-route-html-tiles"/,
+);
 
 console.log("Frontend rendering guard checks passed.");
