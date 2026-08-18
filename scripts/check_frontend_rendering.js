@@ -24,6 +24,11 @@ global.customElements = {
   },
 };
 global.window = { customCards: [] };
+const animationFrames = [];
+global.requestAnimationFrame = (callback) => {
+  animationFrames.push(callback);
+  return animationFrames.length;
+};
 
 require("../ha-kia-connect-dashboard.js");
 
@@ -90,6 +95,13 @@ card._restoreScrollPositions(positions);
 assert.equal(global.document.scrollingElement.scrollTop, 640);
 assert.equal(scrollParent.scrollTop, 420);
 assert.equal(scrollParent.scrollLeft, 12);
+global.document.scrollingElement.scrollTop = 0;
+scrollParent.scrollTop = 0;
+scrollParent.scrollLeft = 0;
+while (animationFrames.length) animationFrames.shift()();
+assert.equal(global.document.scrollingElement.scrollTop, 640);
+assert.equal(scrollParent.scrollTop, 420);
+assert.equal(scrollParent.scrollLeft, 12);
 
 const renderCalls = [];
 card._activeTab = "location";
@@ -111,5 +123,7 @@ assert.match(
   source,
   /class="map-tiles trip-route-tiles trip-route-html-tiles"/,
 );
+assert.match(source, /_render\(preserveScroll = true\)/);
+assert.match(source, /overflow-anchor:none/);
 
 console.log("Frontend rendering guard checks passed.");

@@ -635,10 +635,20 @@ class KiaDashboardCard extends HTMLElement {
   }
 
   _restoreScrollPositions(positions) {
-    for (const { element, top, left } of positions || []) {
-      if (Number.isFinite(top)) element.scrollTop = top;
-      if (Number.isFinite(left)) element.scrollLeft = left;
-    }
+    const saved = Array.isArray(positions) ? positions : [];
+    const restore = () => {
+      for (const { element, top, left } of saved) {
+        if (Number.isFinite(top)) element.scrollTop = top;
+        if (Number.isFinite(left)) element.scrollLeft = left;
+      }
+    };
+
+    restore();
+    if (!saved.length || typeof requestAnimationFrame !== "function") return;
+    requestAnimationFrame(() => {
+      restore();
+      requestAnimationFrame(restore);
+    });
   }
 
   getCardSize() {
@@ -2706,7 +2716,7 @@ class KiaDashboardCard extends HTMLElement {
     return (renderers[this._activeTab] || renderers.overview).call(this, context);
   }
 
-  _render(preserveScroll = false) {
+  _render(preserveScroll = true) {
     if (!this.shadowRoot) return;
     const scrollPositions = preserveScroll ? this._captureScrollPositions() : [];
 
@@ -2789,6 +2799,7 @@ class KiaDashboardCard extends HTMLElement {
     return `
       :host {
         display:block;
+        overflow-anchor:none;
         --kia-bg:var(--primary-background-color,#080d13);
         --kia-card:var(--card-background-color,#141b24);
         --kia-panel:color-mix(in srgb,var(--kia-card) 92%,var(--kia-bg));
