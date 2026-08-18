@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.17.7 - 2026-08-18
+
+- Made scroll preservation the default for every dashboard-card render,
+  including calendar, charging-history, notice, status, and tab updates.
+- Restored Home Assistant scroll containers across delayed browser layout
+  passes and disabled scroll anchoring on the card host.
+- Added regression coverage for delayed scroll restoration.
+
 ## 2.17.6 - 2026-08-14
 
 - Preserved the Home Assistant page position when panning, zooming, or resetting
