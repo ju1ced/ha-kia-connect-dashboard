@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-## 2.18.0-alpha.1 - 2026-08-19
+## 2.18.0 - 2026-08-19
 
 - Added a native Lovelace visual editor with grouped and searchable entity
   mappings, behavior settings, safety controls, map options, and vehicle images.
@@ -15,6 +15,8 @@ All notable changes to this project will be documented in this file.
   Home Assistant custom-card contract.
 - Replaced unsupported internal entity-picker dependencies with self-contained
   friendly-name and entity-ID suggestions.
+- Validated the alpha visual-editor flow in a real Home Assistant installation
+  before promoting the same configuration contract to stable.
 
 ## 2.17.7 - 2026-08-18
 

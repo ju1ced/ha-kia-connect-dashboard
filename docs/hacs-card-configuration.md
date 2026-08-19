@@ -34,6 +34,31 @@ Remote lock and charger controls remain opt-in. Enabling them in the editor does
 not remove confirmation or returned-state safeguards documented under
 [Actions](#actions).
 
+### Editing workflow
+
+1. Open the dashboard in edit mode and select the Kia Dashboard Card.
+2. Set the title and optional subtitle.
+3. Search mappings by logical name, Home Assistant entity ID, or friendly name.
+4. Expand only the groups needed for the installed vehicle and charger.
+5. Review behavior and safety settings before enabling any remote control.
+6. Save the card and verify the affected dashboard tabs.
+
+The editor emits standard Home Assistant `config-changed` events, so the card
+preview and dashboard save flow remain owned by Home Assistant. Clearing an
+optional mapping removes that key and hides or disables the related content.
+
+### Advanced YAML and recovery
+
+Use **Show code editor** for experimental properties that are not exposed as a
+visual control. Known editor changes preserve those unknown properties. If a
+mapping produces unexpected content, reopen the editor and clear only that
+mapping; the rest of the configuration remains intact.
+
+After a HACS update, perform a full browser refresh if Settings still reports
+the previous dashboard version. If the editor does not open, confirm that only
+one Kia Dashboard JavaScript resource is registered and consult
+`docs/troubleshooting.md` before changing card YAML.
+
 ## Resource
 
 After installing the repository through HACS, make sure this Lovelace resource is
