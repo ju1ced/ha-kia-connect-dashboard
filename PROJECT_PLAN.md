@@ -58,7 +58,8 @@ The supported production path is `custom:kia-dashboard-card`.
 
 ### Phase 5 — Follow-up validation
 
-- Test the editor against a real Home Assistant instance.
+- Test the editor against a real Home Assistant instance. Completed with the
+  2.18.0-alpha.1 HACS prerelease before stable promotion.
 - Capture light and dark theme screenshots.
 - Refine labels and domain filters from user feedback without changing the
   persisted configuration contract.
