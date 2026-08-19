@@ -1,4 +1,4 @@
-const KIA_DASHBOARD_CARD_VERSION = "2.17.7";
+const KIA_DASHBOARD_CARD_VERSION = "2.18.0";
 const KIA_DASHBOARD_NL = {
   "AC charge target": "AC-laaddoel",
   "AC charging limit": "AC-laadlimiet",
@@ -3086,4 +3086,11 @@ class KiaDashboardCard extends HTMLElement {
 if (!customElements.get?.("kia-dashboard-card-editor")) customElements.define("kia-dashboard-card-editor", KiaDashboardCardEditor);
 if (!customElements.get?.("kia-dashboard-card")) customElements.define("kia-dashboard-card", KiaDashboardCard);
 window.customCards = window.customCards || [];
-window.customCards.push({ type: "kia-dashboard-card", name: "Kia Dashboard Card", description: "Responsive Kia EV6 overview card for Home Assistant.", version: KIA_DASHBOARD_CARD_VERSION });
+window.customCards.push({
+  type: "kia-dashboard-card",
+  name: "Kia Dashboard Card",
+  description: "Responsive Hyundai/Kia vehicle dashboard for Home Assistant.",
+  version: KIA_DASHBOARD_CARD_VERSION,
+  preview: true,
+  documentationURL: "https://github.com/ju1ced/ha-kia-connect-dashboard/blob/main/docs/hacs-card-configuration.md",
+});

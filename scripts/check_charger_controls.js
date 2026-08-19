@@ -273,8 +273,9 @@ async function run() {
   assert.match(settings, /Data current/);
   assert.match(settings, /Vehicle data updated within the expected interval/);
   assert.match(settings, /Dashboard version/);
-  assert.match(settings, /2.17.7/);
-  assert.equal(window.customCards[0].version, "2.17.7");
+  const registeredVersion = window.customCards[0].version;
+  assert.match(registeredVersion, /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/);
+  assert.match(settings, new RegExp(registeredVersion.replaceAll(".", "\\.")));
 
   card._hass.states["sensor.vehicle_last_updated"].state = new Date(
     Date.now() - 4 * 60 * 60 * 1000,

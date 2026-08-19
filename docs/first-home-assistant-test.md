@@ -58,6 +58,11 @@ entities:
 
 See `docs/hacs-card-configuration.md` for the complete card configuration.
 
+For a pull-request or release-candidate build, follow
+`docs/release-testing.md` instead of replacing the stable HACS resource. The
+test-build resource uses a separate URL so the stable installation remains easy
+to restore.
+
 ## Optional YAML Package Entity Map
 
 The repository still contains a YAML dashboard package and render script for
@@ -222,3 +227,11 @@ After the first pass, add screenshots for:
 
 Store real screenshots next to the current visual references in
 `docs/screenshots/` once the first Home Assistant install is stable.
+
+When testing the visual editor, also capture:
+
+- the initial card-picker preview;
+- the editor with one entity group expanded;
+- entity search by friendly name and by entity ID;
+- the mobile editor at or below 700 px;
+- the editor in Home Assistant light and dark themes.

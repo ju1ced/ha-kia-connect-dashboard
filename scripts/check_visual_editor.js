@@ -81,6 +81,11 @@ assert.deepEqual(new Card().getGridOptions(), {
   columns: "full",
   min_columns: 6,
 });
+assert.equal(window.customCards[0].preview, true);
+assert.match(
+  window.customCards[0].documentationURL,
+  /hacs-card-configuration\.md$/,
+);
 
 Card.getConfigElement().then((element) => {
   assert.ok(
@@ -111,6 +116,8 @@ assert.equal(
   "sensor.keep_me",
 );
 assert.deepEqual(editor.lastEvent.detail.config.future_option, { keep: true });
+assert.equal(editor.lastEvent.bubbles, true);
+assert.equal(editor.lastEvent.composed, true);
 
 editor._setEntity("battery_level", "");
 assert.equal("battery_level" in editor.lastEvent.detail.config.entities, false);

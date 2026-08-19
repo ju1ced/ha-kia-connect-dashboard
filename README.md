@@ -76,6 +76,9 @@ An anonymized complete example is available at
 `examples/hacs-reference-card.yaml`; common problems are covered in
 `docs/troubleshooting.md`.
 
+Pull-request and release-candidate builds can be tested alongside the stable
+HACS installation using the CI artifact and `docs/release-testing.md`.
+
 ## First Home Assistant Test
 
 Use `docs/first-home-assistant-test.md` for the first manual test checklist.

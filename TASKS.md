@@ -67,6 +67,9 @@
 - [x] Add visual controls for behavior, safety, maps, history, and images.
 - [x] Preserve unknown YAML properties when the editor changes known settings.
 - [x] Add regression tests and user documentation for the editor contract.
+- [x] Package successful pull-request builds as short-lived Home Assistant test
+      artifacts.
+- [x] Prepare version 2.18.0 and a repeatable release checklist.
 - [ ] Validate the editor in a real Home Assistant card dialog on desktop and
       mobile.
 - [ ] Capture visual-editor screenshots in light and dark themes.
