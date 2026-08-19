@@ -1,4 +1,4 @@
-const KIA_DASHBOARD_CARD_VERSION = "2.17.7";
+const KIA_DASHBOARD_CARD_VERSION = "2.18.0-alpha.1";
 const KIA_DASHBOARD_NL = {
   "AC charge target": "AC-laaddoel",
   "AC charging limit": "AC-laadlimiet",
@@ -501,7 +501,245 @@ const KIA_DASHBOARD_NL = {
   "trips. Increase trip_calendar_limit to show more.": "ritten worden getoond. Verhoog trip_calendar_limit om er meer te tonen."
 };
 
+const KIA_EDITOR_ENTITY_GROUPS = [
+  {
+    id: "vehicle",
+    label: "Vehicle identity and connection",
+    icon: "mdi:car-connected",
+    keys: "vin last_updated vehicle_data dashboard_version drive_mode".split(" "),
+  },
+  {
+    id: "battery",
+    label: "Battery and vehicle charging",
+    icon: "mdi:battery-charging-high",
+    keys: "battery_level battery_range charging_state charging_power plug_connected charging_limit dc_charging_limit battery_state_of_health battery_remaining_energy battery_capacity battery_pack_voltage battery_temperature_min battery_temperature_max battery_water_temperature battery_heating battery_precondition battery_winter_mode battery_heater_power battery_12v_level battery_12v_fault estimated_charge_duration average_energy_consumption energy_consumption_90d".split(" "),
+  },
+  {
+    id: "access",
+    label: "Access, openings and tires",
+    icon: "mdi:car-door-lock",
+    keys: "door_lock trunk hood lights charge_port front_left_door front_right_door rear_left_door rear_right_door front_left_window front_right_window rear_left_window rear_right_window front_left_window_open front_left_window_close front_right_window_open front_right_window_close rear_left_window_open rear_left_window_close rear_right_window_open rear_right_window_close tire_front_left tire_front_right tire_rear_left tire_rear_right smart_key_battery_warning".split(" "),
+  },
+  {
+    id: "climate",
+    label: "Climate and comfort",
+    icon: "mdi:car-seat-heater",
+    keys: "climate set_temperature cabin_temperature outside_temperature defrost steering_wheel_heater rear_window_heater driver_seat passenger_seat rear_left_seat rear_right_seat driver_seat_heating passenger_seat_heating rear_left_seat_heating rear_right_seat_heating driver_seat_ventilation passenger_seat_ventilation rear_left_seat_ventilation rear_right_seat_ventilation climate_schedule climate_departure_time climate_schedule_1 climate_departure_time_1 climate_departure_days_1 climate_schedule_2 climate_departure_time_2 climate_departure_days_2 last_climate_result".split(" "),
+  },
+  {
+    id: "location",
+    label: "Location, driving and trips",
+    icon: "mdi:map-marker-path",
+    keys: "location latitude longitude odometer engine ignition today_driving_stats daily_driving_stats total_energy_regeneration trip_calendar trip_person_tracker".split(" "),
+  },
+  {
+    id: "actions",
+    label: "Vehicle actions",
+    icon: "mdi:gesture-tap-button",
+    keys: "refresh start_climate stop_climate start_charging stop_charging vent_windows last_charging_result".split(" "),
+  },
+  {
+    id: "charger",
+    label: "Home charger and energy",
+    icon: "mdi:ev-station",
+    keys: "charger_online charger_status charger_mode charger_power charger_current charger_current_limit charger_session_energy charger_total_energy charger_grid_support charger_pv_power charger_house_power charger_grid_power charger_start charger_pause charger_resume charger_stop charger_energy_price charger_energy_today charger_energy_week charger_energy_month charger_energy_year charger_session_cost charger_cost_month".split(" "),
+  },
+];
+
+const KIA_EDITOR_FIELDS = [
+  { section: "Card", key: "title", label: "Vehicle name", type: "text", placeholder: "Kia EV6" },
+  { section: "Card", key: "subtitle", label: "Subtitle", type: "text", placeholder: "GT-Line RWD" },
+  { section: "Safety and controls", key: "confirm_actions", label: "Confirm remote actions", type: "boolean", default: true },
+  { section: "Safety and controls", key: "vehicle_controls", label: "Enable reviewed lock controls", type: "boolean" },
+  { section: "Safety and controls", key: "charger_controls", label: "Enable home-charger controls", type: "boolean" },
+  { section: "Safety and controls", key: "charger_resume_via_mode", label: "Resume charger through its mode", type: "boolean" },
+  { section: "Safety and controls", key: "vehicle_action_timeout", label: "Vehicle action timeout (ms)", type: "number", min: 5000, step: 1000 },
+  { section: "Safety and controls", key: "vehicle_action_refresh_delay", label: "Refresh delay after action (ms)", type: "number", min: 0, max: 30000, step: 1000 },
+  { section: "Connection and history", key: "vehicle_fresh_minutes", label: "Data current for (minutes)", type: "number", min: 1, step: 1 },
+  { section: "Connection and history", key: "vehicle_stale_minutes", label: "Data stale after (minutes)", type: "number", min: 1, step: 1 },
+  { section: "Connection and history", key: "charger_history_min_kwh", label: "Minimum charging day (kWh)", type: "number", min: 0, step: 0.1 },
+  { section: "Connection and history", key: "daily_history_limit", label: "Daily history limit", type: "number", min: 1, step: 1 },
+  { section: "Connection and history", key: "trip_history_days", label: "Recorder trip history (days)", type: "number", min: 1, step: 1 },
+  { section: "Connection and history", key: "trip_history_limit", label: "Recorder trip limit", type: "number", min: 1, step: 1 },
+  { section: "Connection and history", key: "trip_calendar_limit", label: "Calendar trip limit", type: "number", min: 1, step: 1 },
+  { section: "Connection and history", key: "trip_calendar_start", label: "Calendar history start", type: "date" },
+  { section: "Connection and history", key: "trip_route_matching", label: "Match phone routes to roads", type: "boolean" },
+  { section: "Connection and history", key: "trip_route_service", label: "Route service URL", type: "url", placeholder: "https://router.project-osrm.org" },
+  { section: "Map and assets", key: "map_zoom", label: "Map zoom", type: "number", min: 1, max: 20, step: 1 },
+  { section: "Map and assets", key: "latitude", label: "Fixed map latitude", type: "number", min: -90, max: 90, step: 0.000001 },
+  { section: "Map and assets", key: "longitude", label: "Fixed map longitude", type: "number", min: -180, max: 180, step: 0.000001 },
+  { section: "Map and assets", key: "asset_base", label: "Vehicle image base path", type: "text", placeholder: "/local/vehicles/" },
+];
+
+const KIA_EDITOR_IMAGE_FIELDS = [
+  ["normal", "Default vehicle image", "ev6_front_right.png"],
+  ["charging", "Charging vehicle image", "ev6_charging.png"],
+  ["climate", "Climate vehicle image", "ev6_climate.png"],
+  ["side", "Side vehicle image", "ev6_side.png"],
+  ["top", "Top vehicle image", "ev6_top.png"],
+  ["map_marker", "Map marker image", "ev6_top.png"],
+];
+
+class KiaDashboardCardEditor extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this._config = { type: "custom:kia-dashboard-card", entities: {} };
+    this._filter = "";
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    const options = this.shadowRoot?.querySelector("#kiaEntityOptions");
+    if (options) options.innerHTML = this._entityOptionsMarkup();
+    else if (this._config) this._render();
+  }
+
+  setConfig(config) {
+    this._config = this._clone(config || { type: "custom:kia-dashboard-card" });
+    if (!this._config.entities || typeof this._config.entities !== "object") this._config.entities = {};
+    this._render();
+  }
+
+  _clone(value) {
+    if (typeof structuredClone === "function") return structuredClone(value);
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  _label(key) {
+    return key.replaceAll("_", " ").replace(/\b\w/g, (character) => character.toUpperCase());
+  }
+
+  _emit(config) {
+    this._config = config;
+    this.dispatchEvent(new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true }));
+  }
+
+  _setField(key, value, emptyValue = "") {
+    const next = this._clone(this._config);
+    if (value === emptyValue || value === undefined || Number.isNaN(value)) delete next[key];
+    else next[key] = value;
+    this._emit(next);
+  }
+
+  _setEntity(key, value) {
+    const next = this._clone(this._config);
+    next.entities = { ...(next.entities || {}) };
+    const normalized = typeof value === "string" ? value.trim() : "";
+    if (normalized) next.entities[key] = normalized;
+    else delete next.entities[key];
+    this._emit(next);
+    this._refreshSummary();
+  }
+
+  _setImage(key, value) {
+    const next = this._clone(this._config);
+    next.images = { ...(next.images || {}) };
+    const normalized = String(value || "").trim();
+    if (normalized) next.images[key] = normalized;
+    else delete next.images[key];
+    if (!Object.keys(next.images).length) delete next.images;
+    this._emit(next);
+  }
+
+  _fieldMarkup(field) {
+    const configured = this._config[field.key];
+    if (field.type === "boolean") {
+      const checked = configured === undefined ? field.default === true : configured === true;
+      return `<label class="toggle"><span><strong>${field.label}</strong>${field.key === "vehicle_controls" || field.key === "charger_controls" ? "<small>Opt-in: only enable after reviewing mapped actions.</small>" : ""}</span><input type="checkbox" data-field="${field.key}" ${checked ? "checked" : ""}></label>`;
+    }
+    const attributes = ["min", "max", "step"].filter((name) => field[name] !== undefined).map((name) => `${name}="${field[name]}"`).join(" ");
+    return `<label class="field"><span>${field.label}</span><input data-field="${field.key}" type="${field.type}" value="${this._escape(configured ?? "")}" placeholder="${this._escape(field.placeholder || "")}" ${attributes}></label>`;
+  }
+
+  _entityGroupMarkup(group) {
+    const query = this._filter.toLowerCase();
+    const keys = group.keys.filter((key) => !query || key.includes(query) || this._label(key).toLowerCase().includes(query) || group.label.toLowerCase().includes(query));
+    if (!keys.length) return "";
+    const configured = group.keys.filter((key) => this._config.entities?.[key]).length;
+    return `<details class="entity-group" ${this._filter ? "open" : ""}><summary><ha-icon icon="${group.icon}"></ha-icon><span><strong>${group.label}</strong><small>${configured} of ${group.keys.length} mapped</small></span><ha-icon class="chevron" icon="mdi:chevron-down"></ha-icon></summary><div class="entity-list">${keys.map((key) => `<label class="entity-field"><span>${this._label(key)}<code>${key}</code></span><input class="entity-input" data-entity-key="${key}" list="kiaEntityOptions" value="${this._escape(this._config.entities?.[key] || "")}" placeholder="Select or enter an entity ID"></label>`).join("")}</div></details>`;
+  }
+
+  _entityOptionsMarkup() {
+    return Object.entries(this._hass?.states || {})
+      .map(([entityId, state]) => ({ entityId, name: String(state?.attributes?.friendly_name || "") }))
+      .sort((left, right) => (left.name || left.entityId).localeCompare(right.name || right.entityId))
+      .map(({ entityId, name }) => `<option value="${this._escape(entityId)}">${this._escape(name ? `${name} — ${entityId}` : entityId)}</option>`)
+      .join("");
+  }
+
+  _escape(value) {
+    return String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+  }
+
+  _render() {
+    if (!this.shadowRoot) return;
+    const sections = [...new Set(KIA_EDITOR_FIELDS.map((field) => field.section))];
+    const mapped = Object.values(this._config.entities || {}).filter(Boolean).length;
+    const total = KIA_EDITOR_ENTITY_GROUPS.reduce((sum, group) => sum + group.keys.length, 0);
+    this.shadowRoot.innerHTML = `<style>
+      :host{display:block;color:var(--primary-text-color);font-family:var(--primary-font-family,system-ui,sans-serif)}
+      *{box-sizing:border-box}.editor{display:grid;gap:14px;padding:4px 2px 20px}.intro,.settings,.entity-group{border:1px solid var(--divider-color);border-radius:12px;background:var(--card-background-color)}
+      .intro{padding:16px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}.intro h2,.intro p{margin:0}.intro h2{font-size:18px}.intro p{margin-top:5px;color:var(--secondary-text-color);font-size:13px;line-height:1.45}.progress{font-weight:700;color:var(--primary-color);white-space:nowrap}
+      .settings{padding:14px}.settings h3{margin:0 0 12px;font-size:15px}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field,.toggle{display:grid;gap:6px;font-size:13px}.field input{width:100%;min-height:42px;padding:0 12px;border:1px solid var(--divider-color);border-radius:9px;background:var(--primary-background-color);color:var(--primary-text-color)}
+      .toggle{grid-template-columns:1fr auto;align-items:center;padding:8px 0}.toggle small{display:block;margin-top:3px;color:var(--secondary-text-color);font-weight:400}.toggle input{width:20px;height:20px;accent-color:var(--primary-color)}
+      .search{position:relative}.search ha-icon{position:absolute;left:12px;top:11px;color:var(--secondary-text-color)}.search input{width:100%;min-height:44px;padding:0 12px 0 43px;border:1px solid var(--divider-color);border-radius:10px;background:var(--card-background-color);color:var(--primary-text-color)}
+      .entity-group{overflow:hidden}.entity-group summary{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:14px;cursor:pointer;list-style:none}.entity-group summary::-webkit-details-marker{display:none}.entity-group summary>ha-icon:first-child{color:var(--primary-color)}.entity-group summary span{display:grid;gap:2px}.entity-group summary small{color:var(--secondary-text-color)}.chevron{transition:transform .18s}.entity-group[open] .chevron{transform:rotate(180deg)}
+      .entity-list{display:grid;gap:12px;padding:2px 14px 16px;border-top:1px solid var(--divider-color)}.entity-field{display:grid;grid-template-columns:minmax(180px,.8fr) minmax(250px,1.2fr);align-items:center;gap:16px;padding-top:12px}.entity-field>span{font-size:13px;font-weight:600}.entity-field code{display:block;margin-top:3px;color:var(--secondary-text-color);font-size:11px;font-weight:400;overflow-wrap:anywhere}.entity-input{width:100%;min-height:42px;padding:0 12px;border:1px solid var(--divider-color);border-radius:9px;background:var(--primary-background-color);color:var(--primary-text-color)}
+      .images{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.empty{padding:18px;text-align:center;color:var(--secondary-text-color)}
+      @media(max-width:700px){.intro{grid-template-columns:1fr}.fields,.images{grid-template-columns:1fr}.entity-field{grid-template-columns:1fr;gap:7px}}
+    </style><div class="editor">
+      <section class="intro"><div><h2>Kia Dashboard visual configuration</h2><p>Map only the entities and features your vehicle exposes. Existing YAML and unknown options are preserved.</p></div><span class="progress" id="mappingProgress">${mapped} / ${total} mapped</span></section>
+      ${sections.map((section) => `<section class="settings"><h3>${section}</h3><div class="fields">${KIA_EDITOR_FIELDS.filter((field) => field.section === section).map((field) => this._fieldMarkup(field)).join("")}</div>${section === "Map and assets" ? `<div class="images">${KIA_EDITOR_IMAGE_FIELDS.map(([key, label, placeholder]) => `<label class="field"><span>${label}</span><input data-image="${key}" value="${this._escape(this._config.images?.[key] || "")}" placeholder="${placeholder}"></label>`).join("")}</div>` : ""}</section>`).join("")}
+      <label class="search"><ha-icon icon="mdi:magnify"></ha-icon><input id="entitySearch" type="search" value="${this._escape(this._filter)}" placeholder="Search entity mappings…"></label>
+      <div id="entityGroups">${KIA_EDITOR_ENTITY_GROUPS.map((group) => this._entityGroupMarkup(group)).join("") || '<div class="empty">No mappings match this search.</div>'}</div>
+      <datalist id="kiaEntityOptions">${this._entityOptionsMarkup()}</datalist>
+    </div>`;
+    this._bindEvents();
+  }
+
+  _bindEvents() {
+    this.shadowRoot.querySelectorAll("[data-field]").forEach((input) => {
+      const field = KIA_EDITOR_FIELDS.find((candidate) => candidate.key === input.dataset.field);
+      input.addEventListener("change", () => {
+        if (field.type === "boolean") this._setField(field.key, input.checked, field.default === true ? true : false);
+        else if (field.type === "number") this._setField(field.key, input.value === "" ? "" : Number(input.value));
+        else this._setField(field.key, input.value.trim());
+      });
+    });
+    this.shadowRoot.querySelectorAll("[data-image]").forEach((input) => input.addEventListener("change", () => this._setImage(input.dataset.image, input.value)));
+    this.shadowRoot.querySelector("#entitySearch")?.addEventListener("input", (event) => {
+      this._filter = event.target.value;
+      const groups = this.shadowRoot.querySelector("#entityGroups");
+      groups.innerHTML = KIA_EDITOR_ENTITY_GROUPS.map((group) => this._entityGroupMarkup(group)).join("") || '<div class="empty">No mappings match this search.</div>';
+      this._bindEntityInputs();
+    });
+    this._bindEntityInputs();
+  }
+
+  _bindEntityInputs() {
+    this.shadowRoot?.querySelectorAll("input[data-entity-key]").forEach((input) => {
+      input.addEventListener("change", () => this._setEntity(input.dataset.entityKey, input.value));
+    });
+  }
+
+  _refreshSummary() {
+    const mapped = Object.values(this._config.entities || {}).filter(Boolean).length;
+    const total = KIA_EDITOR_ENTITY_GROUPS.reduce((sum, group) => sum + group.keys.length, 0);
+    const progress = this.shadowRoot?.querySelector("#mappingProgress");
+    if (progress) progress.textContent = `${mapped} / ${total} mapped`;
+  }
+}
+
 class KiaDashboardCard extends HTMLElement {
+  static async getConfigElement() {
+    return document.createElement("kia-dashboard-card-editor");
+  }
+
+  static getStubConfig() {
+    return { title: "Kia EV6", subtitle: "", entities: {} };
+  }
+
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -653,6 +891,10 @@ class KiaDashboardCard extends HTMLElement {
 
   getCardSize() {
     return 12;
+  }
+
+  getGridOptions() {
+    return { columns: "full", min_columns: 6 };
   }
 
   _entity(key) {
@@ -2841,6 +3083,14 @@ class KiaDashboardCard extends HTMLElement {
   }
 }
 
-customElements.define("kia-dashboard-card", KiaDashboardCard);
+if (!customElements.get?.("kia-dashboard-card-editor")) customElements.define("kia-dashboard-card-editor", KiaDashboardCardEditor);
+if (!customElements.get?.("kia-dashboard-card")) customElements.define("kia-dashboard-card", KiaDashboardCard);
 window.customCards = window.customCards || [];
-window.customCards.push({ type: "kia-dashboard-card", name: "Kia Dashboard Card", description: "Responsive Kia EV6 overview card for Home Assistant.", version: KIA_DASHBOARD_CARD_VERSION });
+window.customCards.push({
+  type: "kia-dashboard-card",
+  name: "Kia Dashboard Card",
+  description: "Responsive Hyundai/Kia vehicle dashboard for Home Assistant.",
+  version: KIA_DASHBOARD_CARD_VERSION,
+  preview: true,
+  documentationURL: "https://github.com/ju1ced/ha-kia-connect-dashboard/blob/main/docs/hacs-card-configuration.md",
+});

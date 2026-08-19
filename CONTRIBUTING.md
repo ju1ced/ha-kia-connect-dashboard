@@ -25,3 +25,8 @@ python scripts/check_version_consistency.py
 
 CI also runs the check for pull requests, `main`, and `v*` tags. During a tag
 build, the tag must equal `v` followed by the dashboard and changelog version.
+
+Before publishing a release, follow `docs/release-checklist.md`. Pull requests
+upload a short-lived Home Assistant test artifact; install it using
+`docs/release-testing.md` and record the manual editor, responsive, and theme
+results in the pull request.

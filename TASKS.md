@@ -57,3 +57,19 @@
       card path.
 - [x] Add troubleshooting and FAQ documentation.
 - [x] Publish an anonymized, complete reference card configuration.
+
+## Visual configuration editor
+
+- [x] Keep the dashboard as a frontend-only Lovelace card instead of converting
+      it to a custom Home Assistant panel.
+- [x] Add native Lovelace visual-editor registration and stub configuration.
+- [x] Group all supported entity mappings by vehicle function.
+- [x] Add visual controls for behavior, safety, maps, history, and images.
+- [x] Preserve unknown YAML properties when the editor changes known settings.
+- [x] Add regression tests and user documentation for the editor contract.
+- [x] Package successful pull-request builds as short-lived Home Assistant test
+      artifacts.
+- [x] Prepare version 2.18.0-alpha.1 and a repeatable release checklist.
+- [ ] Validate the editor in a real Home Assistant card dialog on desktop and
+      mobile.
+- [ ] Capture visual-editor screenshots in light and dark themes.
