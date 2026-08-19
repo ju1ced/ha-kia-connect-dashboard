@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added a native Lovelace visual editor with grouped and searchable entity
+  mappings, behavior settings, safety controls, map options, and vehicle images.
+- Preserved unknown and future YAML properties when editing known settings.
+- Added visual-editor contract tests, CI coverage, documentation, and an updated
+  frontend-only product plan.
+- Added modern Sections grid sizing and aligned the stub configuration with the
+  Home Assistant custom-card contract.
+- Replaced unsupported internal entity-picker dependencies with self-contained
+  friendly-name and entity-ID suggestions.
+
 ## 2.17.7 - 2026-08-18
 
 - Made scroll preservation the default for every dashboard-card render,

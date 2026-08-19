@@ -5,6 +5,35 @@ use the card directly in Home Assistant, configure your own entities in the card
 YAML. You do not need to edit `dashboard/templates/entities.yaml` for direct HACS
 usage.
 
+## Visual Editor
+
+The card includes a native Lovelace visual editor. Add **Kia Dashboard Card**
+through the Home Assistant dashboard editor, then configure the vehicle without
+switching to YAML mode.
+
+The editor provides:
+
+- grouped entity selectors for the vehicle, battery, access, climate, location,
+  actions, and home charger;
+- visual controls for confirmation, reviewed vehicle and charger controls,
+  connection thresholds, history, maps, and vehicle images;
+- search across all logical entity mappings;
+- configured counters for each group;
+- search suggestions using Home Assistant friendly names and entity IDs, while
+  still accepting manually entered custom entity IDs.
+
+Only map features exposed by your integration. Optional unmapped sections stay
+hidden or read-only in the dashboard.
+
+Opening and saving an existing YAML card through the visual editor preserves
+configuration properties the editor does not recognize. YAML mode therefore
+remains available for experimental or future options without creating two
+separate configuration sources.
+
+Remote lock and charger controls remain opt-in. Enabling them in the editor does
+not remove confirmation or returned-state safeguards documented under
+[Actions](#actions).
+
 ## Resource
 
 After installing the repository through HACS, make sure this Lovelace resource is

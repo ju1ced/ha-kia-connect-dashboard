@@ -66,6 +66,11 @@ entities:
   door_lock: lock.your_vehicle_door_lock
 ```
 
+The card also provides a native Home Assistant visual editor with grouped,
+searchable entity mappings and controls for safety, history, maps, and vehicle
+images. Existing YAML configurations can be opened in the visual editor without
+discarding unknown or advanced properties.
+
 See `docs/hacs-card-configuration.md` for the complete card configuration.
 An anonymized complete example is available at
 `examples/hacs-reference-card.yaml`; common problems are covered in

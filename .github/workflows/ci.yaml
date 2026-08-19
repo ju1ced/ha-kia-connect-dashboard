@@ -29,6 +29,8 @@ jobs:
         run: node scripts/check_charger_controls.js
       - name: Test frontend rendering guards
         run: node scripts/check_frontend_rendering.js
+      - name: Test visual editor contract
+        run: node scripts/check_visual_editor.js
       - name: Validate required structure
         run: python scripts/check_required_structure.py
       - name: Validate release version consistency
