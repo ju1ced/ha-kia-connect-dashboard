@@ -32,12 +32,12 @@ test.
 Register the test resource through **Settings → Dashboards → Resources**:
 
 ```text
-URL: /local/kia-dashboard-test/ha-kia-connect-dashboard.js?v=2.18.0
+URL: /local/kia-dashboard-test/ha-kia-connect-dashboard.js?v=2.18.0-alpha.1
 Type: JavaScript module
 ```
 
 Refresh Home Assistant and reopen the dashboard editor. Settings inside the Kia
-card should report version `2.18.0`.
+card should report version `2.18.0-alpha.1`.
 
 ## Visual Editor Test
 

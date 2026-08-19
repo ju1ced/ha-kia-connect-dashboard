@@ -69,7 +69,7 @@
 - [x] Add regression tests and user documentation for the editor contract.
 - [x] Package successful pull-request builds as short-lived Home Assistant test
       artifacts.
-- [x] Prepare version 2.18.0 and a repeatable release checklist.
+- [x] Prepare version 2.18.0-alpha.1 and a repeatable release checklist.
 - [ ] Validate the editor in a real Home Assistant card dialog on desktop and
       mobile.
 - [ ] Capture visual-editor screenshots in light and dark themes.
