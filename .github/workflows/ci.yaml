@@ -66,7 +66,7 @@ jobs:
           cp hacs.json build/test-release/
           cp docs/release-testing.md build/test-release/README.md
       - name: Upload Home Assistant test build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ha-kia-connect-dashboard-test-build
           path: build/test-release/
