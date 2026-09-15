@@ -28,7 +28,10 @@ are available in the current stable release.
 - CI-enforced dashboard, changelog, and release-tag version consistency.
 - Confirmation and feedback patterns for enabled remote actions.
 - Opt-in lock and unlock controls with confirmation and returned-state
-  verification.
+  verification, one bounded Kia refresh, and immediate local state
+  synchronization. The complete flow is validated against real Kia responses.
+- Desktop, tablet, and mobile layouts validated in Home Assistant with both
+  light and dark themes.
 
 ## Parked: Validate persistent trip data
 
@@ -48,19 +51,15 @@ are available in the current stable release.
   views as more long-term data accumulates.
 - Keep the current total-increasing sensor as the permanent source of truth.
 
-## Next: Safe vehicle actions
+## Future safe vehicle actions
 
-- Validate the reviewed lock and unlock controls against real Kia responses.
 - Review supported light, trunk, hood, and charge-port actions individually.
 - Keep unsupported or insufficiently observable actions read-only.
 
-## Next: Documentation and visual QA
+## Documentation follow-up
 
 - Capture current Home Assistant screenshots for every view.
-- Complete installation, customization, troubleshooting, and FAQ documentation.
-- Validate desktop, tablet, mobile, light, and dark layouts against real entity
-  states.
-- Publish a complete reference configuration using anonymized entity examples.
+- Refresh documentation screenshots when a view changes materially.
 
 ## Maintenance
 

@@ -45,14 +45,16 @@
 - [x] Keep every unreviewed action disabled until its state and command result
       are observable.
 - [x] Add regression tests for the approved lock action path.
-- [ ] Validate lock and unlock against real Kia command timing without disabling
+- [x] Validate lock and unlock against real Kia command timing without disabling
       confirmations.
+- [x] Refresh Kia data once after a remote lock action and synchronize the
+      confirmed Home Assistant state without a browser reload.
 
 ## Documentation and visual QA
 
 - [ ] Capture real Home Assistant screenshots for every view.
-- [ ] Validate desktop, tablet, and mobile layouts.
-- [ ] Validate light and dark Home Assistant themes.
+- [x] Validate desktop, tablet, and mobile layouts.
+- [x] Validate light and dark Home Assistant themes.
 - [x] Complete installation and customization guides for the supported HACS
       card path.
 - [x] Add troubleshooting and FAQ documentation.
