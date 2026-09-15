@@ -984,7 +984,7 @@ async function run() {
   assert.match(matchedCalendarDayView, /class="trip-route-map-content"/);
   assert.match(
     matchedCalendarDayView,
-    /<img src="https:\/\/basemaps\.cartocdn\.com\//,
+    /<img src="https:\/\/tile\.openstreetmap\.de\//,
   );
   assert.doesNotMatch(matchedCalendarDayView, /<image /);
   assert.doesNotMatch(matchedCalendarDayView, /class="trip-route-tint"/);
