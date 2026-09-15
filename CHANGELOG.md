@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.18.2 - 2026-09-15
+
+- Replaced the CARTO basemap tile default with `tile.openstreetmap.de`, since
+  CARTO's `basemaps.cartocdn.com` now requires an API key for anonymous use
+  and was showing an "API key required" tile.
+- Documented that `map_tile_url` can point at your own MapTiler or Stadia
+  Maps key for a more reliable long-term tile source.
+
 ## 2.18.1 - 2026-09-15
 
 - Replaced hotlinked `tile.openstreetmap.org` map tiles with CARTO's free

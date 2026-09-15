@@ -1,4 +1,4 @@
-const KIA_DASHBOARD_CARD_VERSION = "2.18.1";
+const KIA_DASHBOARD_CARD_VERSION = "2.18.2";
 const KIA_DASHBOARD_NL = {
   "AC charge target": "AC-laaddoel",
   "AC charging limit": "AC-laadlimiet",
@@ -568,8 +568,8 @@ const KIA_EDITOR_FIELDS = [
   { section: "Map and assets", key: "map_zoom", label: "Map zoom", type: "number", min: 1, max: 20, step: 1 },
   { section: "Map and assets", key: "latitude", label: "Fixed map latitude", type: "number", min: -90, max: 90, step: 0.000001 },
   { section: "Map and assets", key: "longitude", label: "Fixed map longitude", type: "number", min: -180, max: 180, step: 0.000001 },
-  { section: "Map and assets", key: "map_tile_url", label: "Map tile URL template", type: "url", placeholder: "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" },
-  { section: "Map and assets", key: "map_attribution", label: "Map attribution text", type: "text", placeholder: "© OpenStreetMap contributors © CARTO" },
+  { section: "Map and assets", key: "map_tile_url", label: "Map tile URL template", type: "url", placeholder: "https://tile.openstreetmap.de/{z}/{x}/{y}.png" },
+  { section: "Map and assets", key: "map_attribution", label: "Map attribution text", type: "text", placeholder: "© OpenStreetMap contributors" },
   { section: "Map and assets", key: "asset_base", label: "Vehicle image base path", type: "text", placeholder: "/local/vehicles/" },
 ];
 
@@ -1498,10 +1498,14 @@ class KiaDashboardCard extends HTMLElement {
   }
 
   _mapTileUrlTemplate() {
-    // tile.openstreetmap.org now returns HTTP 403 for hotlinked/embedded-app
-    // traffic like this custom card (see the OSM tile usage policy). CARTO's
-    // basemaps are free for this kind of use and only require attribution.
-    return this._config.map_tile_url || this._config.map?.tile_url || "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png";
+    // tile.openstreetmap.org returns HTTP 403 for hotlinked/embedded-app
+    // traffic like this custom card, and CARTO's basemaps.cartocdn.com now
+    // gates anonymous use behind an API key too. tile.openstreetmap.de is a
+    // community-run OSM mirror that still serves this kind of low-volume
+    // embedded use without requiring an account. Set map_tile_url to your
+    // own key-based provider (e.g. MapTiler, Stadia Maps) for a more
+    // reliable long-term source.
+    return this._config.map_tile_url || this._config.map?.tile_url || "https://tile.openstreetmap.de/{z}/{x}/{y}.png";
   }
 
   _mapTileUrl(zoom, x, y) {
@@ -1509,7 +1513,7 @@ class KiaDashboardCard extends HTMLElement {
   }
 
   _mapAttribution() {
-    return this._config.map_attribution || this._config.map?.attribution || "© OpenStreetMap contributors © CARTO";
+    return this._config.map_attribution || this._config.map?.attribution || "© OpenStreetMap contributors";
   }
 
   _mapTileGrid() {
