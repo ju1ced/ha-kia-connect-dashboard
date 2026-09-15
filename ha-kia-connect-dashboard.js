@@ -1,4 +1,4 @@
-const KIA_DASHBOARD_CARD_VERSION = "2.18.0";
+const KIA_DASHBOARD_CARD_VERSION = "2.18.1";
 const KIA_DASHBOARD_NL = {
   "AC charge target": "AC-laaddoel",
   "AC charging limit": "AC-laadlimiet",
@@ -568,6 +568,8 @@ const KIA_EDITOR_FIELDS = [
   { section: "Map and assets", key: "map_zoom", label: "Map zoom", type: "number", min: 1, max: 20, step: 1 },
   { section: "Map and assets", key: "latitude", label: "Fixed map latitude", type: "number", min: -90, max: 90, step: 0.000001 },
   { section: "Map and assets", key: "longitude", label: "Fixed map longitude", type: "number", min: -180, max: 180, step: 0.000001 },
+  { section: "Map and assets", key: "map_tile_url", label: "Map tile URL template", type: "url", placeholder: "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" },
+  { section: "Map and assets", key: "map_attribution", label: "Map attribution text", type: "text", placeholder: "© OpenStreetMap contributors © CARTO" },
   { section: "Map and assets", key: "asset_base", label: "Vehicle image base path", type: "text", placeholder: "/local/vehicles/" },
 ];
 
@@ -1495,6 +1497,21 @@ class KiaDashboardCard extends HTMLElement {
     return lat !== null && lon !== null ? { lat, lon } : null;
   }
 
+  _mapTileUrlTemplate() {
+    // tile.openstreetmap.org now returns HTTP 403 for hotlinked/embedded-app
+    // traffic like this custom card (see the OSM tile usage policy). CARTO's
+    // basemaps are free for this kind of use and only require attribution.
+    return this._config.map_tile_url || this._config.map?.tile_url || "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png";
+  }
+
+  _mapTileUrl(zoom, x, y) {
+    return this._mapTileUrlTemplate().replace("{z}", zoom).replace("{x}", x).replace("{y}", y);
+  }
+
+  _mapAttribution() {
+    return this._config.map_attribution || this._config.map?.attribution || "© OpenStreetMap contributors © CARTO";
+  }
+
   _mapTileGrid() {
     const coords = this._trackerCoords();
     if (!coords) return null;
@@ -1521,7 +1538,7 @@ class KiaDashboardCard extends HTMLElement {
         if (tileY < 0 || tileY >= scale) {
           tiles.push('<span class="map-tile-empty"></span>');
         } else {
-          tiles.push(`<img src="https://tile.openstreetmap.org/${zoom}/${tileX}/${tileY}.png" alt="">`);
+          tiles.push(`<img src="${this._mapTileUrl(zoom, tileX, tileY)}" alt="" loading="lazy">`);
         }
       }
     }
@@ -1529,6 +1546,7 @@ class KiaDashboardCard extends HTMLElement {
     return {
       style: `--map-grid:${gridSize};--map-size:${gridSize * tileSize}px;left:50%;top:50%;transform:translate(-${Math.round(centerOffset + xOffset)}px, -${Math.round(centerOffset + yOffset)}px)`,
       tiles: tiles.join(""),
+      attribution: this._mapAttribution(),
     };
   }
 
@@ -2532,7 +2550,7 @@ class KiaDashboardCard extends HTMLElement {
       if (tileY < 0 || tileY >= scale) continue;
       for (let tileX = firstTileX; tileX <= lastTileX; tileX += 1) {
         const wrappedX = ((tileX % scale) + scale) % scale;
-        tiles.push(`<img src="https://tile.openstreetmap.org/${zoom}/${wrappedX}/${tileY}.png" alt="" style="left:${(tileX * 256 - left).toFixed(1)}px;top:${(tileY * 256 - top).toFixed(1)}px">`);
+        tiles.push(`<img src="${this._mapTileUrl(zoom, wrappedX, tileY)}" alt="" loading="lazy" style="left:${(tileX * 256 - left).toFixed(1)}px;top:${(tileY * 256 - top).toFixed(1)}px">`);
       }
     }
     const routeColors = ["var(--blue, #42c8ff)", "#7e57c2", "#f59e0b", "#ef5350"];
@@ -2553,7 +2571,7 @@ class KiaDashboardCard extends HTMLElement {
     const qualityLabel = roadMatched ? "Road-matched route" : "Approximate route";
     const zoomOffset = this._tripRouteZoomOffset();
     const panned = pan.x !== 0 || pan.y !== 0;
-    return `<section class="trip-route-map" aria-label="Approximate routes"><div class="trip-route-map-heading"><div><span>Route overview</span><strong>${sourceLabel}</strong></div><div class="trip-route-map-meta"><small>${pointCount} points</small><div class="trip-route-controls" role="group" aria-label="Map zoom"><button data-trip-route-zoom="out" aria-label="Zoom out" ${zoomOffset <= -4 ? "disabled" : ""}><ha-icon icon="mdi:minus"></ha-icon></button><button data-trip-route-zoom="reset" aria-label="Reset map zoom" ${zoomOffset === 0 && !panned ? "disabled" : ""}><ha-icon icon="mdi:fit-to-screen-outline"></ha-icon></button><button data-trip-route-zoom="in" aria-label="Zoom in" ${zoomOffset >= 4 ? "disabled" : ""}><ha-icon icon="mdi:plus"></ha-icon></button></div></div></div><div class="map trip-route-map-canvas" data-trip-route-pan aria-label="Drag map to move"><div class="trip-route-drag-layer"><div class="trip-route-map-content"><div class="map-tiles trip-route-tiles trip-route-html-tiles">${tiles.join("")}</div><svg class="trip-route-overlay" viewBox="0 0 ${width} ${height}" role="img" aria-label="Approximate trip route"><g>${lines}</g></svg></div></div><span class="trip-route-quality">${qualityLabel}</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a></div></section>`;
+    return `<section class="trip-route-map" aria-label="Approximate routes"><div class="trip-route-map-heading"><div><span>Route overview</span><strong>${sourceLabel}</strong></div><div class="trip-route-map-meta"><small>${pointCount} points</small><div class="trip-route-controls" role="group" aria-label="Map zoom"><button data-trip-route-zoom="out" aria-label="Zoom out" ${zoomOffset <= -4 ? "disabled" : ""}><ha-icon icon="mdi:minus"></ha-icon></button><button data-trip-route-zoom="reset" aria-label="Reset map zoom" ${zoomOffset === 0 && !panned ? "disabled" : ""}><ha-icon icon="mdi:fit-to-screen-outline"></ha-icon></button><button data-trip-route-zoom="in" aria-label="Zoom in" ${zoomOffset >= 4 ? "disabled" : ""}><ha-icon icon="mdi:plus"></ha-icon></button></div></div></div><div class="map trip-route-map-canvas" data-trip-route-pan aria-label="Drag map to move"><div class="trip-route-drag-layer"><div class="trip-route-map-content"><div class="map-tiles trip-route-tiles trip-route-html-tiles">${tiles.join("")}</div><svg class="trip-route-overlay" viewBox="0 0 ${width} ${height}" role="img" aria-label="Approximate trip route"><g>${lines}</g></svg></div></div><span class="trip-route-quality">${qualityLabel}</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">${this._safe(this._mapAttribution())}</a></div></section>`;
   }
 
   _renderTripRoutePlaceholder(message = "No route points available for this day") {
@@ -2931,7 +2949,7 @@ class KiaDashboardCard extends HTMLElement {
 
           <section class="panel location-panel">
             <div class="panel-title"><ha-icon icon="mdi:map-marker-outline"></ha-icon><h2>Location</h2><button data-nav="location"><ha-icon icon="mdi:chevron-right"></ha-icon></button></div>
-            <div class="location-layout"><div class="map">${mapTiles ? `<div class="map-tiles" style="${mapTiles.style}">${mapTiles.tiles}</div>` : ""}<span class="map-marker"><img src="${markerImage}" alt="EV6 location" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><ha-icon icon="mdi:car-sports"></ha-icon></span></div><div class="location-meta"><span>Last parked</span><b>${this._safe(location)}</b></div></div>
+            <div class="location-layout"><div class="map">${mapTiles ? `<div class="map-tiles" style="${mapTiles.style}">${mapTiles.tiles}</div><span class="map-attribution">${this._safe(mapTiles.attribution)}</span>` : ""}<span class="map-marker"><img src="${markerImage}" alt="EV6 location" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><ha-icon icon="mdi:car-sports"></ha-icon></span></div><div class="location-meta"><span>Last parked</span><b>${this._safe(location)}</b></div></div>
           </section>
 
           <section class="panel tire-panel">
@@ -3071,7 +3089,7 @@ class KiaDashboardCard extends HTMLElement {
       .battery-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 18px; } .battery-facts div { min-width:0; } .battery-facts .wide { grid-column:1 / -1; } .battery-facts b { display:block; font-size:clamp(15px,1.1vw,19px); line-height:1.1; overflow-wrap:anywhere; } .limit-control { display:grid; grid-template-columns:auto minmax(120px,1fr); gap:14px; align-items:center; } .limit-control small { display:block; color:var(--kia-muted); font-size:12px; margin-top:2px; } .limit-control input { width:100%; accent-color:var(--blue); }
       .actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } .actions ha-icon { color:var(--blue); --mdc-icon-size:34px; } .actions .warm { color:var(--amber); } .actions .good { color:var(--green); } .notice { margin-top:12px; color:var(--kia-muted); font-size:13px; line-height:1.35; }
       .vehicle-list { display:grid; gap:13px; padding-inline:8px; } .status-row { display:grid; grid-template-columns:30px 1fr auto 28px; align-items:center; gap:12px; color:var(--kia-muted); } .status-row strong { color:var(--kia-text); } .status-row ha-icon { color:var(--kia-muted); } .status-row .ok { color:var(--green); } .status-row .warn { color:var(--amber); }
-      .location-layout { display:grid; grid-template-columns:1fr; grid-template-rows:minmax(260px,1fr) auto; gap:12px; align-items:stretch; height:100%; } .map { min-height:clamp(280px,22vw,380px); border-radius:8px; background:color-mix(in srgb,var(--kia-control) 62%,var(--blue) 8%); display:grid; place-items:center; position:relative; overflow:hidden; isolation:isolate; } .map-tiles { position:absolute; left:0; top:0; width:var(--map-size,1280px); height:var(--map-size,1280px); display:grid; grid-template-columns:repeat(var(--map-grid,5),256px); grid-template-rows:repeat(var(--map-grid,5),256px); transform-origin:0 0; z-index:0; filter:saturate(1.18) contrast(1.08); } .map-tiles img,.map-tile-empty { width:256px; height:256px; display:block; } .map-tile-empty { background:var(--kia-control); } .map:before { content:""; position:absolute; inset:0; background:color-mix(in srgb,var(--kia-card) 4%,transparent); pointer-events:none; z-index:1; } .map-marker { width:46px; height:46px; border-radius:0; background:transparent; border:0; display:grid; place-items:center; box-shadow:none; z-index:2; } .map-marker img { width:42px; height:42px; object-fit:contain; filter:drop-shadow(0 4px 6px rgba(0,0,0,.34)); } .map-marker ha-icon { display:none; color:var(--blue); --mdc-icon-size:28px; } .location-meta { display:grid; grid-template-columns:1fr auto; gap:6px 16px; align-items:end; } .location-meta span { grid-column:1 / -1; } .location-meta b { display:block; font-size:20px; margin:0; }
+      .location-layout { display:grid; grid-template-columns:1fr; grid-template-rows:minmax(260px,1fr) auto; gap:12px; align-items:stretch; height:100%; } .map { min-height:clamp(280px,22vw,380px); border-radius:8px; background:color-mix(in srgb,var(--kia-control) 62%,var(--blue) 8%); display:grid; place-items:center; position:relative; overflow:hidden; isolation:isolate; } .map-tiles { position:absolute; left:0; top:0; width:var(--map-size,1280px); height:var(--map-size,1280px); display:grid; grid-template-columns:repeat(var(--map-grid,5),256px); grid-template-rows:repeat(var(--map-grid,5),256px); transform-origin:0 0; z-index:0; filter:saturate(1.18) contrast(1.08); } .map-tiles img,.map-tile-empty { width:256px; height:256px; display:block; } .map-tile-empty { background:var(--kia-control); } .map:before { content:""; position:absolute; inset:0; background:color-mix(in srgb,var(--kia-card) 4%,transparent); pointer-events:none; z-index:1; } .map-marker { width:46px; height:46px; border-radius:0; background:transparent; border:0; display:grid; place-items:center; box-shadow:none; z-index:2; } .map-marker img { width:42px; height:42px; object-fit:contain; filter:drop-shadow(0 4px 6px rgba(0,0,0,.34)); } .map-marker ha-icon { display:none; color:var(--blue); --mdc-icon-size:28px; } .map-attribution { position:absolute; right:4px; bottom:2px; z-index:2; font-size:9px; line-height:1.4; padding:1px 5px; border-radius:4px; background:rgba(0,0,0,.45); color:rgba(255,255,255,.85); pointer-events:none; } .location-meta { display:grid; grid-template-columns:1fr auto; gap:6px 16px; align-items:end; } .location-meta span { grid-column:1 / -1; } .location-meta b { display:block; font-size:20px; margin:0; }
       .tires { display:grid; grid-template-columns:1fr 86px 1fr; align-items:center; gap:18px; } .tires img { width:86px; height:136px; object-fit:contain; justify-self:center; } .tire-side { display:grid; gap:3px; } .tire-side b { font-size:18px; } .tire-side b:before { content:""; display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--green); margin-right:8px; box-shadow:0 0 7px var(--green); } .tire-side:first-child { text-align:right; }
       .health-panel { display:flex; align-items:center; gap:26px; } .shield { color:var(--green); --mdc-icon-size:56px; } .health-panel h2 { font-size:22px; } .health-panel p { color:var(--kia-muted); margin-top:6px; } .ghost { position:absolute; right:28px; bottom:18px; opacity:.12; --mdc-icon-size:72px; }
       .footer { margin-top:12px; min-height:44px; padding:0 16px; display:flex; align-items:center; justify-content:space-between; color:var(--kia-muted); } .footer span { display:flex; align-items:center; gap:8px; }

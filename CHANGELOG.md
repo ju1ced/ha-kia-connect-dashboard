@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 2.18.1 - 2026-09-15
+
+- Replaced hotlinked `tile.openstreetmap.org` map tiles with CARTO's free
+  basemap tiles (configurable via `map_tile_url`) after OpenStreetMap started
+  returning HTTP 403 for this embedded-app usage.
+- Added a visible map attribution label to the Overview location preview and
+  the trip route map, and made the attribution text configurable via
+  `map_attribution`.
+
 ## 2.18.0 - 2026-08-19
 
 - Added a native Lovelace visual editor with grouped and searchable entity
